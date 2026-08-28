@@ -1,0 +1,258 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ITHIHASA - Heritage Collection</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts: EB Garamond (for Editorial headings) & Manrope (for sans-serif UI elements) -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS with custom configuration -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1f1b12",
+                        "surface": "#fff8f1",
+                        "secondary-container": "#e7e2d9",
+                        "on-tertiary-fixed": "#261a00",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#fcf2e3",
+                        "tertiary": "#000000",
+                        "tertiary-fixed-dim": "#ebc166",
+                        "surface-container-high": "#f0e7d8",
+                        "inverse-primary": "#c9c6c5",
+                        "on-primary-container": "#858383",
+                        "on-primary-fixed-variant": "#474646",
+                        "on-secondary-container": "#67645d",
+                        "error": "#ba1a1a",
+                        "secondary": "#615e57",
+                        "surface-variant": "#ebe1d2",
+                        "surface-tint": "#5f5e5e",
+                        "outline": "#747878",
+                        "on-surface-variant": "#444748",
+                        "surface-container-highest": "#ebe1d2",
+                        "surface-container": "#f6eddd",
+                        "inverse-surface": "#343026",
+                        "on-background": "#1f1b12",
+                        "surface-bright": "#fff8f1",
+                        "on-secondary-fixed-variant": "#494740",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-secondary-fixed": "#1d1c16",
+                        "secondary-fixed-dim": "#cac6be",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#5b4300",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#261a00",
+                        "on-primary-fixed": "#1c1b1b",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "primary": "#000000",
+                        "on-tertiary-container": "#a27f2b",
+                        "outline-variant": "#c4c7c7",
+                        "primary-fixed": "#e5e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#f9f0e0",
+                        "surface-dim": "#e2d9ca",
+                        "background": "#fff8f1",
+                        "tertiary-fixed": "#ffdf9e",
+                        "secondary-fixed": "#e7e2d9",
+                        "primary-container": "#1c1b1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xxl": "64px",
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "80px",
+                        "xl": "40px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["EB Garamond"],
+                        "display-lg": ["EB Garamond"],
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "title-sm": ["Manrope"],
+                        "body-sm": ["Manrope"],
+                        "headline-md": ["EB Garamond"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "title-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Smooth scrolling */
+        html { scroll-behavior: smooth; }
+        
+        /* Hide scrollbar for clean editorial look */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        /* Custom image hover transition */
+        .img-hover-fade { transition: opacity 0.6s ease-in-out; }
+        .group:hover .img-hover-fade.primary-img { opacity: 0; }
+        .group:hover .img-hover-fade.secondary-img { opacity: 1; }
+        
+        /* Ensures tap highlights don't break the clean aesthetic on mobile */
+        * { -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen selection:bg-tertiary-fixed-dim selection:text-on-tertiary-fixed pt-16 pb-[80px] md:pb-0 overflow-x-hidden">
+<!-- JSON Component: TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 dark:bg-surface/90 backdrop-blur-md border-b border-surface-variant dark:border-on-surface-variant/10 transition-all duration-300 ease-in-out hidden md:flex">
+<div class="flex justify-between items-center px-margin-mobile h-16 w-full max-w-[1440px] mx-auto md:px-margin-desktop">
+<button aria-label="Menu" class="text-primary dark:text-on-surface hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<div class="flex items-center space-x-sm">
+<!-- Using logo image as requested -->
+<span class="font-display-lg-mobile text-display-lg-mobile tracking-widest uppercase" style="font-family: &quot;EB Garamond&quot;, serif; color: rgb(201, 162, 75); letter-spacing: 0.15em;">ITHIHASA</span>
+<h1 class="font-display-lg-mobile text-display-lg-mobile tracking-tighter text-on-surface dark:text-surface hidden">ITHIHASA</h1>
+</div>
+<button aria-label="Favorites" class="text-primary dark:text-on-surface hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">favorite</span>
+</button>
+</div>
+</header>
+<!-- Mobile Header (Visible only on md:hidden) -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md border-b border-surface-variant md:hidden flex justify-between items-center px-margin-mobile h-16">
+<button aria-label="Menu" class="text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-display-lg-mobile text-[24px] tracking-widest uppercase" style="font-family: &quot;EB Garamond&quot;, serif; color: rgb(201, 162, 75); letter-spacing: 0.15em;">ITHIHASA</span>
+<button aria-label="Favorites" class="text-primary">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</header>
+<main>
+<!-- Hero Section -->
+<section class="relative w-full h-[85vh] md:h-screen flex items-end justify-center pb-xxl px-margin-mobile md:px-margin-desktop bg-surface-container-low overflow-hidden">
+<!-- Background Image -->
+<div class="absolute inset-0 w-full h-full">
+<div class="absolute inset-0 bg-black/20 z-10"></div> <!-- Subtle overlay for text legibility -->
+<img class="w-full h-full object-cover object-center" data-alt="A striking editorial fashion photograph showcasing premium heritage clothing on a fashion model. The model is positioned against a grand architectural backdrop featuring elegant arches and stonework. Soft, natural sunlight highlights the intricate textures of the luxurious fabric. The lighting is cinematic, casting dramatic yet soft shadows. The overall aesthetic is 'Quiet Luxury', minimalist, sophisticated, and high-end fashion editorial style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTgIsQSeZgL6gPr5BzbOn4zPfVYwYI8CdOKex2qP8jZEajyFSyn9E3qrE2imYZGlGb4NmDo29iwPzMLfZPQbbePqynIejoL_kRw7EVVqNo-rHTDZPRMOyjxIwi9vOoaaNrla2H0A399UbOS5as4yisOqALtlv5KaV0aAao5NtRd-gpCnz0WFUXBmVM-wyEp8JFLdtBCJo8wndas2kZs8ySpSWqs6j_epZ2vCkEVURyANnADQscsGnKRQ">
+</div>
+<!-- Hero Content -->
+<div class="relative z-20 text-center w-full max-w-4xl mx-auto text-surface">
+<h2 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg mb-sm uppercase tracking-widest" style="font-family: 'EB Garamond', serif;">The Heritage Collection</h2>
+<p class="font-body-md text-surface-container-low mb-lg tracking-wide">Wear Your Legacy.</p>
+<button class="bg-primary text-surface font-label-caps text-label-caps px-lg py-md rounded-none tracking-widest hover:bg-surface hover:text-primary transition-colors duration-300 border border-primary">
+                    EXPLORE COLLECTION
+                </button>
+</div>
+</section>
+<!-- Spacer -->
+<div class="h-xxl"></div>
+<!-- Section: Timeless Silhouettes -->
+<section class="px-margin-mobile md:px-margin-desktop max-w-[1440px] mx-auto">
+<div class="flex flex-col md:flex-row justify-between items-end mb-xl">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Timeless Silhouettes</h3>
+<p class="font-body-sm text-on-surface-variant max-w-md">Garments designed to transcend seasons, crafted with uncompromising attention to detail and heritage techniques.</p>
+</div>
+<a class="hidden md:inline-flex items-center text-primary font-label-caps text-label-caps hover:opacity-70 transition-opacity mt-md md:mt-0 group" href="#">
+                    VIEW ALL <span class="material-symbols-outlined ml-xs text-[16px] group-hover:translate-x-1 transition-transform">arrow_right_alt</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter md:gap-lg">
+<!-- Product Card 1 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-[3/4] bg-surface-container overflow-hidden mb-sm">
+<img class="absolute inset-0 w-full h-full object-cover img-hover-fade primary-img z-10" data-alt="A studio photograph of a minimalist, high-end tailored coat in a neutral parchment tone. The coat hangs perfectly straight, emphasizing its clean lines and structured silhouette. The lighting is soft and even, highlighting the premium texture of the wool blend fabric. The background is a seamless, warm off-white surface, creating a pure and luxurious aesthetic without any distractions." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNCMcaDLvxlPQJRUSko-v1OrloyVguM84SprYzl7dTY-DR83ZBBO1BnCut4BvL5p3XqP3b1bKSWAmLW-S5m2F5I_nNIrYhmJR5EF0-n886joFJcakmgL8la0qCJZMyobZt_4BxSngH7EJfQc-bNJnl5RYxjmDFdE4Jqrb43vo7hC8_lOU8h9GAloddN46UXWZqMfMv4xK9-AV5sIqhWqFewjx068B1QSc284hxNziSMxE64kwS0u4duw">
+<img class="absolute inset-0 w-full h-full object-cover img-hover-fade secondary-img z-0" data-alt="A detail shot of the minimalist tailored coat, focusing tightly on the exquisite stitching around the collar and a single, meticulously crafted horn button. The macro perspective reveals the weave of the premium fabric. The lighting creates a subtle play of highlights and shadows to emphasize the material quality and craftsmanship indicative of high-end heritage fashion." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUkIiwr4loZU2fPMhmQwIDWX_dQxPjDFthp7typ9DqOk4TdXCO2_p-6qSFk7uAji2EhTpWJuhrZEBiangQ8pjBg8UIUg6xNIlwIAlaE7znjHezhJ7hIeoPl8S10S7q0YpqsQHyTPZ1_TOC5mQNxxbs-lcLGVVSGKfmGR0d5CoAzLkUUqBY2lGMpp6bbWTY3RnAIDnJcCD6CAJmpmUkpLke4sl9CfiS8uZK99gJFQQ-EPRiD63ev6HwHg">
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-display-lg-mobile text-[18px] leading-tight text-on-surface">The Atelier Overcoat</h4>
+<p class="font-body-sm text-on-surface-variant mt-xs">Merino Wool Blend</p>
+</div>
+<span class="font-body-md text-on-surface">$895</span>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="group cursor-pointer">
+<div class="relative aspect-[3/4] bg-surface-container overflow-hidden mb-sm">
+<img class="absolute inset-0 w-full h-full object-cover img-hover-fade primary-img z-10" data-alt="A striking photograph of a flowing silk blouse in a deep, rich charcoal ink color. The garment is styled dynamically, catching a gentle breeze to show its movement and light, ethereal drape. The studio setting is minimalist, with a soft, parchment-colored background providing high contrast against the dark fabric. The lighting emphasizes the subtle sheen and luxurious nature of the silk." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXnIEjBuC2yVEpvd6pUaD9l-WmFRyHXF433Gdp5iRpkkUVqnRlUC6Hi9XvXMa_6cyzV-FIL_1NVVPbZZDf5ubWXnRLJ-XhD5pKdXocpNYEUgt_8Wuz_8xBgBD7oD3wXHJrWDnq69Iju_w6c_DIjB1zM1JMaAREde__cv55J680w1bGrCZPEscGG0sLETGEeegDF2EoYSNVEiLPiuF3QkDuKMBLHgZFPehMNHH0ktd0Ld2zRE1KS4Zaew">
+<img class="absolute inset-0 w-full h-full object-cover img-hover-fade secondary-img z-0" data-alt="A lifestyle shot of a model wearing the charcoal ink silk blouse, captured in a sunlit, elegant interior setting with minimalist decor. The model looks thoughtfully away from the camera, embodying a serene and sophisticated demeanor. The soft, natural light filters through sheer curtains, enhancing the 'Quiet Luxury' mood and the garment's fluid silhouette in a real-world environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWNsV0hSbtMq_lUsEibtoHdhETdmVzhXY58chAckee4dd5zMkPwhnjc0GyvOwO5ngfmTBeOq2ZSw3vWh3h8YSUneuob0THjWFvZlY0aw9jG6xd6YEoRGhYJ7EXVOkhDCfSgrt1daSIqj0eMsWRzyWlLO52GsbUCW2pyid-yDjhUq1NM6r9ivOHoLRoaUUgSZL20laGag9LLhluhYA_dXmdGstaBNZru7BltdJXoEj_u2TkdUAHz6Yn8g">
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-display-lg-mobile text-[18px] leading-tight text-on-surface">Silk Drape Blouse</h4>
+<p class="font-body-sm text-on-surface-variant mt-xs">100% Mulberry Silk</p>
+</div>
+<span class="font-body-md text-on-surface">$345</span>
+</div>
+</div>
+<!-- Product Card 3 (Hidden on mobile for better flow) -->
+<div class="group cursor-pointer hidden lg:block">
+<div class="relative aspect-[3/4] bg-surface-container overflow-hidden mb-sm">
+<img class="absolute inset-0 w-full h-full object-cover img-hover-fade primary-img z-10" data-alt="A detailed flat lay of high-waisted, wide-leg trousers in a soft, sandy beige tone. The trousers are perfectly pressed with a sharp front crease, showcasing their structured tailoring. The composition is clean and geometric, arranged on a slightly lighter parchment-colored surface. The lighting is diffused, emphasizing the fine twill weave of the fabric and the clean finish of the waistband." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoABPI_JQxsUUxq_2jsx3SK7KE9YkhtI44ZX_hT_HBAhBu6DfUl_HAxXqpTYLwEQ_WPOqTB9zJWX6c-N7em4YVCq5WtHvW_bzi-OLCAdiK5peJYFLF3mq2od5yElkbtmjw4L8AXZZO-DTWwsS1KPoTBx08JndAC5DQMBR4_PmHBBK3hkXS_YjacOT3Hvg64nhyhNfZKP5QMEP1q8nXfGnNVBQfuUeOrgOa1bx96RZzHyBSyz7nhKIfxg">
+<img class="absolute inset-0 w-full h-full object-cover img-hover-fade secondary-img z-0" data-alt="A close-up shot focusing on the drape of the wide-leg trousers as they fall over a pair of minimalist leather loafers. The image captures the fluid movement of the fabric and the elegant break over the shoe. The setting is subtle, perhaps a polished concrete floor, emphasizing the interaction between the garment's soft texture and the hard surface, portraying a refined, modern aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiDPtrVcP3Xodjz105hXpYPFk1XDdgfcDC7W-X5Ybh-cCRsSfP_nFnJdBSd2PmqaF81wv3rf6QgwXDbgfwVwufO9S7t2NJnwHSuQcKszSET-ELP0Xcexmt7jg2gJ02Wu1kL3Mb4Eif1NJOqCsqOZsXVqWTKI1y16SjACN0CVBlW1BGoaWUkih9wI9T04Jxmzg0Y9EQvDbW3ngaTIC4bnYqn7_WKNJDHUE3RystoMNz2p8SIb2Ddkp-AQ">
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-display-lg-mobile text-[18px] leading-tight text-on-surface">Structured Wide-Leg Trouser</h4>
+<p class="font-body-sm text-on-surface-variant mt-xs">Cotton Twill</p>
+</div>
+<span class="font-body-md text-on-surface">$420</span>
+</div>
+</div>
+</div>
+<div class="mt-lg md:hidden flex justify-center">
+<a class="inline-flex items-center text-primary font-label-caps text-label-caps px-lg py-md border border-outline hover:bg-surface-container transition-colors" href="#">
+                    VIEW ALL SILHOUETTES
+                </a>
+</div>
+</section>
+<!-- Spacer -->
+<div class="h-xxl"></div>
+</main>
+<!-- JSON Component: BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 h-16 pb-safe bg-surface/90 dark:bg-surface/90 backdrop-blur-md border-t border-surface-variant dark:border-on-surface-variant/10 md:hidden block">
+<div class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile h-16">
+<!-- Active State -->
+<button aria-label="home" class="relative flex flex-col items-center justify-center text-primary dark:text-tertiary-fixed-dim after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-tertiary-fixed-dim after:rounded-full active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+</button>
+<!-- Inactive States -->
+<button aria-label="storefront" class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">storefront</span>
+</button>
+<button aria-label="search" class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">search</span>
+</button>
+<button aria-label="shopping_bag" class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span>
+</button>
+<button aria-label="person" class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">person</span>
+</button>
+</div>
+</nav>
+
+
+</body></html>

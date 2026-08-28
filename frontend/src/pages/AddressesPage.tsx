@@ -1,0 +1,412 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Plus, MapPin, Edit2, Trash2 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import {
+  fetchAddresses,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  type Address,
+  type AddressInput,
+} from '../api/addresses.js';
+
+export const AddressesPage: React.FC = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+
+  const [formData, setFormData] = useState<AddressInput>({
+    name: '',
+    phone: '',
+    line1: '',
+    line2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: 'India',
+    isDefaultShipping: true,
+  });
+
+  const { data: addresses = [], isLoading } = useQuery<Address[]>({
+    queryKey: ['addresses'],
+    queryFn: fetchAddresses,
+  });
+
+  const showToast = (msg: string) => {
+    toast.success(msg);
+  };
+
+  const createMutation = useMutation({
+    mutationFn: createAddress,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      setIsModalOpen(false);
+      showToast('Address added successfully');
+    },
+    onError: (err: any) => {
+      showToast(err.message || 'Failed to save address');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<AddressInput> }) =>
+      updateAddress(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      setIsModalOpen(false);
+      setEditingAddress(null);
+      showToast('Address updated successfully');
+    },
+    onError: (err: any) => {
+      showToast(err.message || 'Failed to update address');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteAddress,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      showToast('Address removed');
+    },
+  });
+
+  const openAddModal = () => {
+    setEditingAddress(null);
+    setFormData({
+      name: '',
+      phone: '',
+      line1: '',
+      line2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: 'India',
+      isDefaultShipping: addresses.length === 0,
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (addr: Address) => {
+    setEditingAddress(addr);
+    setFormData({
+      name: addr.name,
+      phone: addr.phone,
+      line1: addr.line1,
+      line2: addr.line2 || '',
+      city: addr.city,
+      state: addr.state,
+      postalCode: addr.postalCode,
+      country: addr.country,
+      isDefaultShipping: addr.isDefaultShipping,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingAddress) {
+      updateMutation.mutate({ id: editingAddress.id, data: formData });
+    } else {
+      createMutation.mutate(formData);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors pb-24 md:pb-16 relative">
+      {/* Top Header */}
+      <header className="sticky top-0 z-40 bg-[var(--bg-primary)]/90 backdrop-blur-xl border-b border-[var(--border-color)] flex justify-between items-center px-5 md:px-20 h-16 transition-colors">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 -ml-2 text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors"
+          aria-label="Go Back"
+        >
+          <ArrowLeft size={22} />
+        </button>
+
+        <h1
+          className="text-[20px] md:text-[24px] font-normal tracking-[0.15em] uppercase text-[var(--gold)]"
+          style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+        >
+          Saved Addresses
+        </h1>
+
+        <button
+          onClick={openAddModal}
+          className="p-2 text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors"
+          aria-label="Add New Address"
+        >
+          <Plus size={22} />
+        </button>
+      </header>
+
+      {/* Content Canvas */}
+      <main className="max-w-[800px] mx-auto px-5 md:px-8 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <p className="body-md text-[14px] text-[var(--text-secondary)]">
+              Manage your delivery locations for seamless atelier checkouts.
+            </p>
+          </div>
+          <button
+            onClick={openAddModal}
+            className="hidden sm:inline-flex items-center gap-2 border border-[var(--text-primary)] px-4 py-2 text-[11px] label-caps tracking-widest uppercase hover:bg-[var(--gold)] hover:border-[var(--gold)] hover:text-[#0A0A0A] transition-colors"
+          >
+            <Plus size={14} />
+            <span>Add Address</span>
+          </button>
+        </div>
+
+        {/* Addresses List */}
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-32 bg-[var(--bg-card)] border border-[var(--border-color)] animate-pulse rounded-lg"
+              />
+            ))}
+          </div>
+        ) : addresses.length === 0 ? (
+          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-10 text-center flex flex-col items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center text-[var(--text-secondary)]">
+              <MapPin size={24} />
+            </div>
+            <div>
+              <h2
+                className="text-[22px] font-normal text-[var(--text-primary)] mb-1"
+                style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+              >
+                No addresses saved yet
+              </h2>
+              <p className="body-sm text-[13px] text-[var(--text-secondary)]">
+                Add your shipping address for effortless purchases.
+              </p>
+            </div>
+            <button
+              onClick={openAddModal}
+              className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-6 py-3 label-caps text-[11px] uppercase tracking-[0.15em] hover:bg-[var(--gold)] hover:text-[#0A0A0A] transition-colors font-semibold"
+            >
+              Add First Address
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {addresses.map((addr) => (
+              <div
+                key={addr.id}
+                className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-5 md:p-6 transition-all hover:border-[var(--gold)] flex flex-col sm:flex-row justify-between sm:items-start gap-4"
+              >
+                <div className="space-y-1.5 flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-[16px] font-semibold text-[var(--text-primary)] tracking-wide">
+                      {addr.name}
+                    </h3>
+                    {addr.isDefaultShipping && (
+                      <span className="label-caps text-[9px] uppercase tracking-widest bg-[var(--gold)]/15 text-[var(--gold)] px-2.5 py-0.5 rounded border border-[var(--gold)]/30 font-semibold">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                  <p className="body-sm text-[13px] text-[var(--text-secondary)] leading-relaxed">
+                    {addr.line1}
+                    {addr.line2 ? `, ${addr.line2}` : ''}
+                    <br />
+                    {addr.city}, {addr.state} {addr.postalCode}
+                    <br />
+                    {addr.country}
+                  </p>
+                  <p className="body-sm text-[12px] text-[var(--text-secondary)]/80">
+                    Phone: {addr.phone}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-start pt-2 sm:pt-0">
+                  <button
+                    onClick={() => openEditModal(addr)}
+                    className="p-2 text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors border border-[var(--border-color)] hover:border-[var(--gold)] rounded"
+                    aria-label="Edit Address"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => deleteMutation.mutate(addr.id)}
+                    className="p-2 text-[var(--text-secondary)] hover:text-[var(--error)] transition-colors border border-[var(--border-color)] hover:border-[var(--error)] rounded cursor-pointer"
+                    aria-label="Delete Address"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* Add / Edit Address Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl w-full max-w-lg p-6 md:p-8 max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95">
+            <h2
+              className="text-[24px] font-normal text-[var(--text-primary)] mb-5"
+              style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+            >
+              {editingAddress ? 'Edit Address' : 'Add New Address'}
+            </h2>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Eleanor Vance"
+                  className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
+                  Mobile Number *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                  className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
+                  Street Address *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.line1}
+                  onChange={(e) => setFormData({ ...formData, line1: e.target.value })}
+                  placeholder="124 Atelier Avenue"
+                  className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
+                  Apartment, Suite, Unit (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.line2 || ''}
+                  onChange={(e) => setFormData({ ...formData, line2: e.target.value })}
+                  placeholder="Suite 4B"
+                  className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    placeholder="Mumbai"
+                    className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
+                    State *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    placeholder="Maharashtra"
+                    className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
+                    PIN / Postal Code *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.postalCode}
+                    onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                    placeholder="400001"
+                    className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    disabled
+                    value={formData.country || 'India'}
+                    className="w-full bg-transparent border-b border-[var(--border-color)] py-1.5 text-[15px] opacity-70 cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.isDefaultShipping}
+                    onChange={(e) =>
+                      setFormData({ ...formData, isDefaultShipping: e.target.checked })
+                    }
+                    className="w-4 h-4 accent-[var(--gold)]"
+                  />
+                  <span className="body-sm text-[13px] text-[var(--text-primary)]">
+                    Set as default shipping address
+                  </span>
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6 border-t border-[var(--border-color)]">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-5 py-2.5 label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                  className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-6 py-2.5 label-caps text-[11px] uppercase tracking-[0.15em] hover:bg-[var(--gold)] hover:text-[#0A0A0A] transition-colors font-semibold"
+                >
+                  {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save Address'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

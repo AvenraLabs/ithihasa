@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/jpeg" href="/ithihasa_logo.jpeg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#FFF8F1" />
+    <meta name="description" content="Ithihasa — Wear Your Legacy. Premium royal heritage clothing, silk kurtas, bandhgalas, and pure pashminas handcrafted in India." />
+    <title>ITHIHASA — Wear Your Legacy</title>
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('ithihasa_theme');
+          var theme = (saved === 'dark' || saved === 'light')
+            ? saved
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+          } else {
+            document.documentElement.classList.add('light');
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased selection:bg-[var(--gold)] selection:text-[#0A0A0A]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

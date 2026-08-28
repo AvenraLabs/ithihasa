@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sustainability - Ithihasa</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-dim": "#e2d9ca",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#ebe1d2",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#261a00",
+                        "outline-variant": "#c4c7c7",
+                        "surface-tint": "#5f5e5e",
+                        "on-secondary-fixed-variant": "#494740",
+                        "on-secondary-container": "#67645d",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#fff8f1",
+                        "tertiary": "#000000",
+                        "on-tertiary-fixed-variant": "#5b4300",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#1d1c16",
+                        "tertiary-fixed": "#ffdf9e",
+                        "primary": "#000000",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#ebc166",
+                        "background": "#fff8f1",
+                        "surface-variant": "#ebe1d2",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#cac6be",
+                        "on-primary-container": "#858383",
+                        "inverse-primary": "#c9c6c5",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-high": "#f0e7d8",
+                        "outline": "#747878",
+                        "surface-container": "#f6eddd",
+                        "on-surface": "#1f1b12",
+                        "on-tertiary-container": "#a27f2b",
+                        "secondary-fixed": "#e7e2d9",
+                        "secondary-container": "#e7e2d9",
+                        "secondary": "#615e57",
+                        "on-tertiary-fixed": "#261a00",
+                        "on-background": "#1f1b12",
+                        "surface-container-low": "#fcf2e3",
+                        "primary-fixed": "#e5e2e1",
+                        "surface": "#fff8f1",
+                        "on-primary-fixed-variant": "#474646",
+                        "on-surface-variant": "#444748",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#1c1b1b",
+                        "inverse-on-surface": "#f9f0e0",
+                        "inverse-surface": "#343026"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "margin-desktop": "80px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "unit": "4px",
+                        "margin-mobile": "20px",
+                        "xxl": "64px",
+                        "lg": "24px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["EB Garamond"],
+                        "body-md": ["Manrope"],
+                        "headline-md": ["EB Garamond"],
+                        "display-lg": ["EB Garamond"],
+                        "label-caps": ["Manrope"],
+                        "title-sm": ["Manrope"],
+                        "body-sm": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "title-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Smooth scrolling */
+        html { scroll-behavior: smooth; }
+        
+        /* Minimalist scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2d9ca; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #cac6be; }
+        
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            background-color: #c4c7c7; /* outline-variant */
+            z-index: -1;
+        }
+        
+        @media (max-width: 768px) {
+            .timeline-line::before {
+                left: 20px;
+                transform: none;
+            }
+            .timeline-item-left, .timeline-item-right {
+                width: 100%;
+                padding-left: 48px;
+                text-align: left;
+            }
+            .timeline-dot {
+                left: 14px !important;
+                transform: none !important;
+            }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased selection:bg-surface-variant selection:text-primary">
+<!-- TopAppBar (Desktop) -->
+<header class="hidden md:flex fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md border-b border-surface-variant flex justify-between items-center px-margin-desktop h-16 duration-300 ease-in-out">
+<button class="hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md tracking-[0.2em] text-primary">ITHIHASA</h1>
+<button class="hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary">shopping_bag</span>
+</button>
+</header>
+<!-- TopAppBar (Mobile) -->
+<header class="flex md:hidden fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md border-b border-surface-variant flex justify-between items-center px-margin-mobile h-16 duration-300 ease-in-out">
+<button class="hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md tracking-[0.2em] text-primary">ITHIHASA</h1>
+<button class="hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary">shopping_bag</span>
+</button>
+</header>
+<main class="pt-24 pb-xxl px-margin-mobile md:px-margin-desktop max-w-[1440px] mx-auto">
+<!-- Hero Section -->
+<section class="mb-xxl text-center max-w-3xl mx-auto">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-md">Wear Your Legacy Responsibly</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg">At Ithihasa, true luxury lies in preservation—of craft, of community, and of the environment. Our commitment to quiet luxury extends beyond the garment to the very soil from which it springs.</p>
+<a class="inline-flex items-center gap-sm px-lg py-sm bg-primary text-on-primary font-label-caps text-label-caps tracking-widest hover:bg-surface-tint transition-colors" href="#">
+                DOWNLOAD SUSTAINABILITY REPORT
+                <span class="material-symbols-outlined text-[16px]">download</span>
+</a>
+</section>
+<!-- Bento Grid: Initiatives -->
+<section class="mb-xxl">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-md md:gap-lg auto-rows-[300px] md:auto-rows-[400px]">
+<!-- Ethical Sourcing (Large) -->
+<div class="md:col-span-8 relative overflow-hidden group">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A detailed wide shot of an Indian weaver's hands working meticulously on a traditional wooden loom. The lighting is soft and natural, streaming through a nearby window, illuminating the rich texture of raw silk threads. The aesthetic is documentary-style, highlighting craftsmanship and heritage with a warm, earthy palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfuAOnPCqC8BXeZn57yr9eiUKBdl4u3WIp81uO-yo3Z8Cof9YExTNdCx26LKQV3mroFg6i7O3cXvyDYc4UgWBhQrz3dpc__Wo22wYOJ0pOqqhqgSLgkLd-HTCKL4v4Zj0VesOcGUPq5_3Ut0JT-E1b15oYZO2iaG9Ho4cyt16ZQsIdG1bIT_X4Xgf-WMIMpDUgMq_glHSZDvTUugwwolAJvrPDVEJS5mXcwTc3Lnb5JLDCeQmnuRpayQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-lg w-full">
+<h2 class="font-headline-md text-headline-md text-surface mb-xs">Ethical Sourcing</h2>
+<p class="font-body-sm text-body-sm text-surface-container-high max-w-md">Ensuring fair wages and dignified working conditions for our master weavers across rural India.</p>
+</div>
+</div>
+<!-- Zero-Waste (Square) -->
+<div class="md:col-span-4 bg-surface-container-high p-lg flex flex-col justify-between border border-surface-variant">
+<div class="flex justify-end">
+<span class="material-symbols-outlined text-primary text-3xl">recycling</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary mb-xs">Zero-Waste Initiatives</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Every scrap of precious silk is repurposed into limited-edition accessories or textile art, ensuring nothing returns to the earth prematurely.</p>
+</div>
+</div>
+<!-- Eco-Friendly Dyes (Square) -->
+<div class="md:col-span-4 bg-surface-container-low p-lg flex flex-col justify-between border border-surface-variant">
+<div class="flex justify-end">
+<span class="material-symbols-outlined text-primary text-3xl">eco</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary mb-xs">Eco-Friendly Dyes</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Transitioning to 100% natural and azo-free dyes, protecting our waterways and ensuring skin safety.</p>
+</div>
+</div>
+<!-- Image block (Large) -->
+<div class="md:col-span-8 relative overflow-hidden group border border-surface-variant">
+<img class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A close-up shot of natural dye materials like indigo leaves, madder root, and marigold flowers arranged elegantly on a textured stone surface. The lighting is diffused, highlighting the rich, natural colors of the raw materials. The style is minimalist and editorial, emphasizing the organic origins of the colors used in heritage textiles." src="https://lh3.googleusercontent.com/aida-public/AB6AXuABWSNU5HRkGUrZWjeT5HVNVyNXYalmCjRT7O63MhAtIkvqSAkDWK4iQfX-vxFqRY-ChEGDVJuwzv1mUoAUucBChkamraA6cbFb8_zKa8K2YiFS_BlfHUn_x_BWfkFZ8D0PpQA-610NUxTCHG17sDg6PY1SS7x6TeFRtRO9UKYtWgV6Ij4bYWRwF0VIKk9C6z4_Gwvv8UT-3CFTGcEuEQe9g2HOj0UD3EZbF9xe38RhqmfN_135KwuGWQ"/>
+<div class="absolute inset-0 bg-primary/10"></div>
+</div>
+</div>
+</section>
+<!-- Visual Timeline -->
+<section class="mb-xxl pt-xl border-t border-surface-variant">
+<div class="text-center mb-xl">
+<h2 class="font-headline-md text-headline-md text-primary">Our Green Journey</h2>
+</div>
+<div class="relative timeline-line max-w-4xl mx-auto py-md">
+<!-- 2018 -->
+<div class="relative flex items-center justify-between mb-xl w-full">
+<div class="timeline-item-left w-5/12 text-right pr-lg md:pr-xl">
+<h3 class="font-title-sm text-title-sm text-primary">2018: The Foundation</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Established direct-to-weaver partnerships, eliminating middlemen and ensuring fair trade practices.</p>
+</div>
+<div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-surface border-2 border-primary rounded-full timeline-dot z-10"></div>
+<div class="w-5/12 hidden md:block"></div>
+</div>
+<!-- 2020 -->
+<div class="relative flex items-center justify-between mb-xl w-full">
+<div class="w-5/12 hidden md:block"></div>
+<div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-surface border-2 border-primary rounded-full timeline-dot z-10"></div>
+<div class="timeline-item-right w-5/12 text-left pl-lg md:pl-xl">
+<h3 class="font-title-sm text-title-sm text-primary">2020: Zero-Waste Protocol</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Launched the 'Atelier Scraps' initiative, turning offcuts into the coveted Heritage Patchwork collection.</p>
+</div>
+</div>
+<!-- 2023 -->
+<div class="relative flex items-center justify-between w-full">
+<div class="timeline-item-left w-5/12 text-right pr-lg md:pr-xl">
+<h3 class="font-title-sm text-title-sm text-primary">2023: Natural Dye Transition</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Achieved 80% reliance on botanical and non-toxic dyes across our core silk collections.</p>
+</div>
+<div class="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-primary border-2 border-primary rounded-full timeline-dot z-10"></div>
+<div class="w-5/12 hidden md:block"></div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 h-16 bg-surface/90 backdrop-blur-md border-t border-surface-variant flex justify-around items-center px-margin-mobile pb-safe">
+<button class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-on-tertiary-container after:rounded-full scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined fill">search</span> <!-- Active state for Explore/Sustainability -->
+</button>
+<button class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">person</span>
+</button>
+</nav>
+</body></html>

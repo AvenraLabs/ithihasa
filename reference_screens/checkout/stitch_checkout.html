@@ -1,0 +1,330 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport">
+<title>ITHIHASA - Checkout</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#fcf2e3",
+                        "primary-container": "#1c1b1b",
+                        "primary-fixed": "#e5e2e1",
+                        "on-surface-variant": "#444748",
+                        "on-tertiary-container": "#a27f2b",
+                        "surface-container-highest": "#ebe1d2",
+                        "inverse-surface": "#343026",
+                        "surface-variant": "#ebe1d2",
+                        "background": "#fff8f1",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed": "#1d1c16",
+                        "surface-tint": "#5f5e5e",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-dim": "#e2d9ca",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#000000",
+                        "inverse-on-surface": "#f9f0e0",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#67645d",
+                        "on-surface": "#1f1b12",
+                        "outline": "#747878",
+                        "primary": "#000000",
+                        "secondary-fixed": "#e7e2d9",
+                        "tertiary-fixed-dim": "#ebc166",
+                        "on-secondary-fixed-variant": "#494740",
+                        "on-background": "#1f1b12",
+                        "tertiary-container": "#261a00",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#858383",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#f0e7d8",
+                        "surface-bright": "#fff8f1",
+                        "on-tertiary-fixed-variant": "#5b4300",
+                        "secondary-container": "#e7e2d9",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#fff8f1",
+                        "secondary-fixed-dim": "#cac6be",
+                        "inverse-primary": "#c9c6c5",
+                        "on-primary-fixed-variant": "#474646",
+                        "on-tertiary-fixed": "#261a00",
+                        "surface-container": "#f6eddd",
+                        "outline-variant": "#c4c7c7",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#ffdf9e",
+                        "secondary": "#615e57"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "margin-desktop": "80px",
+                        "xl": "40px",
+                        "xs": "4px",
+                        "xxl": "64px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Manrope"],
+                        "display-lg-mobile": ["EB Garamond"],
+                        "display-lg": ["EB Garamond"],
+                        "body-sm": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "title-sm": ["Manrope"],
+                        "headline-md": ["EB Garamond"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "title-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom Input Styles */
+        .input-field {
+            border: none;
+            border-bottom: 1px solid theme('colors.surface-dim');
+            background-color: transparent;
+            padding: theme('spacing.sm') 0;
+            border-radius: 0;
+            color: theme('colors.on-surface');
+            font-family: theme('fontFamily.body-md');
+            font-size: theme('fontSize.body-md');
+            transition: border-color 0.2s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            box-shadow: none;
+            border-bottom: 1px solid theme('colors.tertiary');
+        }
+        .input-label {
+            font-family: theme('fontFamily.label-caps');
+            font-size: theme('fontSize.label-caps');
+            color: theme('colors.on-surface-variant');
+            transition: all 0.2s ease;
+        }
+        .input-group:focus-within .input-label {
+            color: theme('colors.tertiary');
+        }
+        
+        /* Hide scrollbar for clean look */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        /* Safe Area Utilities */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .pt-safe { padding-top: env(safe-area-inset-top); }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased pt-safe selection:bg-surface-dim selection:text-tertiary">
+<!-- Top Navigation (Transactional, Minimal) -->
+<header class="fixed top-0 w-full z-50 bg-background/90 backdrop-blur-md border-b border-surface-variant flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 pt-safe">
+<button aria-label="Go back" class="flex items-center text-on-surface hover:opacity-70 transition-opacity" onclick="history.back()">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<div class="h-8 flex items-center justify-center"><span class="font-display-lg text-display-lg-mobile md:text-display-lg uppercase tracking-[0.2em]" style="color: rgb(201, 162, 75); font-family: &quot;EB Garamond&quot;, serif;">ITHIHASA</span></div>
+<div class="w-6"></div> <!-- Spacer for flex balance -->
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-24 pb-32 md:pt-32 px-margin-mobile md:px-margin-desktop max-w-screen-xl mx-auto w-full grid grid-cols-1 md:grid-cols-12 gap-xl md:gap-margin-desktop">
+<!-- Checkout Steps (Left Column on Desktop) -->
+<div class="md:col-span-7 flex flex-col gap-xxl">
+<div class="mb-md">
+<h1 class="font-headline-md text-headline-md md:font-display-lg md:text-display-lg mb-sm">Checkout</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Please complete the details below to finalize your order.</p>
+</div>
+<!-- Step 1: Shipping Address -->
+<section class="flex flex-col gap-lg">
+<div class="flex items-center gap-sm mb-xs">
+<span class="font-label-caps text-label-caps bg-surface-dim px-2 py-1 text-tertiary rounded-xs">01</span>
+<h2 class="font-title-sm text-title-sm uppercase tracking-widest text-on-surface">Shipping Address</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="input-group flex flex-col">
+<label class="input-label mb-1">First Name</label>
+<input class="input-field" placeholder="Jane" required="" type="text">
+</div>
+<div class="input-group flex flex-col">
+<label class="input-label mb-1">Last Name</label>
+<input class="input-field" placeholder="Doe" required="" type="text">
+</div>
+<div class="input-group flex flex-col md:col-span-2">
+<label class="input-label mb-1">Address</label>
+<input class="input-field" placeholder="123 Atelier Way" required="" type="text">
+</div>
+<div class="input-group flex flex-col md:col-span-2">
+<label class="input-label mb-1">Apartment, suite, etc. (optional)</label>
+<input class="input-field" placeholder="Apt 4B" type="text">
+</div>
+<div class="input-group flex flex-col">
+<label class="input-label mb-1">City</label>
+<input class="input-field" placeholder="New York" required="" type="text">
+</div>
+<div class="grid grid-cols-2 gap-lg">
+<div class="input-group flex flex-col">
+<label class="input-label mb-1">State</label>
+<input class="input-field" placeholder="NY" required="" type="text">
+</div>
+<div class="input-group flex flex-col">
+<label class="input-label mb-1">ZIP Code</label>
+<input class="input-field" placeholder="10001" required="" type="text">
+</div>
+</div>
+</div>
+</section>
+<!-- Step 2: Shipping Method -->
+<section class="flex flex-col gap-lg border-t border-surface-variant pt-lg">
+<div class="flex items-center gap-sm mb-xs">
+<span class="font-label-caps text-label-caps bg-surface-dim px-2 py-1 text-tertiary rounded-xs">02</span>
+<h2 class="font-title-sm text-title-sm uppercase tracking-widest text-on-surface">Shipping Method</h2>
+</div>
+<div class="flex flex-col gap-sm">
+<label class="flex items-center justify-between p-md border border-surface-dim hover:border-tertiary cursor-pointer transition-colors">
+<div class="flex items-center gap-md">
+<input checked="" class="text-tertiary focus:ring-tertiary border-surface-dim" name="shipping" type="radio" value="standard">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">Standard Shipping</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">3-5 Business Days</span>
+</div>
+</div>
+<span class="font-title-sm text-title-sm text-on-surface">Free</span>
+</label>
+<label class="flex items-center justify-between p-md border border-surface-dim hover:border-tertiary cursor-pointer transition-colors">
+<div class="flex items-center gap-md">
+<input class="text-tertiary focus:ring-tertiary border-surface-dim" name="shipping" type="radio" value="express">
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">Express Courier</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">1-2 Business Days</span>
+</div>
+</div>
+<span class="font-title-sm text-title-sm text-on-surface">$25.00</span>
+</label>
+</div>
+</section>
+<!-- Step 3: Payment -->
+<section class="flex flex-col gap-lg border-t border-surface-variant pt-lg">
+<div class="flex items-center gap-sm mb-xs">
+<span class="font-label-caps text-label-caps bg-surface-dim px-2 py-1 text-tertiary rounded-xs">03</span>
+<h2 class="font-title-sm text-title-sm uppercase tracking-widest text-on-surface">Payment</h2>
+</div>
+<div class="flex flex-col gap-lg">
+<div class="input-group flex flex-col">
+<label class="input-label mb-1">Card Number</label>
+<div class="relative">
+<input class="input-field w-full" placeholder="0000 0000 0000 0000" required="" type="text">
+<span class="material-symbols-outlined absolute right-0 top-2 text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">credit_card</span>
+</div>
+</div>
+<div class="input-group flex flex-col">
+<label class="input-label mb-1">Name on Card</label>
+<input class="input-field" placeholder="Jane Doe" required="" type="text">
+</div>
+<div class="grid grid-cols-2 gap-lg">
+<div class="input-group flex flex-col">
+<label class="input-label mb-1">Expiration (MM/YY)</label>
+<input class="input-field" placeholder="12/25" required="" type="text">
+</div>
+<div class="input-group flex flex-col">
+<label class="input-label mb-1">Security Code</label>
+<input class="input-field" placeholder="123" required="" type="text">
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Order Summary (Right Column on Desktop) -->
+<div class="md:col-span-5 relative mt-xl md:mt-0">
+<div class="sticky top-24 bg-surface-container-lowest border border-surface-variant p-lg md:p-xl flex flex-col gap-lg shadow-sm">
+<h3 class="font-title-sm text-title-sm uppercase tracking-widest text-on-surface border-b border-surface-variant pb-sm">Order Summary</h3>
+<!-- Items list -->
+<div class="flex flex-col gap-md">
+<div class="flex gap-md">
+<div class="w-20 h-24 bg-surface-container-low flex-shrink-0">
+<img class="w-full h-full object-cover grayscale mix-blend-multiply" data-alt="A meticulously crafted silk scarf featuring intricate heritage patterns in deep indigo and gold, elegantly draped over a minimal concrete pedestal. The lighting is soft and directional, creating a moody, high-end editorial aesthetic with deep shadows and pristine white background accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3MRp5doyhRfCf9j-d_HzfeQ08zBbdXtwZF6gcPc1p4YVB4EW1VY2CVYk4Wmc9O4kHQckw23JMaErJqABLpnd39PTIgFI2-YASAPIAiX6apTq0NJF92beEUETglp2pqLsVWEwTlgciS5ZYEf3zken7rPA0luxiI-AFErxCFxu7FCTo2micRLIAp4XBWjCiRNsnVBC-h8OMswCBodZ-QC889TvsrBJroW9QWavdMx5f2ZQSHG8zriSAFg">
+</div>
+<div class="flex flex-col justify-between flex-grow">
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface">Silk Heritage Scarf</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Indigo / One Size</p>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Qty 1</span>
+<span class="font-body-md text-body-md text-on-surface">$245.00</span>
+</div>
+</div>
+</div>
+<div class="flex gap-md">
+<div class="w-20 h-24 bg-surface-container-low flex-shrink-0">
+<img class="w-full h-full object-cover grayscale mix-blend-multiply" data-alt="A minimalist structured leather tote bag in rich espresso brown, sitting on a pale parchment surface. The lighting is natural and diffused, casting soft shadows that highlight the premium texture of the leather. The mood is understated luxury, focusing on clean lines and material quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD70zZR6SruPl5T5lbBdCiQrSjKS7PpgYyzjJzAc26LeFN3qVFEABoGSWXiXRtwHc7kClGRQXDS6lnK-H4syVRWsqdjD2C86Xwr5tC4LBw3nWUqxlVRZN_OLBhokgBD--_52bTL9THMMIKuizGn9IB3atK31Ie1QF3CqC7n5GuN3U6V45BRiacrNNxK1zKmCmC9DfB2zhcaYo-pP1vEqSF1LJHW8eyBtFUalPlw0mkITCeRHHY_hNTT6A">
+</div>
+<div class="flex flex-col justify-between flex-grow">
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface">Structured Leather Tote</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Espresso</p>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Qty 1</span>
+<span class="font-body-md text-body-md text-on-surface">$890.00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Calculations -->
+<div class="flex flex-col gap-xs border-t border-surface-variant pt-md font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex justify-between">
+<span class="">Subtotal</span>
+<span class="">$1,135.00</span>
+</div>
+<div class="flex justify-between">
+<span class="">Shipping</span>
+<span class="">Calculated next step</span>
+</div>
+<div class="flex justify-between">
+<span class="">Taxes</span>
+<span class="">$90.80</span>
+</div>
+</div>
+<!-- Total -->
+<div class="flex justify-between items-end border-t border-tertiary pt-md mt-sm">
+<span class="font-title-sm text-title-sm uppercase tracking-widest text-on-surface">Total</span>
+<span class="font-headline-md text-headline-md text-tertiary">$1,225.80</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Fixed Bottom Action Area (Mobile focus, stays at bottom on desktop too for linearity) -->
+<div class="fixed bottom-0 left-0 w-full bg-background/90 backdrop-blur-md border-t border-surface-variant p-margin-mobile pb-safe z-40 md:relative md:bg-transparent md:border-none md:p-0 md:max-w-screen-xl md:mx-auto md:px-margin-desktop md:mb-xxl">
+<button class="w-full bg-tertiary text-on-primary font-label-caps text-label-caps uppercase tracking-[0.15em] py-md hover:bg-tertiary/90 transition-colors active:scale-[0.98]">
+            Complete Purchase
+        </button>
+</div>
+
+
+</body></html>

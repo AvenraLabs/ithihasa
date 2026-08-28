@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - Ithihasa Atelier Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#c9c6c5",
+                        "surface-container-high": "#f0e7d8",
+                        "surface-variant": "#ebe1d2",
+                        "secondary-fixed-dim": "#cac6be",
+                        "background": "#fff8f1",
+                        "inverse-on-surface": "#f9f0e0",
+                        "on-tertiary-container": "#a27f2b",
+                        "tertiary-fixed": "#ffdf9e",
+                        "outline": "#747878",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#494740",
+                        "secondary-container": "#e7e2d9",
+                        "tertiary-fixed-dim": "#ebc166",
+                        "secondary-fixed": "#e7e2d9",
+                        "surface-container-highest": "#ebe1d2",
+                        "primary": "#000000",
+                        "tertiary": "#000000",
+                        "surface-container-low": "#fcf2e3",
+                        "on-tertiary-fixed": "#261a00",
+                        "inverse-surface": "#343026",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface": "#fff8f1",
+                        "on-background": "#1f1b12",
+                        "on-primary-fixed-variant": "#474646",
+                        "surface-dim": "#e2d9ca",
+                        "on-secondary-fixed": "#1d1c16",
+                        "on-primary-container": "#858383",
+                        "surface-container": "#f6eddd",
+                        "primary-container": "#1c1b1b",
+                        "surface-tint": "#5f5e5e",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "secondary": "#615e57",
+                        "on-surface": "#1f1b12",
+                        "primary-fixed": "#e5e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#fff8f1",
+                        "on-primary-fixed": "#1c1b1b",
+                        "on-surface-variant": "#444748",
+                        "on-secondary-container": "#67645d",
+                        "outline-variant": "#c4c7c7",
+                        "tertiary-container": "#261a00",
+                        "on-error": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#5b4300"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "40px",
+                        "xs": "4px",
+                        "xxl": "64px",
+                        "sm": "8px",
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "lg": "24px",
+                        "margin-desktop": "80px",
+                        "md": "16px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Manrope"],
+                        "headline-md": ["EB Garamond"],
+                        "title-sm": ["Manrope"],
+                        "display-lg-mobile": ["EB Garamond"],
+                        "label-caps": ["Manrope"],
+                        "display-lg": ["EB Garamond"],
+                        "body-sm": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "title-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); }
+        /* Custom Input Styles for Quiet Luxury */
+        .luxury-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid theme('colors.outline-variant');
+            padding: theme('spacing.sm') 0;
+            font-family: theme('fontFamily.body-md');
+            font-size: 16px;
+            color: theme('colors.on-surface');
+            transition: border-color 0.2s ease;
+        }
+        .luxury-input:focus {
+            outline: none;
+            border-bottom-color: theme('colors.primary');
+        }
+        .luxury-input::placeholder {
+            color: theme('colors.on-surface-variant');
+            opacity: 0.5;
+        }
+        .luxury-label {
+            font-family: theme('fontFamily.label-caps');
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: theme('colors.secondary');
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: theme('spacing.xs');
+        }
+        
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: theme('colors.primary');
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: theme('colors.primary');
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(100%);
+            border-color: white;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden antialiased selection:bg-surface-variant selection:text-primary">
+<!-- SideNavBar (Shared Component) -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-surface border-r border-surface-variant flex flex-col h-full py-xl gap-md hidden md:flex z-50">
+<div class="px-lg pb-md flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden shrink-0">
+<img alt="Atelier Logo" class="w-full h-full object-cover" data-alt="A minimalist line art logo depicting an elegant, stylized letter 'A' intertwined with a thread, rendered in deep black against a parchment-colored background. The design is modern, conveying heritage and high-end atelier craftsmanship, lit perfectly for UI display." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVhxd9vEWJvox-bo7lP9rr0z7XpLY-TXsWwb0M2m1aQhyGvymeeUPEyhLLfDOiC-ETlEap3ahyffDIBdLH9gzFgDCW4OEUzS2_C9muF90Vm6yrSIkLxrWMcSzy4GfRvoYKAG6e1rE6jILFFP3w8QaydvoJ58rTQFyPy2qv4NsRKQjfSQLuSHhLA4xjbTyjB5gs33uQSNZUw3xYKc00IOhvV6rrHfxNaZZeFAD05FfNBT44-ipfqwwTGg"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary">Atelier Admin</h1>
+<p class="font-body-sm text-body-sm text-secondary">Heritage Management</p>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-xs px-md">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">inventory_2</span>
+<span class="font-label-caps text-label-caps">Inventory</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">group</span>
+<span class="font-label-caps text-label-caps">Customers</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">campaign</span>
+<span class="font-label-caps text-label-caps">Marketing</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary border-r-2 border-tertiary-fixed-dim bg-surface-container-low translate-x-1" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-xs px-md">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">logout</span>
+<span class="font-label-caps text-label-caps">Log Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-64 flex flex-col h-screen relative">
+<!-- TopNavBar (Shared Component) -->
+<header class="sticky top-0 z-40 flex justify-between items-center w-full px-lg h-16 bg-background/90 backdrop-blur-md border-b border-surface-variant hidden md:flex">
+<div class="flex-1 flex items-center">
+<!-- Search bar placeholder -->
+<div class="relative w-64 group focus-within:border-primary">
+<span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
+<input class="luxury-input pl-8 py-1 border-b border-outline-variant focus:border-primary bg-transparent w-full text-body-md font-body-md placeholder:text-on-surface-variant" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<a class="text-secondary hover:text-primary transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">notifications</span>
+</a>
+<a class="text-primary font-bold" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+</a>
+<div class="w-8 h-8 rounded-full bg-surface-dim overflow-hidden ml-md border border-outline-variant">
+<img alt="Admin profile avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a stylish administrator in a minimalist setting. The subject is wearing a crisp white shirt, softly lit with natural daylight against a neutral beige background. The image has a clean, high-end editorial feel suitable for a luxury fashion brand's administrative portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBeT7JOXeFScWzH12P28VorrXMgGL2GZR_78ZSyAfAXaqGz-YKVyLUf_QHMJifm2bpl5IaMa0Aq6etNMim1O2NeVM5K1sBtH2ZIMAQQw_5ybuT0pHJoSHB2ffi_CDYNhyXj-uof6PtM-Cqbd5fe1Vim4jd9pPY0yFB1GcSnVBoRUMbLDHb-kk-g3nPBN2B_NecVaiMwV3TL4FtvdG_Qa0Ku_5CdQ30PQ6puMRxSbsc4wwD25NlGXtvOA"/>
+</div>
+</div>
+</header>
+<!-- Scrollable Settings Content -->
+<div class="flex-1 overflow-y-auto overflow-x-hidden p-margin-mobile md:p-margin-desktop scroll-smooth">
+<div class="max-w-4xl mx-auto pb-xxl">
+<header class="mb-xl">
+<h2 class="font-display-lg text-display-lg text-primary mb-sm">Settings</h2>
+<p class="font-body-md text-body-md text-secondary">Manage your atelier's configuration, profile, and administrative access.</p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- Left Column: Navigation/TOC (Desktop only) -->
+<div class="hidden lg:block lg:col-span-3">
+<nav class="sticky top-24 flex flex-col gap-md border-l border-surface-variant pl-md">
+<a class="font-title-sm text-title-sm text-primary relative before:absolute before:-left-[17px] before:top-1/2 before:-translate-y-1/2 before:w-[2px] before:h-full before:bg-primary py-1" href="#general">General Settings</a>
+<a class="font-title-sm text-title-sm text-secondary hover:text-primary transition-colors py-1" href="#profile">Store Profile</a>
+<a class="font-title-sm text-title-sm text-secondary hover:text-primary transition-colors py-1" href="#payments">Payment Gateways</a>
+<a class="font-title-sm text-title-sm text-secondary hover:text-primary transition-colors py-1" href="#team">Team Permissions</a>
+</nav>
+</div>
+<!-- Right Column: Settings Sections -->
+<div class="lg:col-span-9 flex flex-col gap-xxl">
+<!-- General Settings -->
+<section class="scroll-mt-32" id="general">
+<h3 class="font-headline-md text-headline-md text-primary mb-lg border-b border-surface-variant pb-sm">General Settings</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg mb-lg">
+<div>
+<label class="luxury-label">Store Name</label>
+<input class="luxury-input" type="text" value="Ithihasa Atelier"/>
+</div>
+<div>
+<label class="luxury-label">Support Email</label>
+<input class="luxury-input" type="email" value="support@ithihasa.com"/>
+</div>
+<div>
+<label class="luxury-label">Timezone</label>
+<div class="relative">
+<select class="luxury-input appearance-none bg-transparent">
+<option>(GMT+05:30) India Standard Time</option>
+<option>(GMT+00:00) London</option>
+<option>(GMT-05:00) Eastern Time (US &amp; Canada)</option>
+</select>
+<span class="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+</div>
+</div>
+<div>
+<label class="luxury-label">Currency</label>
+<div class="relative">
+<select class="luxury-input appearance-none bg-transparent">
+<option>INR (₹)</option>
+<option>USD ($)</option>
+<option>EUR (€)</option>
+</select>
+<span class="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between p-md border border-surface-variant rounded-sm bg-surface-container-lowest">
+<div>
+<p class="font-title-sm text-title-sm text-primary mb-xs">Maintenance Mode</p>
+<p class="font-body-sm text-body-sm text-secondary">Temporarily disable storefront access for updates.</p>
+</div>
+<!-- Custom Toggle -->
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-outline-variant z-10 transition-transform duration-200 ease-in-out" id="maintenance_toggle" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200 ease-in-out" for="maintenance_toggle"></label>
+</div>
+</div>
+</section>
+<!-- Store Profile -->
+<section class="scroll-mt-32" id="profile">
+<h3 class="font-headline-md text-headline-md text-primary mb-lg border-b border-surface-variant pb-sm">Store Profile</h3>
+<div class="flex flex-col gap-lg">
+<div>
+<label class="luxury-label">Brand Story (Bio)</label>
+<textarea class="luxury-input min-h-[100px] resize-y" placeholder="Enter the brand narrative...">Curating heritage craftsmanship for the modern era.</textarea>
+</div>
+<div>
+<label class="luxury-label mb-md">Storefront Imagery</label>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-md">
+<div class="aspect-square bg-surface-container-high rounded-sm border border-dashed border-outline-variant flex flex-col items-center justify-center text-secondary hover:bg-surface-container transition-colors cursor-pointer group">
+<span class="material-symbols-outlined group-hover:text-primary mb-xs">add_photo_alternate</span>
+<span class="font-label-caps text-label-caps group-hover:text-primary">Upload</span>
+</div>
+<div class="aspect-square relative rounded-sm overflow-hidden border border-outline-variant">
+<img alt="Store imagery 1" class="w-full h-full object-cover" data-alt="A beautifully styled flat lay of premium silk fabrics and traditional Indian jewelry on a clean, light parchment surface. Soft, diffused lighting creates gentle shadows, emphasizing the rich textures and quiet luxury aesthetic of a high-end heritage fashion brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxoFfy0uSmOMcf6ca6Eqb0ICw2PfLdYlURCszUxM313a2REACEneZtg1TZzLp762yFMCIC7AWr6UJCtsjXlNoyXz__uHaqnmyPMWkZtmh-yv79JhdW0TZYOz-rz5WG-oZwyuIpfRjsvkXsWlcx8tt8-ioT_PP-jwFBwh6ILIy9ZiCdOKZZEbjmj95xILmAS3ssYqg_F1Wly908L9B5rh-3-8PE8bQytTwfRVgHYB1Xw67GSxOqoH49Yg"/>
+<button class="absolute top-1 right-1 w-6 h-6 bg-background/80 backdrop-blur rounded-full flex items-center justify-center text-error opacity-0 hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Payment Gateways -->
+<section class="scroll-mt-32" id="payments">
+<h3 class="font-headline-md text-headline-md text-primary mb-lg border-b border-surface-variant pb-sm">Payment Gateways</h3>
+<div class="flex flex-col gap-md">
+<!-- Gateway Card -->
+<div class="border border-surface-variant p-md flex items-center justify-between bg-surface-container-lowest">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 bg-surface-variant rounded-sm flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">credit_card</span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-primary">Razorpay</p>
+<p class="font-body-sm text-body-sm text-secondary">Primary processor for domestic (INR) transactions.</p>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="px-2 py-1 bg-surface-container-high text-primary font-label-caps text-label-caps rounded-sm">Active</span>
+<button class="text-primary hover:text-secondary underline font-label-caps text-label-caps">Configure</button>
+</div>
+</div>
+<!-- Gateway Card -->
+<div class="border border-surface-variant p-md flex items-center justify-between bg-surface">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 bg-surface-variant rounded-sm flex items-center justify-center text-secondary opacity-50">
+<span class="material-symbols-outlined">public</span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-secondary">Stripe</p>
+<p class="font-body-sm text-body-sm text-secondary opacity-70">For international multi-currency processing.</p>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="px-4 py-2 bg-transparent border border-primary text-primary hover:bg-surface-container-highest font-label-caps text-label-caps rounded-sm transition-colors">Connect</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Team Permissions -->
+<section class="scroll-mt-32" id="team">
+<div class="flex items-end justify-between mb-lg border-b border-surface-variant pb-sm">
+<h3 class="font-headline-md text-headline-md text-primary">Team Permissions</h3>
+<button class="font-label-caps text-label-caps text-primary hover:text-secondary underline flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">add</span> Invite Member
+                                </button>
+</div>
+<div class="flex flex-col gap-md">
+<!-- User Row -->
+<div class="flex items-center justify-between py-sm group">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden border border-outline-variant">
+<img alt="User avatar" class="w-full h-full object-cover" data-alt="Admin profile avatar as described previously, professional and minimalist." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHnVKr36AKXSbjxeVH7wLwTdhTlG1E-rLabK2zyVoeMeTjlUepj7dHAtweF-z8Qs9-m42qlY39gwNFNVA5HMjpNnpwfVqld4WeRdnyhmBtIVRPWosD1Ano0bqlvyi-yW_epbPyVdl0eTYEHqDAc7cjDha_flUal4P68PvARKLFJ19-366Fn4w1Wg8wJMatuTPzzRTqSrBqAcMT-YcovgQCPMmQyOQ_MFdcujlrNethKv68XzV6qs2IAA"/>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-primary">Aisha Patel</p>
+<p class="font-body-sm text-body-sm text-secondary">aisha@ithihasa.com</p>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<span class="font-label-caps text-label-caps text-secondary">Owner</span>
+</div>
+</div>
+<div class="h-[1px] w-full bg-surface-variant"></div>
+<!-- User Row -->
+<div class="flex items-center justify-between py-sm group">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-secondary border border-outline-variant">
+<span class="font-title-sm text-title-sm">RK</span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-primary">Rahul Kumar</p>
+<p class="font-body-sm text-body-sm text-secondary">rahul.k@ithihasa.com</p>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<div class="relative">
+<select class="appearance-none bg-transparent font-label-caps text-label-caps text-primary pr-6 focus:outline-none cursor-pointer">
+<option>Manager</option>
+<option>Editor</option>
+<option>Viewer</option>
+</select>
+<span class="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-secondary text-[16px]">expand_more</span>
+</div>
+<button class="text-error opacity-0 group-hover:opacity-100 transition-opacity" title="Remove User">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Action Bar -->
+<div class="pt-xl mt-lg flex justify-end gap-md">
+<button class="px-lg py-sm bg-transparent border border-primary text-primary font-label-caps text-label-caps hover:bg-surface-container-highest transition-colors rounded-sm tracking-widest">Discard Changes</button>
+<button class="px-lg py-sm bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container transition-colors rounded-sm tracking-widest">Save Settings</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple scroll spy for side navigation highlighting
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('nav a[href^="#"]');
+            const mainContent = document.querySelector('.overflow-y-auto');
+
+            mainContent.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    // Offset for the header and visual padding
+                    if (mainContent.scrollTop >= (sectionTop - 200)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('text-primary', 'before:absolute', 'before:-left-[17px]', 'before:top-1/2', 'before:-translate-y-1/2', 'before:w-[2px]', 'before:h-full', 'before:bg-primary');
+                    link.classList.add('text-secondary');
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.remove('text-secondary');
+                        link.classList.add('text-primary', 'before:absolute', 'before:-left-[17px]', 'before:top-1/2', 'before:-translate-y-1/2', 'before:w-[2px]', 'before:h-full', 'before:bg-primary');
+                    }
+                });
+            });
+        });
+    </script>
+</body></html>

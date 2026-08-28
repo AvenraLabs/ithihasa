@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Support - Ithihasa Atelier Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#c9c6c5",
+                        "surface-container-high": "#f0e7d8",
+                        "surface-variant": "#ebe1d2",
+                        "secondary-fixed-dim": "#cac6be",
+                        "background": "#fff8f1",
+                        "inverse-on-surface": "#f9f0e0",
+                        "on-tertiary-container": "#a27f2b",
+                        "tertiary-fixed": "#ffdf9e",
+                        "outline": "#747878",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#494740",
+                        "secondary-container": "#e7e2d9",
+                        "tertiary-fixed-dim": "#ebc166",
+                        "secondary-fixed": "#e7e2d9",
+                        "surface-container-highest": "#ebe1d2",
+                        "primary": "#000000",
+                        "tertiary": "#000000",
+                        "surface-container-low": "#fcf2e3",
+                        "on-tertiary-fixed": "#261a00",
+                        "inverse-surface": "#343026",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface": "#fff8f1",
+                        "on-background": "#1f1b12",
+                        "on-primary-fixed-variant": "#474646",
+                        "surface-dim": "#e2d9ca",
+                        "on-secondary-fixed": "#1d1c16",
+                        "on-primary-container": "#858383",
+                        "surface-container": "#f6eddd",
+                        "primary-container": "#1c1b1b",
+                        "surface-tint": "#5f5e5e",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "secondary": "#615e57",
+                        "on-surface": "#1f1b12",
+                        "primary-fixed": "#e5e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#fff8f1",
+                        "on-primary-fixed": "#1c1b1b",
+                        "on-surface-variant": "#444748",
+                        "on-secondary-container": "#67645d",
+                        "outline-variant": "#c4c7c7",
+                        "tertiary-container": "#261a00",
+                        "on-error": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#5b4300"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "40px",
+                        "xs": "4px",
+                        "xxl": "64px",
+                        "sm": "8px",
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "lg": "24px",
+                        "margin-desktop": "80px",
+                        "md": "16px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "body-md": [
+                            "Manrope"
+                        ],
+                        "headline-md": [
+                            "EB Garamond"
+                        ],
+                        "title-sm": [
+                            "Manrope"
+                        ],
+                        "display-lg-mobile": [
+                            "EB Garamond"
+                        ],
+                        "label-caps": [
+                            "Manrope"
+                        ],
+                        "display-lg": [
+                            "EB Garamond"
+                        ],
+                        "body-sm": [
+                            "Manrope"
+                        ]
+                    },
+                    "fontSize": {
+                        "body-md": [
+                            "16px",
+                            {
+                                "lineHeight": "26px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "headline-md": [
+                            "24px",
+                            {
+                                "lineHeight": "32px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "500"
+                            }
+                        ],
+                        "title-sm": [
+                            "16px",
+                            {
+                                "lineHeight": "24px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                            }
+                        ],
+                        "display-lg-mobile": [
+                            "32px",
+                            {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "label-caps": [
+                            "12px",
+                            {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.1em",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "display-lg": [
+                            "48px",
+                            {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "body-sm": [
+                            "14px",
+                            {
+                                "lineHeight": "22px",
+                                "letterSpacing": "0.01em",
+                                "fontWeight": "400"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 300,
+                'GRAD' 0,
+                'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+             font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Underline input style */
+        .input-underline {
+            border: none;
+            border-bottom: 1px solid var(--tw-colors-secondary-fixed-dim);
+            background: transparent;
+            padding: 0.5rem 0;
+            transition: border-color 0.2s ease;
+        }
+        .input-underline:focus {
+            outline: none;
+            border-bottom-color: var(--tw-colors-primary);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<aside class="bg-surface dark:bg-surface border-r border-surface-variant dark:border-surface-variant h-screen w-64 fixed left-0 top-0 flex flex-col h-full py-xl gap-md z-50">
+<div class="px-lg flex items-center gap-md mb-xl">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-surface-variant flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Minimalist abstract logo design representing a high-end heritage fashion brand, using simple geometric lines in black and cream." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYITtEtv4B779kVJ1ZYi6oyO8EhAOKvhRiYbcF3d7m1KURed6vtsjoG1STum8bb_rTAG6TL16XJBV6Cku8UBBlFt2K_t7Uq-7sJB8ga-Mo6_B-Ka8oAooLZE2fb6aX3HCeIYrN_v05eZWi35KgOMQnGESOBj6W4PrZtGHxFb1wBl0t_bzv_vTW6yO29ffNr4zpHHPAwk4Okt2FDREtc2OVGbk70cNAhFtZnhupbQez8YVnEyUNeQFWfg"/>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary dark:text-primary m-0">Atelier Admin</h2>
+<p class="font-label-caps text-label-caps text-secondary mt-xs">Heritage Management</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-sm px-md">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-caps text-label-caps">Inventory</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-caps text-label-caps">Customers</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-caps text-label-caps">Marketing</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-sm px-md border-t border-surface-variant pt-lg">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-primary border-r-2 border-tertiary-fixed-dim bg-surface-container-low transition-all duration-300 translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-caps text-label-caps">Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-64 flex flex-col overflow-hidden relative">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-40 flex justify-between items-center w-full px-lg h-16 bg-background/90 dark:bg-background/90 backdrop-blur-md border-b border-surface-variant dark:border-surface-variant docked full-width focus-within:border-primary">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md text-primary dark:text-primary font-bold">Ithihasa Atelier</span>
+</div>
+<div class="flex-1 max-w-md mx-xl">
+<div class="relative w-full flex items-center border-b border-surface-variant focus-within:border-primary transition-colors">
+<span class="material-symbols-outlined text-secondary absolute left-0" data-icon="search">search</span>
+<input class="w-full bg-transparent border-none focus:ring-0 pl-8 py-2 text-body-sm text-on-surface placeholder:text-secondary" placeholder="Search tickets, articles..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-secondary hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-secondary hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-surface-variant ml-sm cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="A portrait photograph of an elegant administrative professional wearing understated, minimalist fashion in a bright, modern office space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2dkDuvbQgcXsIaiksL26fybHCdo7vBmiyK8GNzHoEmnD2XPv_uQ5NWKHz9uUGdXyHkAWfYO0VIuq4KeJVl4k_xslQyNcIto31u4C9TiOM_bnq43sruL1S4bf49PsJH88HLNa6TLIlhciaBrZQ_ZX3mQzsmBAuHLZxT38zV7bZLhaJtDj5et724Jfju6JapGEEZwjgaJ2pHedAfnYONahklnSH0cRVg6nyZam0dvBVwmo3WTJPkqkOJA"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="flex-1 overflow-y-auto p-margin-desktop bg-surface-bright">
+<div class="mb-xxl flex justify-between items-end">
+<div>
+<h1 class="font-display-lg text-display-lg text-primary tracking-tight">Support Center</h1>
+<p class="font-body-md text-body-md text-secondary mt-sm max-w-2xl">Manage customer inquiries and knowledge base resources to maintain exemplary atelier service.</p>
+</div>
+<button class="bg-primary text-on-primary font-label-caps text-label-caps px-lg py-sm flex items-center gap-sm rounded hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                    NEW TICKET
+                </button>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-12 gap-xl mb-xxl">
+<!-- Quick Stats -->
+<div class="col-span-12 lg:col-span-8 grid grid-cols-3 gap-md">
+<div class="bg-surface border border-surface-variant p-lg flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-secondary mb-md">Open Tickets</span>
+<div class="flex items-baseline gap-sm">
+<span class="font-display-lg text-display-lg text-primary">24</span>
+<span class="font-body-sm text-body-sm text-error flex items-center"><span class="material-symbols-outlined text-[16px]" data-icon="arrow_upward">arrow_upward</span> 12%</span>
+</div>
+</div>
+<div class="bg-surface border border-surface-variant p-lg flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-secondary mb-md">Avg Response Time</span>
+<div class="flex items-baseline gap-sm">
+<span class="font-display-lg text-display-lg text-primary">1.2<span class="font-headline-md text-headline-md text-secondary">h</span></span>
+</div>
+</div>
+<div class="bg-surface border border-surface-variant p-lg flex flex-col justify-between bg-surface-container-low">
+<span class="font-label-caps text-label-caps text-primary mb-md">Urgent Escalations</span>
+<div class="flex items-baseline gap-sm">
+<span class="font-display-lg text-display-lg text-error">3</span>
+</div>
+</div>
+</div>
+<!-- Direct Chat Link -->
+<div class="col-span-12 lg:col-span-4">
+<div class="bg-primary text-on-primary p-xl h-full flex flex-col justify-between relative overflow-hidden group cursor-pointer">
+<div class="absolute inset-0 bg-primary-container opacity-0 group-hover:opacity-10 transition-opacity"></div>
+<div>
+<span class="material-symbols-outlined text-tertiary-fixed text-[32px] mb-md" data-icon="forum">forum</span>
+<h3 class="font-headline-md text-headline-md text-on-primary">Direct Chat</h3>
+<p class="font-body-sm text-body-sm text-surface-variant mt-sm">2 active sessions requiring attention.</p>
+</div>
+<div class="flex items-center gap-xs font-label-caps text-label-caps mt-xl text-tertiary-fixed">
+                            ENTER CONSOLE <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Support Tickets Table -->
+<div class="mb-xxl border border-surface-variant bg-surface">
+<div class="flex items-center justify-between p-lg border-b border-surface-variant">
+<h2 class="font-title-sm text-title-sm text-primary">Recent Tickets</h2>
+<div class="flex gap-md">
+<button class="font-label-caps text-label-caps text-secondary hover:text-primary transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]" data-icon="filter_list">filter_list</span> FILTER
+                        </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-surface-variant bg-surface-container-lowest">
+<th class="py-md px-lg font-label-caps text-label-caps text-secondary font-normal w-24">Ticket ID</th>
+<th class="py-md px-lg font-label-caps text-label-caps text-secondary font-normal">Customer</th>
+<th class="py-md px-lg font-label-caps text-label-caps text-secondary font-normal w-1/3">Subject</th>
+<th class="py-md px-lg font-label-caps text-label-caps text-secondary font-normal">Priority</th>
+<th class="py-md px-lg font-label-caps text-label-caps text-secondary font-normal">Status</th>
+<th class="py-md px-lg font-label-caps text-label-caps text-secondary font-normal text-right">Action</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm">
+<tr class="border-b border-surface-variant hover:bg-surface-container-lowest transition-colors cursor-pointer group">
+<td class="py-md px-lg text-secondary">#TK-4029</td>
+<td class="py-md px-lg font-title-sm text-title-sm">Eleanor Vance</td>
+<td class="py-md px-lg text-on-surface truncate max-w-[200px]">Inquiry regarding bespoke silk tailoring measurements</td>
+<td class="py-md px-lg">
+<span class="inline-flex items-center gap-xs text-error">
+<span class="material-symbols-outlined text-[14px]" data-icon="circle" data-weight="fill">circle</span> High
+                                    </span>
+</td>
+<td class="py-md px-lg">
+<span class="bg-surface-container-high px-sm py-xs rounded font-label-caps text-label-caps text-secondary">OPEN</span>
+</td>
+<td class="py-md px-lg text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span></button>
+</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-lowest transition-colors cursor-pointer group">
+<td class="py-md px-lg text-secondary">#TK-4028</td>
+<td class="py-md px-lg font-title-sm text-title-sm">Arthur Pendelton</td>
+<td class="py-md px-lg text-on-surface truncate max-w-[200px]">Shipping delay on Fall Lookbook order</td>
+<td class="py-md px-lg">
+<span class="inline-flex items-center gap-xs text-tertiary-fixed-dim">
+<span class="material-symbols-outlined text-[14px]" data-icon="circle" data-weight="fill">circle</span> Med
+                                    </span>
+</td>
+<td class="py-md px-lg">
+<span class="bg-surface-container-high px-sm py-xs rounded font-label-caps text-label-caps text-secondary">PENDING</span>
+</td>
+<td class="py-md px-lg text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors cursor-pointer group">
+<td class="py-md px-lg text-secondary">#TK-4027</td>
+<td class="py-md px-lg font-title-sm text-title-sm">Clara Bow</td>
+<td class="py-md px-lg text-on-surface truncate max-w-[200px]">Care instructions for cashmere blend cardigan</td>
+<td class="py-md px-lg">
+<span class="inline-flex items-center gap-xs text-outline">
+<span class="material-symbols-outlined text-[14px]" data-icon="circle" data-weight="fill">circle</span> Low
+                                    </span>
+</td>
+<td class="py-md px-lg">
+<span class="border border-surface-variant px-sm py-xs rounded font-label-caps text-label-caps text-secondary">RESOLVED</span>
+</td>
+<td class="py-md px-lg text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-secondary hover:text-primary"><span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Knowledge Base Management Section -->
+<div class="mb-xxl">
+<div class="flex items-center justify-between mb-lg">
+<h2 class="font-headline-md text-headline-md text-primary">Knowledge Base</h2>
+<button class="font-label-caps text-label-caps text-primary hover:text-secondary transition-colors underline underline-offset-4">VIEW ALL ARTICLES</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<!-- Article Card 1 -->
+<div class="group cursor-pointer">
+<div class="aspect-video bg-surface-container-high relative overflow-hidden mb-md border border-surface-variant">
+<div class="bg-cover bg-center w-full h-full transition-transform duration-700 group-hover:scale-105" data-alt="A close-up photograph of hands working with fine silk fabric, demonstrating bespoke tailoring techniques in a brightly lit, minimalist atelier." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB52ZqzTy0lZYpBYHJ7xnxOeKPd-456kp7xZu9QnjSqOBKSMj6k71OsFb11uFygOZI6yUsONUJ0VWP35dZcMS_1ulNFdcl8S8VikFp1kVV7D7YQ4KNEgpTNZLq5AtIos5EALXhrev_KJbzsY0JT-IT9DU94u9sdMBq6MuxMTyEXVAUCa1RxSiM2fnx1qIJPGv8gmCwDhfctKpUaZKf3O5d9hBBknFnQJHSFMxY1OaQo4BQ49JAffND6ww')"></div>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="bg-surface text-primary font-label-caps text-label-caps px-md py-sm rounded">EDIT ARTICLE</span>
+</div>
+</div>
+<h3 class="font-title-sm text-title-sm text-primary mb-xs">Bespoke Fitting Guide</h3>
+<p class="font-body-sm text-body-sm text-secondary">Updated 2 days ago • 14 views this week</p>
+</div>
+<!-- Article Card 2 -->
+<div class="group cursor-pointer">
+<div class="aspect-video bg-surface-container-high relative overflow-hidden mb-md border border-surface-variant">
+<div class="bg-cover bg-center w-full h-full transition-transform duration-700 group-hover:scale-105" data-alt="A beautifully styled flat lay of premium fabric swatches in neutral and earthy tones, arranged neatly on a pristine white marble surface." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAcgk-_hF4VomNabKHyB4leqjKKewQGsYa6i9C0fPce-eOeTQGusRD8JDu0vhPDSTEXyFNh0pbjtsgSQgc7FRbbNx--ute7gUZiSVCkiiBOA2oHciVhuA1E4c2u7mc1dadUmUShipqIKwAP6PQ_5Pc_7RD5Nd0A5w2wBq6ZamTsTgTYBjeU4tOcCp_uMevDYnFy7zP23KlkKmvGPlXhQNrwPmNAvNaCqCA77ODHF-g5Zzv-sMQgficNgQ')"></div>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="bg-surface text-primary font-label-caps text-label-caps px-md py-sm rounded">EDIT ARTICLE</span>
+</div>
+</div>
+<h3 class="font-title-sm text-title-sm text-primary mb-xs">Material Care: Heritage Cottons</h3>
+<p class="font-body-sm text-body-sm text-secondary">Updated 1 week ago • 45 views this week</p>
+</div>
+<!-- Add New Article Action -->
+<div class="aspect-video border border-surface-variant border-dashed flex flex-col items-center justify-center text-secondary hover:text-primary hover:bg-surface-container-lowest transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-[32px] mb-sm group-hover:scale-110 transition-transform" data-icon="post_add">post_add</span>
+<span class="font-label-caps text-label-caps">DRAFT NEW ARTICLE</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

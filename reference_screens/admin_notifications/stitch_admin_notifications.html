@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ithihasa Atelier - Notifications</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error-container": "#93000a",
+                      "error-container": "#ffdad6",
+                      "inverse-primary": "#c9c6c5",
+                      "surface-container-high": "#f0e7d8",
+                      "surface-variant": "#ebe1d2",
+                      "secondary-fixed-dim": "#cac6be",
+                      "background": "#fff8f1",
+                      "inverse-on-surface": "#f9f0e0",
+                      "on-tertiary-container": "#a27f2b",
+                      "tertiary-fixed": "#ffdf9e",
+                      "outline": "#747878",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed-variant": "#494740",
+                      "secondary-container": "#e7e2d9",
+                      "tertiary-fixed-dim": "#ebc166",
+                      "secondary-fixed": "#e7e2d9",
+                      "surface-container-highest": "#ebe1d2",
+                      "primary": "#000000",
+                      "tertiary": "#000000",
+                      "surface-container-low": "#fcf2e3",
+                      "on-tertiary-fixed": "#261a00",
+                      "inverse-surface": "#343026",
+                      "on-tertiary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "surface": "#fff8f1",
+                      "on-background": "#1f1b12",
+                      "on-primary-fixed-variant": "#474646",
+                      "surface-dim": "#e2d9ca",
+                      "on-secondary-fixed": "#1d1c16",
+                      "on-primary-container": "#858383",
+                      "surface-container": "#f6eddd",
+                      "primary-container": "#1c1b1b",
+                      "surface-tint": "#5f5e5e",
+                      "primary-fixed-dim": "#c9c6c5",
+                      "secondary": "#615e57",
+                      "on-surface": "#1f1b12",
+                      "primary-fixed": "#e5e2e1",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-bright": "#fff8f1",
+                      "on-primary-fixed": "#1c1b1b",
+                      "on-surface-variant": "#444748",
+                      "on-secondary-container": "#67645d",
+                      "outline-variant": "#c4c7c7",
+                      "tertiary-container": "#261a00",
+                      "on-error": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#5b4300"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "40px",
+                      "xs": "4px",
+                      "xxl": "64px",
+                      "sm": "8px",
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "lg": "24px",
+                      "margin-desktop": "80px",
+                      "md": "16px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "EB Garamond"
+                      ],
+                      "title-sm": [
+                              "Manrope"
+                      ],
+                      "display-lg-mobile": [
+                              "EB Garamond"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "EB Garamond"
+                      ],
+                      "body-sm": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "26px",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "title-sm": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="bg-surface border-r border-surface-variant flex flex-col h-full py-xl gap-md h-screen w-64 fixed left-0 top-0 hidden md:flex">
+<div class="px-lg pb-md mb-md border-b border-surface-variant">
+<h1 class="font-headline-md text-headline-md text-primary">Atelier Admin</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Heritage Management</p>
+</div>
+<ul class="flex flex-col gap-xs flex-1 px-sm">
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-caps text-label-caps">Inventory</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-caps text-label-caps">Customers</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-label-caps text-label-caps">Marketing</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</li>
+</ul>
+<div class="px-sm mt-auto">
+<ul class="flex flex-col gap-xs border-t border-surface-variant pt-md">
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300 rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-caps text-label-caps">Log Out</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen relative">
+<!-- TopNavBar -->
+<header class="bg-background/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-lg h-16 border-b border-surface-variant">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md text-primary block md:hidden">Ithihasa Atelier</span>
+<!-- Search (Left) -->
+<div class="hidden md:flex items-center bg-surface-container-high rounded-full px-md py-xs border border-transparent focus-within:border-primary transition-colors duration-200">
+<span class="material-symbols-outlined text-on-surface-variant mr-sm">search</span>
+<input class="bg-transparent border-none outline-none text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant w-48" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<!-- Notifications - Active State -->
+<button aria-label="Notifications" class="relative p-sm text-primary font-bold hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-on-tertiary-container rounded-full"></span>
+</button>
+<button aria-label="Settings" class="p-sm text-secondary hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<img alt="Admin profile avatar" class="w-8 h-8 rounded-full border border-surface-variant ml-sm object-cover" data-alt="Admin profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD43exBz77-4PGKudMzfnN5A8J4b4hhtzPNC2N6AbvepUSE2af4pOLLcIZg3b09DAijTf99RbaSHuFHovxdY0TbRi76YmZbiC6CyHSeX76fdqceLFPru_c5DYLwxQBNnla7mMp5G6DLfDqEWbgW6jxg5Tw3oM_D1DrGoymRQRLIx_6H5IgwpqXgb9t5ABGpcBv8dOKlaUSIdDGlhespRUhE4iHXXveamdAjp3Y5kvo-DfWe1AO0ra5ggQ"/>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-xl md:p-margin-desktop flex-1">
+<div class="max-w-[1440px] mx-auto flex flex-col lg:flex-row gap-xxl">
+<!-- Background Canvas (Customer Insights mock) -->
+<div class="flex-1 opacity-40 pointer-events-none filter blur-[2px]">
+<div class="mb-xl">
+<h2 class="font-display-lg text-display-lg text-primary mb-sm">Customer Insights</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Analytics overview for Q3 2023.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
+<div class="bg-surface-container rounded-xl p-lg border border-surface-variant">
+<span class="font-label-caps text-label-caps text-secondary mb-sm block">Total Revenue</span>
+<span class="font-headline-md text-headline-md text-primary">$124,500</span>
+</div>
+<div class="bg-surface-container rounded-xl p-lg border border-surface-variant">
+<span class="font-label-caps text-label-caps text-secondary mb-sm block">New Customers</span>
+<span class="font-headline-md text-headline-md text-primary">342</span>
+</div>
+<div class="bg-surface-container rounded-xl p-lg border border-surface-variant">
+<span class="font-label-caps text-label-caps text-secondary mb-sm block">Avg Order Value</span>
+<span class="font-headline-md text-headline-md text-primary">$850</span>
+</div>
+</div>
+</div>
+<!-- Notifications Panel Overlay -->
+<div class="w-full lg:w-[400px] flex-shrink-0 bg-surface rounded-xl border border-surface-variant shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col h-[calc(100vh-140px)] sticky top-24 z-10">
+<div class="p-lg border-b border-surface-variant flex justify-between items-center bg-background/50 backdrop-blur-sm">
+<h2 class="font-title-sm text-title-sm text-primary">Notifications</h2>
+<button class="text-secondary hover:text-primary transition-colors text-body-sm font-body-sm">Mark all as read</button>
+</div>
+<div class="flex-1 overflow-y-auto p-md flex flex-col gap-sm">
+<!-- Notification Item 1 -->
+<div class="p-md rounded-lg hover:bg-surface-container transition-colors cursor-pointer flex gap-md items-start group relative bg-surface-container-low border border-surface-variant">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center flex-shrink-0 mt-xs">
+<span class="material-symbols-outlined text-[20px]">local_mall</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-title-sm text-title-sm text-primary">New Order #8901</h3>
+<span class="font-label-caps text-label-caps text-secondary text-[10px]">Just now</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">A new order has been placed for the Heritage Silk Saree collection. Awaiting fulfillment.</p>
+</div>
+<div class="w-2 h-2 rounded-full bg-on-tertiary-container absolute right-md top-md"></div>
+</div>
+<!-- Notification Item 2 -->
+<div class="p-md rounded-lg hover:bg-surface-container transition-colors cursor-pointer flex gap-md items-start group">
+<div class="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center flex-shrink-0 mt-xs">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-title-sm text-title-sm text-primary">Low Stock Alert</h3>
+<span class="font-label-caps text-label-caps text-secondary text-[10px]">2h ago</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant"><span class="font-semibold text-primary">Silk Evening Gown</span> inventory is running critically low (2 units remaining).</p>
+</div>
+</div>
+<!-- Notification Item 3 -->
+<div class="p-md rounded-lg hover:bg-surface-container transition-colors cursor-pointer flex gap-md items-start group">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0 mt-xs">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-title-sm text-title-sm text-primary">New Customer Signup</h3>
+<span class="font-label-caps text-label-caps text-secondary text-[10px]">5h ago</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Eleanor Vance has registered an account and subscribed to the Atelier newsletter.</p>
+</div>
+</div>
+<!-- Notification Item 4 -->
+<div class="p-md rounded-lg hover:bg-surface-container transition-colors cursor-pointer flex gap-md items-start group">
+<div class="w-10 h-10 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center flex-shrink-0 mt-xs">
+<span class="material-symbols-outlined text-[20px]">system_update_alt</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-title-sm text-title-sm text-primary">System Update</h3>
+<span class="font-label-caps text-label-caps text-secondary text-[10px]">1d ago</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">The inventory management system was successfully updated to version 2.4.1.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

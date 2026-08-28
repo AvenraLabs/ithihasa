@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Account - ITHIHASA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed-dim": "#ebc166",
+                      "on-error-container": "#ffdad6",
+                      "inverse-on-surface": "#313030",
+                      "on-secondary-fixed-variant": "#5b4300",
+                      "surface-container-lowest": "#0e0e0e",
+                      "on-tertiary-fixed-variant": "#4a4642",
+                      "secondary-container": "#765700",
+                      "on-error": "#690005",
+                      "primary-fixed-dim": "#cac6be",
+                      "tertiary-fixed-dim": "#ccc5c0",
+                      "ink-elevated": "#1A1714",
+                      "surface-container-low": "#1c1b1b",
+                      "primary-container": "#e7e2d9",
+                      "on-primary-fixed": "#1d1c16",
+                      "tertiary": "#ffffff",
+                      "ink-line": "#262220",
+                      "on-primary-fixed-variant": "#494740",
+                      "surface-bright": "#3a3939",
+                      "on-surface": "#e5e2e1",
+                      "on-primary-container": "#67645d",
+                      "surface-variant": "#353534",
+                      "primary": "#ffffff",
+                      "parchment": "#F4EFE6",
+                      "ink-raised": "#141210",
+                      "inverse-surface": "#e5e2e1",
+                      "on-secondary-fixed": "#261a00",
+                      "on-tertiary-fixed": "#1e1b18",
+                      "secondary": "#ebc166",
+                      "on-primary": "#32302a",
+                      "error-container": "#93000a",
+                      "gold-accent": "#C9A24B",
+                      "on-surface-variant": "#cac6bc",
+                      "ink-deep": "#0A0A0A",
+                      "on-secondary-container": "#facf73",
+                      "primary-fixed": "#e7e2d9",
+                      "surface-container-highest": "#353534",
+                      "secondary-fixed": "#ffdf9e",
+                      "surface-container-high": "#2a2a2a",
+                      "surface": "#131313",
+                      "tertiary-container": "#e9e1dc",
+                      "outline-variant": "#49473f",
+                      "error": "#ffb4ab",
+                      "on-secondary": "#402d00",
+                      "inverse-primary": "#615e57",
+                      "on-background": "#e5e2e1",
+                      "background": "#131313",
+                      "on-tertiary": "#33302c",
+                      "surface-container": "#201f1f",
+                      "on-tertiary-container": "#68635f",
+                      "surface-dim": "#131313",
+                      "outline": "#949088",
+                      "surface-tint": "#cac6be",
+                      "tertiary-fixed": "#e9e1dc"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "20px",
+                      "xl": "40px",
+                      "margin-desktop": "80px",
+                      "xxl": "64px",
+                      "md": "16px",
+                      "xs": "4px",
+                      "gutter": "16px",
+                      "sm": "8px",
+                      "unit": "4px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "EB Garamond"
+                      ],
+                      "body-sm": [
+                              "Manrope"
+                      ],
+                      "display-lg-mobile": [
+                              "EB Garamond"
+                      ],
+                      "display-lg": [
+                              "EB Garamond"
+                      ],
+                      "title-sm": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-sm": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "26px",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0A0A0A; /* Ink-deep */
+            color: #F4EFE6; /* Parchment */
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Smooth transitions */
+        .page-transition {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        
+        /* Hide scrollbar for clean look */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen flex flex-col items-center">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 dark:bg-surface/90 backdrop-blur-md border-b border-surface-variant dark:border-on-surface-variant/10 flat no shadows transition-all duration-300 ease-in-out flex justify-between items-center px-margin-mobile h-16 max-w-[1440px]">
+<button class="hover:opacity-70 transition-opacity text-primary dark:text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="font-display-lg-mobile text-display-lg-mobile tracking-tighter text-on-surface dark:text-surface">
+            ITHIHASA
+        </div>
+<button class="hover:opacity-70 transition-opacity text-primary dark:text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="w-full max-w-[1440px] mt-16 mb-24 md:mb-16 px-margin-mobile md:px-margin-desktop flex-grow flex flex-col md:flex-row gap-gutter md:gap-xl pt-lg">
+<!-- Profile Overview (Left Column Desktop / Top Mobile) -->
+<section class="w-full md:w-1/3 flex flex-col gap-lg">
+<div class="bg-ink-raised rounded-xl p-lg flex flex-col items-center text-center relative overflow-hidden group">
+<!-- Theme Toggle subtly placed -->
+<button class="absolute top-md right-md text-gold-accent hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined icon-fill" data-icon="dark_mode">dark_mode</span>
+</button>
+<!-- Avatar -->
+<div class="w-24 h-24 rounded-full overflow-hidden border border-ink-line mb-md">
+<img class="w-full h-full object-cover" data-alt="A cinematic, high-contrast black and white portrait of a person in shadow, elegant profile, moody and sophisticated luxury aesthetic, perfectly blending into a dark charcoal background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCT0-LhtpiGHrs52ocxqjyJCKd0MDkGmJwGYyAOcnBQXH-XPuR4nfSWeyKBawMQETGNJCkQNdcug-OA4is_6V7b_N7VTM4OL-Abru44XWRFRqbP34ynKtseVpWOHX06loAKSpjbzHIsBSzSILrm5DGiF5YLXXU7fmrTaqZq-nBauI7jacmxBYKHlFVG8OsBn_edyhU6LC2YwFTNxSC315cPQMwVc-cFMw_6e9oI8HTgdOaeLt88Udv4rw"/>
+</div>
+<h1 class="font-headline-md text-headline-md text-primary mb-xs">Aria Sterling</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-lg">aria.sterling@example.com</p>
+<button class="w-full border border-parchment py-sm px-md rounded-DEFAULT font-label-caps text-label-caps text-parchment hover:bg-parchment hover:text-ink-deep transition-colors duration-300">
+                    Edit Profile
+                </button>
+</div>
+<!-- Tier Status -->
+<div class="bg-ink-raised rounded-xl p-lg border border-ink-line flex justify-between items-center">
+<div>
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-xs">Member Status</h3>
+<p class="font-title-sm text-title-sm text-gold-accent">Noir Tier</p>
+</div>
+<span class="material-symbols-outlined text-gold-accent text-3xl">waves</span>
+</div>
+</section>
+<!-- Account Navigation (Right Column Desktop / Bottom Mobile) -->
+<section class="w-full md:w-2/3 flex flex-col gap-sm">
+<h2 class="font-headline-md text-headline-md text-primary mb-md hidden md:block">Account Details</h2>
+<!-- Nav List Items -->
+<a class="group flex items-center justify-between p-lg bg-ink-raised border border-ink-line rounded-lg hover:border-gold-accent transition-colors duration-300" href="#">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-gold-accent transition-colors">local_mall</span>
+<div>
+<h3 class="font-title-sm text-title-sm text-primary">Orders</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">View and track your history</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">chevron_right</span>
+</a>
+<a class="group flex items-center justify-between p-lg bg-ink-raised border border-ink-line rounded-lg hover:border-gold-accent transition-colors duration-300" href="#">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-gold-accent transition-colors">favorite</span>
+<div>
+<h3 class="font-title-sm text-title-sm text-primary">Wishlist</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Your curated selection</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">chevron_right</span>
+</a>
+<a class="group flex items-center justify-between p-lg bg-ink-raised border border-ink-line rounded-lg hover:border-gold-accent transition-colors duration-300" href="#">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-gold-accent transition-colors">location_on</span>
+<div>
+<h3 class="font-title-sm text-title-sm text-primary">Addresses</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manage delivery locations</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">chevron_right</span>
+</a>
+<a class="group flex items-center justify-between p-lg bg-ink-raised border border-ink-line rounded-lg hover:border-gold-accent transition-colors duration-300" href="#">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-gold-accent transition-colors">credit_card</span>
+<div>
+<h3 class="font-title-sm text-title-sm text-primary">Payments</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Secure methods and wallets</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">chevron_right</span>
+</a>
+<div class="mt-lg pt-lg border-t border-ink-line flex justify-start">
+<button class="font-label-caps text-label-caps text-on-surface-variant hover:text-error transition-colors flex items-center gap-sm">
+<span class="material-symbols-outlined text-sm">logout</span>
+                    Sign Out
+                </button>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile bg-surface/90 dark:bg-surface/90 backdrop-blur-md border-t border-surface-variant dark:border-on-surface-variant/10 flat no shadows h-16 pb-safe">
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
+</a>
+<a class="relative flex flex-col items-center justify-center text-primary dark:text-tertiary-fixed-dim after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-tertiary-fixed-dim after:rounded-full hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined icon-fill" data-icon="person">person</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Atelier Admin - Inventory Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#1f1b12",
+                        "on-tertiary-fixed-variant": "#5b4300",
+                        "surface-container-low": "#fcf2e3",
+                        "outline-variant": "#c4c7c7",
+                        "outline": "#747878",
+                        "surface-dim": "#e2d9ca",
+                        "surface-container-high": "#f0e7d8",
+                        "surface-variant": "#ebe1d2",
+                        "primary": "#000000",
+                        "tertiary-fixed": "#ffdf9e",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#858383",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-surface": "#1f1b12",
+                        "on-primary": "#ffffff",
+                        "background": "#fff8f1",
+                        "on-tertiary-fixed": "#261a00",
+                        "secondary-container": "#e7e2d9",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#e7e2d9",
+                        "inverse-primary": "#c9c6c5",
+                        "secondary": "#615e57",
+                        "on-secondary-fixed-variant": "#494740",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#343026",
+                        "primary-container": "#1c1b1b",
+                        "surface-container-highest": "#ebe1d2",
+                        "on-surface-variant": "#444748",
+                        "tertiary": "#000000",
+                        "on-secondary-fixed": "#1d1c16",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "inverse-on-surface": "#f9f0e0",
+                        "tertiary-container": "#261a00",
+                        "primary-fixed": "#e5e2e1",
+                        "on-secondary-container": "#67645d",
+                        "on-primary-fixed-variant": "#474646",
+                        "secondary-fixed-dim": "#cac6be",
+                        "surface": "#fff8f1",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#5f5e5e",
+                        "on-primary-fixed": "#1c1b1b",
+                        "on-error": "#ffffff",
+                        "surface-container": "#f6eddd",
+                        "on-tertiary-container": "#a27f2b",
+                        "surface-bright": "#fff8f1",
+                        "tertiary-fixed-dim": "#ebc166"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "40px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "unit": "4px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "margin-mobile": "20px",
+                        "gutter": "16px",
+                        "margin-desktop": "80px",
+                        "xxl": "64px"
+                    },
+                    "fontFamily": {
+                        "title-sm": ["Manrope"],
+                        "body-sm": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "headline-md": ["EB Garamond"],
+                        "display-lg": ["EB Garamond"],
+                        "display-lg-mobile": ["EB Garamond"],
+                        "body-md": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "title-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .glass-panel {
+                @apply bg-surface/90 backdrop-blur-md;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex font-body-md overflow-x-hidden antialiased">
+<!-- Desktop Side Navigation -->
+<nav class="hidden md:flex flex-col h-screen py-lg px-md w-64 bg-surface-container-low border-r border-outline-variant fixed left-0 top-0 z-40 shrink-0">
+<div class="mb-xl">
+<h1 class="font-headline-md text-headline-md text-primary tracking-widest uppercase">Atelier Admin</h1>
+<p class="font-label-caps text-label-caps text-secondary mt-xs">Heritage Edition</p>
+</div>
+<div class="flex-1 overflow-y-auto">
+<ul class="space-y-sm">
+<li>
+<a class="flex items-center gap-md py-sm px-md rounded-DEFAULT hover:bg-surface-container-high transition-all duration-200 text-secondary font-title-sm text-title-sm" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+                        Dashboard
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-sm px-md rounded-DEFAULT hover:bg-surface-container-high transition-all duration-200 text-secondary font-title-sm text-title-sm" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="shopping_bag">shopping_bag</span>
+                        Orders
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-sm px-md rounded-DEFAULT hover:bg-surface-container-high transition-all duration-200 text-primary font-title-sm text-title-sm bg-surface-variant font-semibold" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+                        Inventory
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-sm px-md rounded-DEFAULT hover:bg-surface-container-high transition-all duration-200 text-secondary font-title-sm text-title-sm" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="group">group</span>
+                        Customers
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-sm px-md rounded-DEFAULT hover:bg-surface-container-high transition-all duration-200 text-secondary font-title-sm text-title-sm" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="campaign">campaign</span>
+                        Marketing
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-sm px-md rounded-DEFAULT hover:bg-surface-container-high transition-all duration-200 text-secondary font-title-sm text-title-sm" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</div>
+<div class="mt-auto border-t border-outline-variant pt-lg space-y-sm">
+<button class="w-full flex items-center justify-center gap-sm bg-primary text-on-primary font-label-caps text-label-caps py-md rounded-DEFAULT hover:opacity-90 transition-opacity uppercase tracking-widest">
+                View Boutique
+            </button>
+<ul class="space-y-unit mt-md">
+<li>
+<a class="flex items-center gap-md py-sm px-md rounded-DEFAULT hover:bg-surface-container-high transition-all duration-200 text-secondary font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="help_outline">help_outline</span>
+                        Support
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-md py-sm px-md rounded-DEFAULT hover:bg-surface-container-high transition-all duration-200 text-secondary font-body-sm text-body-sm" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="logout">logout</span>
+                        Sign Out
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 w-full min-h-screen flex flex-col">
+<!-- Mobile Top App Bar (Only visible on mobile) -->
+<header class="md:hidden flex justify-between items-center w-full px-margin-mobile py-md bg-surface/90 backdrop-blur-md sticky top-0 z-50 border-b border-outline-variant">
+<h1 class="font-headline-md text-headline-md text-primary tracking-widest uppercase">ITHIHASA HERITAGE</h1>
+<div class="flex items-center gap-md text-primary">
+<button class="hover:text-secondary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:text-secondary transition-colors">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</header>
+<!-- Desktop Header & Page Actions -->
+<div class="px-margin-mobile md:px-margin-desktop py-xl md:py-xxl">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-lg mb-xl">
+<div>
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-sm">Inventory Collection</h2>
+<p class="font-body-md text-body-md text-secondary max-w-2xl">Manage the atelier's curated heritage pieces. Monitor stock levels and update collection details.</p>
+</div>
+<div class="flex flex-col sm:flex-row w-full md:w-auto gap-md">
+<!-- Search Input -->
+<div class="relative w-full sm:w-64">
+<span class="material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 text-secondary pointer-events-none" data-icon="search">search</span>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant focus:border-primary focus:ring-0 pl-xl py-sm font-body-sm text-body-sm text-primary placeholder:text-secondary transition-colors" placeholder="Search pieces or SKU..." type="text"/>
+</div>
+<button class="bg-primary text-on-primary font-label-caps text-label-caps uppercase tracking-widest py-md px-lg rounded-DEFAULT whitespace-nowrap hover:opacity-90 transition-opacity">
+                        Add New Piece
+                    </button>
+</div>
+</div>
+<!-- Filters & Views -->
+<div class="flex items-center justify-between border-b border-outline-variant pb-md mb-xl">
+<div class="flex gap-lg overflow-x-auto pb-xs">
+<button class="font-label-caps text-label-caps uppercase tracking-widest text-primary border-b border-primary pb-unit whitespace-nowrap">All Pieces (124)</button>
+<button class="font-label-caps text-label-caps uppercase tracking-widest text-secondary hover:text-primary transition-colors pb-unit whitespace-nowrap">In Stock (98)</button>
+<button class="font-label-caps text-label-caps uppercase tracking-widest text-error flex items-center gap-xs pb-unit whitespace-nowrap">
+<span class="material-symbols-outlined text-[14px]" data-icon="warning">warning</span>
+                        Low Stock (12)
+                    </button>
+<button class="font-label-caps text-label-caps uppercase tracking-widest text-secondary hover:text-primary transition-colors pb-unit whitespace-nowrap">Drafts (14)</button>
+</div>
+<div class="hidden md:flex gap-sm text-secondary">
+<button aria-label="Grid View" class="p-xs hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="grid_view" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+</button>
+<button aria-label="List View" class="p-xs hover:text-primary transition-colors opacity-50">
+<span class="material-symbols-outlined" data-icon="view_list">view_list</span>
+</button>
+</div>
+</div>
+<!-- Inventory Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-gutter gap-y-xl">
+<!-- Product Card 1 -->
+<div class="group flex flex-col gap-sm cursor-pointer">
+<div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-container-low">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A meticulously crafted heritage silk saree in deep maroon and gold zari work, draped elegantly on a modern minimal mannequin. Studio lighting, high contrast, editorial fashion photography style against a soft beige parchment background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvJw2F-pRoAupFh8Y95MBxVEjnIxH8drAX6RVvz480WHnRFp0U2raa9ZHK9CJMEnv5HxKDmCt8udAq5O_xGtOXbHXmJATuDoO5aFZyVBWNoZXGgi8Bzt6K5v6OAeplFTCOldwrattCGX43_91ND-cSC5psDCZpLw-m3XZOfgpsdpH0Otm9gwmDyrkh3C4qwBZcgQcyg53swSwMB4pH2aOdKu0sV_uUqPxch2No89Qdmr6MI2vI0WS5zQ"/>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+<!-- Badges -->
+<div class="absolute top-sm right-sm flex flex-col gap-unit">
+<span class="bg-surface/90 backdrop-blur-sm text-primary font-label-caps text-[10px] px-sm py-unit rounded-full uppercase tracking-widest border border-outline-variant">Silk Collection</span>
+</div>
+</div>
+<div class="flex justify-between items-start mt-sm">
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-secondary tracking-widest mb-unit">SKU-IH-8821</span>
+<h3 class="font-headline-md text-[18px] leading-tight text-primary">Kanchipuram Heirloom Saree</h3>
+<span class="font-body-sm text-secondary mt-xs">Deep Maroon / Pure Gold Zari</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">$1,250</span>
+</div>
+<div class="flex items-center justify-between mt-auto pt-sm border-t border-outline-variant/50">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-body-sm text-[12px] text-secondary">In Stock: 4</span>
+</div>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- Product Card 2 (Low Stock) -->
+<div class="group flex flex-col gap-sm cursor-pointer">
+<div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-container-low">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A stunning handcrafted silver necklace featuring intricate temple jewelry motifs. The piece is laid flat on a textured linen surface in a soft, natural light setting. Editorial style, focus on craftsmanship details, elegant shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCW3O1L0r40MeHL_QpSCMbeXqWTDgdLm5tImpusAlpXCXUT5x5HROxDiRv6emvJr4eT45boKM7mx8fuRH9sEQ0VNBK6XWB_UPB8cOuCvfzYlJuV3scw8hofZBLvCpSSUHilyiQ2dzLM4YLwW76dfvAG-Jg23pqzWhSOEI7U_3H2evx2oSTfXADcoasDTY52k26fz4HmLHZCfLj0NaZYdxLYuGueqaxU9DScHSuJbc8jyQsNweY0yHFxKw"/>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+</div>
+<div class="flex justify-between items-start mt-sm">
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-secondary tracking-widest mb-unit">SKU-IH-9045</span>
+<h3 class="font-headline-md text-[18px] leading-tight text-primary">Temple Motif Silver Haar</h3>
+<span class="font-body-sm text-secondary mt-xs">Sterling Silver / Antique Finish</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">$450</span>
+</div>
+<div class="flex items-center justify-between mt-auto pt-sm border-t border-outline-variant/50">
+<div class="flex items-center gap-xs text-error">
+<div class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
+<span class="font-body-sm text-[12px] font-medium">Low Stock: 1</span>
+</div>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="group flex flex-col gap-sm cursor-pointer">
+<div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-container-low">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="An intricately hand-painted Kalamkari dupatta draped over a modern dark wooden chair. The fabric features mythological scenes in earthy reds, indigos, and mustard yellows. Soft diffuse lighting, editorial lifestyle shot, quiet luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBN459OKgDEEO9xJ5gJXU-Wc9dNDI-lqA5qxvLhBndym-E-c7D4LVhluzp--gGhx0fNXjqzceHvnlePEZ4inWe2bkEn0TN0Hb8wwwhE0-ws1RQBoYkNGhOArWYI0dYftnFbuyDS5I0mH2B1FvHmpgyjEc4bVv8pHC8Tw6RXEwJ0KrrYwuQrH9DnNYWUVC2LYzjt8MTqTUOOD0bC0UkmoonlxfiZUODBJZlYG_KwFi9tcV-3ZqM4vtQxg"/>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+</div>
+<div class="flex justify-between items-start mt-sm">
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-secondary tracking-widest mb-unit">SKU-IH-3320</span>
+<h3 class="font-headline-md text-[18px] leading-tight text-primary">Kalamkari Narrative Dupatta</h3>
+<span class="font-body-sm text-secondary mt-xs">Handwoven Cotton / Natural Dyes</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">$185</span>
+</div>
+<div class="flex items-center justify-between mt-auto pt-sm border-t border-outline-variant/50">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-body-sm text-[12px] text-secondary">In Stock: 12</span>
+</div>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="group flex flex-col gap-sm cursor-pointer">
+<div class="relative aspect-[3/4] w-full overflow-hidden bg-surface-container-low">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A pair of artisanal brass lamp stands (diyas) with intricate peacock detailing at the crest, placed symmetrically on a polished stone surface. dramatic, moody lighting casting soft shadows, highlighting the metallic sheen. High-end editorial product photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-z-6FOwgc5D7ZgjmoaqfrfWDHJb0APKse30TDZQiTbYTDcsoXY53MUGC8F51H_UW77uD0A-P7i5G9LAUOoVawtm4u6gSCmBk8L6Px-scgiyISOn5m1awGrHon7S22Jvc69iTyLrokdl7GJIU659vKi5t70cZMhPK9ONlrVuaYTXkeplT1vQfDsESZyxDyOrmITZHr_ZRo7ejG00xh4x3drHcF9iV3KJ5QOxYL965uV36Ux5c8iwwsfg"/>
+<div class="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300"></div>
+</div>
+<div class="flex justify-between items-start mt-sm">
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] text-secondary tracking-widest mb-unit">SKU-IH-7712</span>
+<h3 class="font-headline-md text-[18px] leading-tight text-primary">Mayura Brass Deepam Set</h3>
+<span class="font-body-sm text-secondary mt-xs">Solid Brass / Hand-cast</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">$320</span>
+</div>
+<div class="flex items-center justify-between mt-auto pt-sm border-t border-outline-variant/50">
+<div class="flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<span class="font-body-sm text-[12px] text-secondary">In Stock: 8</span>
+</div>
+<button class="text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Pagination/Load More -->
+<div class="mt-xl pt-lg border-t border-outline-variant flex justify-center pb-xl">
+<button class="font-label-caps text-label-caps uppercase tracking-widest text-primary border-b border-primary hover:text-secondary hover:border-secondary transition-colors pb-unit">
+                    Load More Pieces
+                </button>
+</div>
+</div>
+</main>
+</body></html>

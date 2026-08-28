@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Light Mode Avatar: Gold squircle background with parchment silhouette -->
+  <rect width="100" height="100" rx="28" fill="#C9A24B" />
+  <!-- Head -->
+  <circle cx="50" cy="40" r="15" fill="#FFF8F1" />
+  <!-- Torso / Shoulders -->
+  <path d="M25 80 C25 60, 36 55, 50 55 C64 55, 75 60, 75 80 Z" fill="#FFF8F1" />
+</svg>

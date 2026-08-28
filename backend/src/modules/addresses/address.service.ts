@@ -1,0 +1,89 @@
+import { Address } from '../../database/index.js';
+import { NotFoundError, AuthorizationError } from '../../common/errors/index.js';
+
+export class AddressService {
+  public async getAddresses(userId: string) {
+    return Address.findAll({
+      where: { user_id: userId },
+      order: [
+        ['is_default_shipping', 'DESC'],
+        ['created_at', 'DESC'],
+      ],
+    });
+  }
+
+  public async getAddressById(userId: string, addressId: string) {
+    const address = await Address.findOne({
+      where: { id: addressId, user_id: userId },
+    });
+    if (!address) throw new NotFoundError('Address');
+    return address;
+  }
+
+  public async createAddress(userId: string, data: any) {
+    if (data.isDefaultShipping) {
+      await Address.update(
+        { is_default_shipping: false },
+        { where: { user_id: userId } }
+      );
+    }
+    if (data.isDefaultBilling) {
+      await Address.update(
+        { is_default_billing: false },
+        { where: { user_id: userId } }
+      );
+    }
+
+    return Address.create({
+      user_id: userId,
+      name: data.name,
+      phone: data.phone,
+      line1: data.line1,
+      line2: data.line2 || null,
+      city: data.city,
+      state: data.state,
+      postal_code: data.postalCode,
+      country: 'India',
+      is_default_shipping: data.isDefaultShipping || false,
+      is_default_billing: data.isDefaultBilling || false,
+    });
+  }
+
+  public async updateAddress(userId: string, addressId: string, data: any) {
+    const address = await this.getAddressById(userId, addressId);
+
+    if (data.isDefaultShipping) {
+      await Address.update(
+        { is_default_shipping: false },
+        { where: { user_id: userId } }
+      );
+    }
+    if (data.isDefaultBilling) {
+      await Address.update(
+        { is_default_billing: false },
+        { where: { user_id: userId } }
+      );
+    }
+
+    if (data.name !== undefined) address.name = data.name;
+    if (data.phone !== undefined) address.phone = data.phone;
+    if (data.line1 !== undefined) address.line1 = data.line1;
+    if (data.line2 !== undefined) address.line2 = data.line2;
+    if (data.city !== undefined) address.city = data.city;
+    if (data.state !== undefined) address.state = data.state;
+    if (data.postalCode !== undefined) address.postal_code = data.postalCode;
+    if (data.isDefaultShipping !== undefined) address.is_default_shipping = data.isDefaultShipping;
+    if (data.isDefaultBilling !== undefined) address.is_default_billing = data.isDefaultBilling;
+
+    await address.save();
+    return address;
+  }
+
+  public async deleteAddress(userId: string, addressId: string) {
+    const address = await this.getAddressById(userId, addressId);
+    await address.destroy();
+    return { success: true, message: 'Address deleted successfully' };
+  }
+}
+
+export const addressService = new AddressService();

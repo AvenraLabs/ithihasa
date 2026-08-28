@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Care - Ithihasa</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#e2d9ca",
+                      "primary-fixed": "#e5e2e1",
+                      "surface-bright": "#fff8f1",
+                      "primary": "#000000",
+                      "on-primary-fixed": "#1c1b1b",
+                      "background": "#fff8f1",
+                      "on-tertiary-fixed-variant": "#5b4300",
+                      "primary-container": "#1c1b1b",
+                      "error": "#ba1a1a",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed-variant": "#494740",
+                      "on-error": "#ffffff",
+                      "tertiary-container": "#261a00",
+                      "secondary-fixed": "#e7e2d9",
+                      "outline-variant": "#c4c7c7",
+                      "inverse-surface": "#343026",
+                      "on-primary-container": "#858383",
+                      "secondary-container": "#e7e2d9",
+                      "on-background": "#1f1b12",
+                      "on-surface": "#1f1b12",
+                      "surface-container-highest": "#ebe1d2",
+                      "outline": "#747878",
+                      "primary-fixed-dim": "#c9c6c5",
+                      "tertiary": "#000000",
+                      "surface-container": "#f6eddd",
+                      "secondary": "#615e57",
+                      "inverse-on-surface": "#f9f0e0",
+                      "on-primary-fixed-variant": "#474646",
+                      "on-primary": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "on-secondary-container": "#67645d",
+                      "tertiary-fixed": "#ffdf9e",
+                      "tertiary-fixed-dim": "#ebc166",
+                      "on-tertiary-fixed": "#261a00",
+                      "surface-container-high": "#f0e7d8",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#fcf2e3",
+                      "surface-variant": "#ebe1d2",
+                      "inverse-primary": "#c9c6c5",
+                      "on-secondary-fixed": "#1d1c16",
+                      "surface": "#fff8f1",
+                      "secondary-fixed-dim": "#cac6be",
+                      "on-surface-variant": "#444748",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-tint": "#5f5e5e",
+                      "on-tertiary-container": "#a27f2b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "20px",
+                      "md": "16px",
+                      "sm": "8px",
+                      "xs": "4px",
+                      "xl": "40px",
+                      "gutter": "16px",
+                      "margin-desktop": "80px",
+                      "lg": "24px",
+                      "unit": "4px",
+                      "xxl": "64px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "EB Garamond"
+                      ],
+                      "display-lg-mobile": [
+                              "EB Garamond"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-sm": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "EB Garamond"
+                      ],
+                      "title-sm": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "title-sm": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "26px",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: theme('colors.surface');
+            color: theme('colors.on-surface');
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .gold-accent {
+            color: theme('colors.on-tertiary-container');
+        }
+        
+        .gold-border {
+            border-color: theme('colors.on-tertiary-container');
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen pb-[80px]">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 dark:bg-surface/90 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center h-16 px-margin-mobile w-full transition-all duration-300 ease-out">
+<button class="hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed" data-icon="menu">menu</span>
+</button>
+<h1 class="font-display-lg-mobile text-display-lg-mobile tracking-widest text-primary text-center absolute left-1/2 -translate-x-1/2">ITHIHASA</h1>
+<button class="hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed" data-icon="shopping_bag">shopping_bag</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 px-margin-mobile md:px-margin-desktop md:max-w-[1440px] md:mx-auto">
+<!-- Concierge Header -->
+<section class="mb-xxl text-center">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-md">Atelier Concierge</h2>
+<p class="font-body-md text-body-md text-secondary max-w-xl mx-auto">How may we assist you today? Our dedicated team is here to ensure your experience is nothing short of exceptional.</p>
+</section>
+<!-- Direct Support Options (Bento Grid) -->
+<section class="mb-xxl grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="bg-surface-container-lowest border border-surface-dim p-lg flex flex-col items-center text-center hover:border-primary transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-4xl mb-md text-primary group-hover:gold-accent transition-colors font-light" data-icon="call">call</span>
+<h3 class="font-title-sm text-title-sm text-primary mb-xs">Direct Call</h3>
+<p class="font-body-sm text-body-sm text-secondary">Speak directly with an artisan.</p>
+</div>
+<div class="bg-surface-container-lowest border border-surface-dim p-lg flex flex-col items-center text-center hover:border-primary transition-colors cursor-pointer group relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-surface-dim/30 rounded-bl-full -z-10"></div>
+<span class="material-symbols-outlined text-4xl mb-md text-primary group-hover:gold-accent transition-colors font-light" data-icon="chat_bubble_outline">chat_bubble_outline</span>
+<h3 class="font-title-sm text-title-sm text-primary mb-xs">Start a Chat</h3>
+<p class="font-body-sm text-body-sm text-secondary">Instant assistance via messaging.</p>
+</div>
+<div class="bg-surface-container-lowest border border-surface-dim p-lg flex flex-col items-center text-center hover:border-primary transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-4xl mb-md text-primary group-hover:gold-accent transition-colors font-light" data-icon="schedule">schedule</span>
+<h3 class="font-title-sm text-title-sm text-primary mb-xs">Request Callback</h3>
+<p class="font-body-sm text-body-sm text-secondary">We'll call you at your convenience.</p>
+</div>
+</section>
+<!-- Order Assistance (List) -->
+<section class="mb-xxl">
+<h3 class="font-headline-md text-headline-md text-primary border-b border-surface-dim pb-sm mb-lg">Order Assistance</h3>
+<div class="flex flex-col gap-sm">
+<a class="flex justify-between items-center py-md group border-b border-surface-dim/50 hover:border-primary transition-colors" href="#">
+<span class="font-title-sm text-title-sm text-primary">Order Issues</span>
+<span class="material-symbols-outlined text-secondary group-hover:text-primary transition-colors">arrow_forward</span>
+</a>
+<a class="flex justify-between items-center py-md group border-b border-surface-dim/50 hover:border-primary transition-colors" href="#">
+<span class="font-title-sm text-title-sm text-primary">Returns &amp; Exchanges</span>
+<span class="material-symbols-outlined text-secondary group-hover:text-primary transition-colors">arrow_forward</span>
+</a>
+<a class="flex justify-between items-center py-md group border-b border-surface-dim/50 hover:border-primary transition-colors" href="#">
+<span class="font-title-sm text-title-sm text-primary">Shipping Inquiries</span>
+<span class="material-symbols-outlined text-secondary group-hover:text-primary transition-colors">arrow_forward</span>
+</a>
+</div>
+</section>
+<!-- Curated FAQs -->
+<section class="mb-xxl">
+<h3 class="font-headline-md text-headline-md text-primary border-b border-surface-dim pb-sm mb-lg">Curated Knowledge</h3>
+<div class="border-b border-surface-dim py-md cursor-pointer group">
+<div class="flex justify-between items-center">
+<span class="font-title-sm text-title-sm text-primary group-hover:gold-accent transition-colors">Care for your Heirloom</span>
+<span class="material-symbols-outlined text-secondary group-hover:gold-accent transition-colors">expand_more</span>
+</div>
+</div>
+<div class="border-b border-surface-dim py-md cursor-pointer group">
+<div class="flex justify-between items-center">
+<span class="font-title-sm text-title-sm text-primary group-hover:gold-accent transition-colors">Sustainability Report</span>
+<span class="material-symbols-outlined text-secondary group-hover:gold-accent transition-colors">expand_more</span>
+</div>
+</div>
+<div class="border-b border-surface-dim py-md cursor-pointer group">
+<div class="flex justify-between items-center">
+<span class="font-title-sm text-title-sm text-primary group-hover:gold-accent transition-colors">Membership Benefits</span>
+<span class="material-symbols-outlined text-secondary group-hover:gold-accent transition-colors">expand_more</span>
+</div>
+</div>
+</section>
+<!-- Atelier Hours -->
+<section class="text-center py-xl border border-surface-dim bg-surface-container-lowest">
+<p class="font-label-caps text-label-caps text-secondary tracking-widest mb-xs uppercase">Atelier Hours</p>
+<p class="font-body-md text-body-md text-primary">Monday - Friday, 9am - 6pm EST</p>
+<p class="font-body-sm text-body-sm text-secondary mt-xs italic">Exceptional service takes time.</p>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 h-16 bg-surface/90 dark:bg-surface/90 backdrop-blur-xl border-t border-outline-variant/30 fixed bottom-0 left-0 w-full flex justify-around items-center px-margin-mobile pb-safe">
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-caps text-[10px] mt-1 opacity-0 h-0 overflow-hidden">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-caps text-[10px] mt-1 opacity-0 h-0 overflow-hidden">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+<span class="font-label-caps text-[10px] mt-1 opacity-0 h-0 overflow-hidden">Favorite</span>
+</a>
+<a class="relative flex flex-col items-center justify-center text-primary after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-on-tertiary-container after:rounded-full hover:text-primary transition-colors active:scale-95 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-caps text-[10px] mt-1 opacity-0 h-0 overflow-hidden">Profile</span>
+</a>
+</nav>
+</body></html>

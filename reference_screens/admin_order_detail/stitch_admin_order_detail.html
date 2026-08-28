@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order Details - Ithihasa Atelier Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-container": "#67645d",
+                      "on-secondary": "#ffffff",
+                      "inverse-on-surface": "#f9f0e0",
+                      "secondary-container": "#e7e2d9",
+                      "surface-container": "#f6eddd",
+                      "on-primary-container": "#858383",
+                      "primary-fixed": "#e5e2e1",
+                      "tertiary-fixed": "#ffdf9e",
+                      "secondary-fixed": "#e7e2d9",
+                      "on-surface": "#1f1b12",
+                      "tertiary": "#000000",
+                      "surface-variant": "#ebe1d2",
+                      "on-background": "#1f1b12",
+                      "on-error": "#ffffff",
+                      "on-secondary-fixed-variant": "#494740",
+                      "on-tertiary-container": "#a27f2b",
+                      "primary-container": "#1c1b1b",
+                      "on-primary-fixed": "#1c1b1b",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-fixed": "#261a00",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed-variant": "#474646",
+                      "inverse-primary": "#c9c6c5",
+                      "surface-container-low": "#fcf2e3",
+                      "secondary-fixed-dim": "#cac6be",
+                      "surface-bright": "#fff8f1",
+                      "surface": "#fff8f1",
+                      "background": "#fff8f1",
+                      "outline-variant": "#c4c7c7",
+                      "surface-container-high": "#f0e7d8",
+                      "inverse-surface": "#343026",
+                      "primary": "#000000",
+                      "on-surface-variant": "#444748",
+                      "on-secondary-fixed": "#1d1c16",
+                      "on-tertiary-fixed-variant": "#5b4300",
+                      "outline": "#747878",
+                      "surface-tint": "#5f5e5e",
+                      "tertiary-fixed-dim": "#ebc166",
+                      "surface-container-highest": "#ebe1d2",
+                      "surface-container-lowest": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "tertiary-container": "#261a00",
+                      "surface-dim": "#e2d9ca",
+                      "primary-fixed-dim": "#c9c6c5",
+                      "on-tertiary": "#ffffff",
+                      "secondary": "#615e57",
+                      "error": "#ba1a1a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "sm": "8px",
+                      "unit": "4px",
+                      "margin-mobile": "20px",
+                      "lg": "24px",
+                      "gutter": "16px",
+                      "xl": "40px",
+                      "md": "16px",
+                      "xxl": "64px",
+                      "margin-desktop": "80px"
+              },
+              "fontFamily": {
+                      "body-sm": [
+                              "Manrope"
+                      ],
+                      "display-lg-mobile": [
+                              "EB Garamond"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "EB Garamond"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "title-sm": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "EB Garamond"
+                      ]
+              },
+              "fontSize": {
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "26px",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "title-sm": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.background'); color: theme('colors.on-background'); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+<!-- SideNavBar (from Component 11) -->
+<nav class="hidden md:flex flex-col h-screen py-lg px-md w-64 bg-surface-container-low dark:bg-surface-container-highest border-r border-outline-variant dark:border-outline shrink-0">
+<!-- Header -->
+<div class="flex items-center gap-md mb-xl">
+<div class="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-outline-variant">
+<img alt="Heritage Crest" class="w-full h-full object-cover" data-alt="A macro shot of a luxurious heritage crest embroidered in fine silk threads. The crest features a subtle monogram intertwining elegant serif letters. The background is a soft, muted parchment color, and the lighting is even and soft, highlighting the texture of the embroidery. The overall mood is sophisticated and understated, reflecting high-end artisanal craftsmanship in a light-mode editorial style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGHNHLKjZFv9lkuIRZxmee0921pYg6DyzlgIt6IOkgE8oNj0GdOBSziN_DJdINRofH66_ZSzjbWrSzbQHVBfD0vtFGIw38d3sQRRDcgE1a-6lcYfq4FtErBwGHzOmHywyd6B3IdD2p5g88TcwBijP1H3O13v6opUimfr4goQKZ_PzEj_zIdWhA-LBTOhqWYEs0ZtPC0OmK6t4wS02EAIjeO_ce33s8dNWp0GLokGYwoc0laKPeeaEBFg"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary dark:text-on-primary-fixed">Atelier Admin</h1>
+<p class="font-label-caps text-label-caps text-secondary dark:text-secondary-fixed-dim">Heritage Edition</p>
+</div>
+</div>
+<!-- Main Navigation -->
+<div class="flex-1 flex flex-col gap-sm">
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 p-sm rounded-DEFAULT" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="text-label-caps font-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-md text-on-tertiary-container dark:text-tertiary-fixed font-semibold hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 p-sm rounded-DEFAULT" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shopping_bag</span>
+<span class="text-label-caps font-label-caps">Orders</span>
+</a>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 p-sm rounded-DEFAULT" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">inventory_2</span>
+<span class="text-label-caps font-label-caps">Inventory</span>
+</a>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 p-sm rounded-DEFAULT" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">group</span>
+<span class="text-label-caps font-label-caps">Customers</span>
+</a>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 p-sm rounded-DEFAULT" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">campaign</span>
+<span class="text-label-caps font-label-caps">Marketing</span>
+</a>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 p-sm rounded-DEFAULT" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="text-label-caps font-label-caps">Settings</span>
+</a>
+</div>
+<!-- Footer / CTA -->
+<div class="mt-auto flex flex-col gap-sm pt-xl">
+<button class="w-full bg-primary text-on-primary py-sm px-md rounded-DEFAULT font-label-caps text-label-caps tracking-widest hover:bg-primary/90 transition-colors mb-md">
+                View Boutique
+            </button>
+<hr class="border-outline-variant dark:border-outline mb-sm"/>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 p-sm rounded-DEFAULT" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help_outline</span>
+<span class="text-label-caps font-label-caps">Support</span>
+</a>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 p-sm rounded-DEFAULT" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">logout</span>
+<span class="text-label-caps font-label-caps">Sign Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto w-full">
+<!-- TopAppBar (from Component 11) for mobile nav context if needed, but per instructions we hide side nav on mobile and show bottom nav, but since we are doing desktop mostly, we will use a subtle header -->
+<header class="w-full px-margin-mobile md:px-margin-desktop py-lg flex justify-between items-center border-b border-outline-variant bg-surface/90 backdrop-blur-md sticky top-0 z-40">
+<div class="flex items-center gap-md">
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<a class="text-secondary hover:text-primary transition-colors flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+<span class="font-label-caps text-label-caps">Back to Orders</span>
+</a>
+</div>
+<div class="flex items-center gap-md text-primary">
+<span class="material-symbols-outlined cursor-pointer hover:opacity-70 transition-opacity">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:opacity-70 transition-opacity">contrast</span>
+<div class="hidden md:flex items-center gap-sm ml-sm pl-md border-l border-outline-variant">
+<span class="font-label-caps text-label-caps">John Doe</span>
+</div>
+</div>
+</header>
+<div class="w-full max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop py-xxl">
+<!-- Order Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-lg mb-xxl">
+<div>
+<div class="flex items-center gap-md mb-xs">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary m-0">#ITH-4920</h2>
+<span class="inline-flex items-center px-sm py-xs rounded-full bg-surface-container-high border border-outline-variant text-on-tertiary-container font-label-caps text-label-caps">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container mr-sm"></span>
+                            Processing
+                        </span>
+</div>
+<p class="font-body-md text-body-md text-secondary">Placed on October 24, 2023 at 10:42 AM</p>
+</div>
+<div class="flex gap-md">
+<button class="px-md py-sm border border-primary text-primary bg-transparent font-label-caps text-label-caps tracking-widest rounded-DEFAULT hover:bg-surface-container-high transition-colors flex items-center gap-sm">
+<span class="material-symbols-outlined text-sm">download</span>
+                        Download Invoice
+                    </button>
+<button class="px-md py-sm bg-primary text-on-primary font-label-caps text-label-caps tracking-widest rounded-DEFAULT hover:bg-primary/90 transition-colors flex items-center gap-sm">
+<span class="material-symbols-outlined text-sm">edit</span>
+                        Edit Order
+                    </button>
+</div>
+</div>
+<!-- Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl md:gap-xxl">
+<!-- Left Column: Items & Timeline -->
+<div class="lg:col-span-8 flex flex-col gap-xl md:gap-xxl">
+<!-- Order Items -->
+<section>
+<h3 class="font-headline-md text-headline-md text-primary mb-lg border-b border-outline-variant pb-xs">Order Items</h3>
+<div class="flex flex-col gap-md">
+<!-- Item 1 -->
+<div class="flex items-start gap-lg p-md border border-outline-variant rounded-DEFAULT bg-surface-container-lowest">
+<div class="w-24 h-32 shrink-0 bg-surface-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A meticulously styled product shot of a Kanchipuram Heirloom Saree, folded neatly to show the intricate gold zari border against rich crimson silk. The lighting is soft and directional, creating a premium editorial feel. The background is a stark, clean parchment color to keep the focus entirely on the textile's craftsmanship and texture. A subtle light-mode aesthetic pervades the scene." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCp2MY-i6FVyIWxqy0BivV4xT41MJJ9908qDTJIXx2JR2ZGU914DIv91Q0lLzgs-12T500ACSURod9mxu09pXYGiH230imPT-nC_Kivu20DwqYqsDZlIEg9CMHPNtuNWuhO1Rr3SOX0nuJjj9ZjSmuX-_u8mjt-aklkmwuk1gpy4yTYGzotBiAJ8_JriQOcnKtr1zO-h1YwFSuJSQTqJ7HPQA8T9HUf3RfeI_yKEjM-kzDW-e-j47BCcQ"/>
+</div>
+<div class="flex-1 flex flex-col h-full justify-between">
+<div>
+<h4 class="font-title-sm text-title-sm text-primary mb-xs">Kanchipuram Heirloom Saree</h4>
+<p class="font-body-sm text-body-sm text-secondary">Color: Crimson &amp; Gold • Size: Standard</p>
+</div>
+<div class="flex justify-between items-end mt-sm">
+<div class="font-body-sm text-body-sm text-secondary">Qty: 1</div>
+<div class="font-title-sm text-title-sm text-primary">$850.00</div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-start gap-lg p-md border border-outline-variant rounded-DEFAULT bg-surface-container-lowest">
+<div class="w-24 h-32 shrink-0 bg-surface-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="An elegant editorial product photograph of a delicate Banarasi silk dupatta. The fabric is draped gracefully, revealing subtle silver motifs woven into a soft ivory base. The lighting is diffused and bright, creating a pristine, airy atmosphere. Set against a minimalist off-white background, the image embodies quiet luxury and traditional heritage in a modern light-mode context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuChGPEW4JwxYYRiybHsS-xDf4jBYLJ3wC01QcXZpvzDppzHBh0sreoHltNCMjc4KSVwiL0E6zgwxQlZk-NtobJXtnx7JlSaoMooxLKskanJ0-jWuFL2CiNu8GLa5f71hcTC3C6yTV_NMkvpIUJN4PwZ5dzej2MmpS2ASUF1YSYmBu0763NoIlWC1BQ0DMdJ66eDXW8yT8E02O-gAXhjiQzc6mDELn72_NapGl1IqfkazBv43sdfse3FIQ"/>
+</div>
+<div class="flex-1 flex flex-col h-full justify-between">
+<div>
+<h4 class="font-title-sm text-title-sm text-primary mb-xs">Banarasi Silk Dupatta</h4>
+<p class="font-body-sm text-body-sm text-secondary">Color: Ivory &amp; Silver • Size: Standard</p>
+</div>
+<div class="flex justify-between items-end mt-sm">
+<div class="font-body-sm text-body-sm text-secondary">Qty: 1</div>
+<div class="font-title-sm text-title-sm text-primary">$350.00</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Order Timeline -->
+<section>
+<h3 class="font-headline-md text-headline-md text-primary mb-lg border-b border-outline-variant pb-xs">Timeline</h3>
+<div class="pl-md relative">
+<!-- Vertical Line -->
+<div class="absolute left-[27px] top-4 bottom-4 w-px bg-outline-variant z-0"></div>
+<ul class="relative z-10 flex flex-col gap-lg">
+<li class="flex gap-md items-start">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center shrink-0 mt-xs">
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-secondary">Order Delivered</p>
+<p class="font-body-sm text-body-sm text-outline">Pending</p>
+</div>
+</li>
+<li class="flex gap-md items-start">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center shrink-0 mt-xs">
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-secondary">Shipped</p>
+<p class="font-body-sm text-body-sm text-outline">Pending</p>
+</div>
+</li>
+<li class="flex gap-md items-start">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center shrink-0 mt-xs">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container"></span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-primary">Processing</p>
+<p class="font-body-sm text-body-sm text-secondary">October 24, 2023 - 11:15 AM</p>
+</div>
+</li>
+<li class="flex gap-md items-start">
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0 mt-xs text-on-primary">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<p class="font-title-sm text-title-sm text-primary">Order Placed</p>
+<p class="font-body-sm text-body-sm text-secondary">October 24, 2023 - 10:42 AM</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+</div>
+<!-- Right Column: Sidebar -->
+<div class="lg:col-span-4 flex flex-col gap-lg">
+<!-- Customer Card -->
+<div class="p-md border border-outline-variant rounded-DEFAULT bg-surface-container-lowest">
+<h3 class="font-label-caps text-label-caps text-secondary mb-md tracking-widest border-b border-outline-variant pb-xs">Customer</h3>
+<div class="flex items-center gap-md mb-md">
+<div class="w-12 h-12 rounded-full bg-surface-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A refined, professional portrait of a woman named Eleanor Vance. She is styled in subtle, high-quality knitwear, exuding a quiet luxury vibe. The background is a soft, warm parchment tone. The lighting is studio quality, soft and flattering, emphasizing a bright, airy light-mode editorial aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIPq79k1lT0TGctsHI8ikHkC5NLjPhlFKoJmR7F1zwS5vr7m9RfMD99OIzsfwdfScS7PT_nfC0KGrfUa8rh3xCuOH4DvFGWalM4ku7bD7-JLvCSm_dMPor_i6WxSg2vUcR_QZxNboblIWkv-8U3fTM-O6LEmv2uOaolC3PnpB5urqo1upPLtb-JtJwGGM-TwFRNF6qsX10jeFHq0dnEUStFtjyKBnsYdztl17zay3IdYCOXxPg9C8PAw"/>
+</div>
+<div>
+<h4 class="font-title-sm text-title-sm text-primary">Eleanor Vance</h4>
+<p class="font-body-sm text-body-sm text-secondary">Returning Client</p>
+</div>
+</div>
+<div class="flex flex-col gap-xs font-body-sm text-body-sm text-primary">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm text-secondary">mail</span>
+                                e.vance@example.com
+                            </div>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm text-secondary">phone</span>
+                                +1 (555) 019-2834
+                            </div>
+</div>
+</div>
+<!-- Shipping Address -->
+<div class="p-md border border-outline-variant rounded-DEFAULT bg-surface-container-lowest">
+<h3 class="font-label-caps text-label-caps text-secondary mb-md tracking-widest border-b border-outline-variant pb-xs">Shipping Details</h3>
+<div class="font-body-sm text-body-sm text-primary flex flex-col gap-xs">
+<span class="font-title-sm">Eleanor Vance</span>
+<span>1042 Heritage Lane</span>
+<span>Suite 3B</span>
+<span>San Francisco, CA 94109</span>
+<span>United States</span>
+</div>
+<div class="mt-md pt-md border-t border-outline-variant">
+<p class="font-label-caps text-label-caps text-secondary mb-xs">Shipping Method</p>
+<p class="font-body-sm text-body-sm text-primary">Premium Atelier Delivery (2-3 Days)</p>
+</div>
+</div>
+<!-- Order Summary -->
+<div class="p-md border border-outline-variant rounded-DEFAULT bg-surface-container-highest">
+<h3 class="font-label-caps text-label-caps text-secondary mb-md tracking-widest border-b border-outline-variant pb-xs">Order Summary</h3>
+<div class="flex flex-col gap-sm font-body-sm text-body-sm mb-md">
+<div class="flex justify-between">
+<span class="text-secondary">Subtotal (2 items)</span>
+<span class="text-primary">$1,200.00</span>
+</div>
+<div class="flex justify-between">
+<span class="text-secondary">Shipping</span>
+<span class="text-primary">$40.00</span>
+</div>
+<div class="flex justify-between">
+<span class="text-secondary">Tax</span>
+<span class="text-primary">$0.00</span>
+</div>
+</div>
+<div class="pt-md border-t border-outline-variant flex justify-between items-end">
+<span class="font-title-sm text-title-sm text-primary">Total</span>
+<span class="font-headline-md text-headline-md text-primary">$1,240.00</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

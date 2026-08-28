@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ithihasa Atelier - Marketing Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error-container": "#93000a",
+                      "error-container": "#ffdad6",
+                      "inverse-primary": "#c9c6c5",
+                      "surface-container-high": "#f0e7d8",
+                      "surface-variant": "#ebe1d2",
+                      "secondary-fixed-dim": "#cac6be",
+                      "background": "#fff8f1",
+                      "inverse-on-surface": "#f9f0e0",
+                      "on-tertiary-container": "#a27f2b",
+                      "tertiary-fixed": "#ffdf9e",
+                      "outline": "#747878",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed-variant": "#494740",
+                      "secondary-container": "#e7e2d9",
+                      "tertiary-fixed-dim": "#ebc166",
+                      "secondary-fixed": "#e7e2d9",
+                      "surface-container-highest": "#ebe1d2",
+                      "primary": "#000000",
+                      "tertiary": "#000000",
+                      "surface-container-low": "#fcf2e3",
+                      "on-tertiary-fixed": "#261a00",
+                      "inverse-surface": "#343026",
+                      "on-tertiary": "#ffffff",
+                      "error": "#ba1a1a",
+                      "surface": "#fff8f1",
+                      "on-background": "#1f1b12",
+                      "on-primary-fixed-variant": "#474646",
+                      "surface-dim": "#e2d9ca",
+                      "on-secondary-fixed": "#1d1c16",
+                      "on-primary-container": "#858383",
+                      "surface-container": "#f6eddd",
+                      "primary-container": "#1c1b1b",
+                      "surface-tint": "#5f5e5e",
+                      "primary-fixed-dim": "#c9c6c5",
+                      "secondary": "#615e57",
+                      "on-surface": "#1f1b12",
+                      "primary-fixed": "#e5e2e1",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-bright": "#fff8f1",
+                      "on-primary-fixed": "#1c1b1b",
+                      "on-surface-variant": "#444748",
+                      "on-secondary-container": "#67645d",
+                      "outline-variant": "#c4c7c7",
+                      "tertiary-container": "#261a00",
+                      "on-error": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#5b4300"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "40px",
+                      "xs": "4px",
+                      "xxl": "64px",
+                      "sm": "8px",
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "lg": "24px",
+                      "margin-desktop": "80px",
+                      "md": "16px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "EB Garamond"
+                      ],
+                      "title-sm": [
+                              "Manrope"
+                      ],
+                      "display-lg-mobile": [
+                              "EB Garamond"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "display-lg": [
+                              "EB Garamond"
+                      ],
+                      "body-sm": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "26px",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "title-sm": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+          .glass-panel {
+              background: rgba(255, 248, 241, 0.6);
+              backdrop-filter: blur(20px);
+              -webkit-backdrop-filter: blur(20px);
+              border: 1px solid rgba(235, 225, 210, 0.5);
+          }
+      </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-surface dark:bg-surface border-r border-surface-variant dark:border-surface-variant flex flex-col py-xl gap-md z-50">
+<div class="px-lg pb-md">
+<h1 class="font-headline-md text-headline-md text-primary dark:text-primary">Atelier Admin</h1>
+<p class="font-body-sm text-body-sm text-secondary">Heritage Management</p>
+</div>
+<div class="flex-1 flex flex-col gap-xs mt-md">
+<a class="flex items-center gap-md px-lg py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-lg py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
+<span class="font-label-caps text-label-caps">Orders</span>
+</a>
+<a class="flex items-center gap-md px-lg py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-caps text-label-caps">Inventory</span>
+</a>
+<a class="flex items-center gap-md px-lg py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-caps text-label-caps">Customers</span>
+</a>
+<a class="flex items-center gap-md px-lg py-sm text-primary border-r-2 border-tertiary-fixed-dim bg-surface-container-low translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-caps text-label-caps">Marketing</span>
+</a>
+<a class="flex items-center gap-md px-lg py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-xs pt-md border-t border-surface-variant px-xs mx-lg">
+<a class="flex items-center gap-md px-md py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-caps text-label-caps">Log Out</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-40 flex justify-between items-center w-full px-lg h-16 bg-background/90 dark:bg-background/90 backdrop-blur-md border-b border-surface-variant dark:border-surface-variant">
+<div class="flex items-center gap-md w-1/3">
+<!-- Search (Left Aligned) -->
+<div class="relative w-full max-w-sm flex items-center group focus-within:border-primary">
+<span class="material-symbols-outlined absolute left-sm text-secondary group-focus-within:text-primary" data-icon="search">search</span>
+<input class="w-full bg-transparent border-0 border-b border-surface-variant focus:ring-0 focus:border-primary pl-xl py-sm font-body-sm text-body-sm text-on-surface placeholder:text-secondary transition-colors" placeholder="Search marketing..." type="text"/>
+</div>
+</div>
+<div class="flex items-center justify-center w-1/3">
+<span class="font-headline-md text-headline-md text-primary dark:text-primary">Ithihasa Atelier</span>
+</div>
+<div class="flex items-center justify-end gap-md w-1/3">
+<button class="text-secondary hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-secondary hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-surface-variant ml-sm">
+<img alt="Admin profile avatar" class="w-full h-full object-cover" data-alt="A close-up, highly detailed portrait of a sophisticated administrator in a minimalist setting. Soft, natural lighting highlights the quiet luxury aesthetic. Neutral tones, clean lines, professional demeanor. Light mode UI context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfqr1PCw5dfkWe68_4B9svduD3asRXWDX4V-YPa1RO_WUmr8OJIlIkanpfkLFTPZ0nVeRcX5hMENORW8vgH8cprHtdeWNiHqbaB08jOXvY1VP9vq2nMmd5d-5d8z7M-074nGtQCkG7BGRCtWR-FpyHAwzmi84WOiK-qy-uTOozMiq8Zbn0x_bm4CDGb2f85GmMl6ZYALslPe574qQmMxm1SUDW9TUiHo_w1_FYpk9MCYA_vReNQvXIYw"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-margin-desktop w-full max-w-[1440px] mx-auto flex-1 flex flex-col gap-xxl">
+<!-- Page Header & Actions -->
+<div class="flex justify-between items-end border-b border-surface-variant pb-lg">
+<div>
+<h2 class="font-display-lg text-display-lg text-primary">Marketing</h2>
+<!-- Tabs -->
+<div class="flex gap-lg mt-lg">
+<button class="pb-sm border-b-2 border-primary font-label-caps text-label-caps text-primary">Campaigns</button>
+<button class="pb-sm border-b-2 border-transparent hover:border-surface-variant font-label-caps text-label-caps text-secondary hover:text-primary transition-colors">Promotions</button>
+<button class="pb-sm border-b-2 border-transparent hover:border-surface-variant font-label-caps text-label-caps text-secondary hover:text-primary transition-colors">Analytics</button>
+</div>
+</div>
+<button class="bg-primary text-on-primary font-label-caps text-label-caps px-lg py-md rounded-DEFAULT hover:bg-surface-tint transition-colors tracking-widest uppercase">
+                    Create New Campaign
+                </button>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-12 gap-lg">
+<!-- Campaign Performance Chart (Bento span 8) -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-surface-variant rounded-lg p-lg flex flex-col gap-md">
+<div class="flex justify-between items-center">
+<h3 class="font-title-sm text-title-sm text-primary">Campaign Performance</h3>
+<select class="bg-transparent border-0 border-b border-surface-variant text-body-sm font-body-sm focus:ring-0 focus:border-primary py-xs pr-lg cursor-pointer">
+<option>Last 30 Days</option>
+<option>This Quarter</option>
+<option>Year to Date</option>
+</select>
+</div>
+<!-- Abstract Chart Representation -->
+<div class="flex-1 min-h-[300px] flex items-end gap-sm pt-xl border-b border-surface-variant relative">
+<!-- Y-Axis labels abstract -->
+<div class="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-label-caps font-label-caps text-secondary opacity-50 pb-sm pointer-events-none">
+<span>100k</span>
+<span>75k</span>
+<span>50k</span>
+<span>25k</span>
+</div>
+<!-- Bars -->
+<div class="flex-1 bg-surface-container h-[40%] rounded-t-sm hover:bg-surface-variant transition-colors group relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 font-label-caps text-label-caps bg-primary text-on-primary px-sm py-xs rounded transition-opacity">Week 1</div>
+</div>
+<div class="flex-1 bg-surface-container h-[65%] rounded-t-sm hover:bg-surface-variant transition-colors"></div>
+<div class="flex-1 bg-surface-tint h-[85%] rounded-t-sm opacity-80 hover:opacity-100 transition-opacity"></div>
+<div class="flex-1 bg-surface-container h-[55%] rounded-t-sm hover:bg-surface-variant transition-colors"></div>
+<div class="flex-1 bg-surface-container h-[90%] rounded-t-sm hover:bg-surface-variant transition-colors"></div>
+<div class="flex-1 bg-primary h-[100%] rounded-t-sm relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 font-label-caps text-label-caps bg-primary text-on-primary px-sm py-xs rounded transition-opacity">Current</div>
+</div>
+<div class="flex-1 bg-surface-container h-[70%] rounded-t-sm hover:bg-surface-variant transition-colors"></div>
+</div>
+<div class="flex justify-between font-label-caps text-label-caps text-secondary pt-xs">
+<span>W1</span><span>W2</span><span>W3</span><span>W4</span><span>W5</span><span>W6</span><span>W7</span>
+</div>
+</div>
+<!-- Summary Stats (Bento span 4) -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-lg">
+<div class="bg-inverse-surface text-inverse-on-surface rounded-lg p-lg flex flex-col gap-sm">
+<span class="font-label-caps text-label-caps opacity-70">Total Reach</span>
+<span class="font-headline-md text-headline-md text-on-tertiary">2.4M</span>
+<div class="flex items-center gap-xs text-tertiary-fixed mt-auto pt-md">
+<span class="material-symbols-outlined text-[16px]" data-icon="trending_up">trending_up</span>
+<span class="font-body-sm text-body-sm">+12.5% vs last month</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-surface-variant rounded-lg p-lg flex flex-col gap-sm">
+<span class="font-label-caps text-label-caps text-secondary">Conversion Rate</span>
+<span class="font-headline-md text-headline-md text-primary">3.8%</span>
+<div class="flex items-center gap-xs text-secondary mt-auto pt-md">
+<span class="material-symbols-outlined text-[16px]" data-icon="trending_flat">trending_flat</span>
+<span class="font-body-sm text-body-sm">Steady</span>
+</div>
+</div>
+</div>
+<!-- Active Promotions List (Full width below) -->
+<div class="col-span-12 bg-surface-container-lowest border border-surface-variant rounded-lg p-lg mt-lg">
+<div class="flex justify-between items-center mb-md pb-sm border-b border-surface-variant">
+<h3 class="font-title-sm text-title-sm text-primary">Active Promotions</h3>
+<button class="font-label-caps text-label-caps text-secondary hover:text-primary transition-colors underline decoration-1 underline-offset-4">View All</button>
+</div>
+<div class="flex flex-col">
+<!-- List Item 1 -->
+<div class="group flex items-center justify-between py-md border-b border-surface-variant last:border-0 hover:bg-surface-container-low transition-colors -mx-lg px-lg">
+<div class="flex items-center gap-md w-1/3">
+<div class="w-12 h-16 bg-surface-container overflow-hidden">
+<img alt="Heritage Silk Collection" class="w-full h-full object-cover" data-alt="A high-end editorial product shot of a silk scarf draped elegantly over a marble plinth. Minimalist, quiet luxury aesthetic. Soft, natural studio lighting. Rich textures, subdued color palette of cream and gold." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2JKq-zDLjt18F0iGoKxeNfREVpfb0ZNCa_N_J9HJTC0Ws8vHfkxCqE_IQA3efxvp-pqeJBkxqbA2a1EkkJOzfJqa990in59Cc7XKhQwiP6I8n-ToFLo4EqCzrhPC-7VfVpqDQ2JUhmmxTXFSvKiy8p4EJJZfKw_bpiV0EajZLkkRc83rfktiFnBXYSSYLorQqlvx5caOTk1ky-wMu1nhWTYedC5Y78Xgn56DJTLjJozxKoNz7u-_fww"/>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="font-title-sm text-title-sm text-primary">Heritage Silk Launch</span>
+<span class="font-body-sm text-body-sm text-secondary">Email &amp; Social</span>
+</div>
+</div>
+<div class="w-1/4 flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-secondary">Duration</span>
+<span class="font-body-sm text-body-sm text-primary">Oct 15 - Nov 01</span>
+</div>
+<div class="w-1/4 flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="font-label-caps text-label-caps text-primary tracking-widest">Running</span>
+</div>
+<div class="w-auto opacity-0 group-hover:opacity-100 transition-opacity flex gap-sm">
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined" data-icon="edit">edit</span></button>
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined" data-icon="more_vert">more_vert</span></button>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="group flex items-center justify-between py-md border-b border-surface-variant last:border-0 hover:bg-surface-container-low transition-colors -mx-lg px-lg">
+<div class="flex items-center gap-md w-1/3">
+<div class="w-12 h-16 bg-surface-container overflow-hidden">
+<img alt="Winter Archive Sale" class="w-full h-full object-cover" data-alt="A refined still life photograph of premium leather accessories arranged meticulously on a light, textured canvas background. Editorial style, sharp focus, neutral tones with deep brown accents. Quiet luxury vibe." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVyzmvwunbXNUEmyLt_EHYMKUbMibEbCt7COOoFDBrXS97d29lTztW31iB_ZJOdWF9b-iCNpw1qeAnrrOZ05Ff05qUZC-KIfOsqZ9VvUaYk71Wp--zLG4vYGHVuRk8R5uucos_XRPn2CfL8GPGkrQ1GKLx6ib7xGGJS8oeTQerR8TD1KQLnd6_bNtiV4XPhOgfa_Hq92eBAiQUwl7Gb6btgBp3qAsq37HLSYnSQoivMNhD06lf8uG7Ug"/>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="font-title-sm text-title-sm text-primary">Winter Archive Sale</span>
+<span class="font-body-sm text-body-sm text-secondary">VIP Only</span>
+</div>
+</div>
+<div class="w-1/4 flex flex-col gap-xs">
+<span class="font-label-caps text-label-caps text-secondary">Duration</span>
+<span class="font-body-sm text-body-sm text-primary">Nov 15 - Nov 30</span>
+</div>
+<div class="w-1/4 flex items-center gap-sm">
+<div class="w-2 h-2 rounded-full border border-secondary"></div>
+<span class="font-label-caps text-label-caps text-secondary tracking-widest">Paused</span>
+</div>
+<div class="w-auto opacity-0 group-hover:opacity-100 transition-opacity flex gap-sm">
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined" data-icon="edit">edit</span></button>
+<button class="text-secondary hover:text-primary p-xs"><span class="material-symbols-outlined" data-icon="more_vert">more_vert</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Atelier - ITHIHASA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-dim": "#e2d9ca",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#ebe1d2",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#261a00",
+                        "outline-variant": "#c4c7c7",
+                        "surface-tint": "#5f5e5e",
+                        "on-secondary-fixed-variant": "#494740",
+                        "on-secondary-container": "#67645d",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#fff8f1",
+                        "tertiary": "#000000",
+                        "on-tertiary-fixed-variant": "#5b4300",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#1d1c16",
+                        "tertiary-fixed": "#ffdf9e",
+                        "primary": "#000000",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#ebc166",
+                        "background": "#fff8f1",
+                        "surface-variant": "#ebe1d2",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#cac6be",
+                        "on-primary-container": "#858383",
+                        "inverse-primary": "#c9c6c5",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-high": "#f0e7d8",
+                        "outline": "#747878",
+                        "surface-container": "#f6eddd",
+                        "on-surface": "#1f1b12",
+                        "on-tertiary-container": "#a27f2b",
+                        "secondary-fixed": "#e7e2d9",
+                        "secondary-container": "#e7e2d9",
+                        "secondary": "#615e57",
+                        "on-tertiary-fixed": "#261a00",
+                        "on-background": "#1f1b12",
+                        "surface-container-low": "#fcf2e3",
+                        "primary-fixed": "#e5e2e1",
+                        "surface": "#fff8f1",
+                        "on-primary-fixed-variant": "#474646",
+                        "on-surface-variant": "#444748",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#1c1b1b",
+                        "inverse-on-surface": "#f9f0e0",
+                        "inverse-surface": "#343026"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "margin-desktop": "80px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "unit": "4px",
+                        "margin-mobile": "20px",
+                        "xxl": "64px",
+                        "lg": "24px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["EB Garamond", "serif"],
+                        "body-md": ["Manrope", "sans-serif"],
+                        "headline-md": ["EB Garamond", "serif"],
+                        "display-lg": ["EB Garamond", "serif"],
+                        "label-caps": ["Manrope", "sans-serif"],
+                        "title-sm": ["Manrope", "sans-serif"],
+                        "body-sm": ["Manrope", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "title-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;700&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md antialiased selection:bg-tertiary-container selection:text-on-tertiary-container overflow-x-hidden min-h-screen flex flex-col">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 dark:bg-surface-dim/90 backdrop-blur-md border-b border-surface-variant flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 duration-300 ease-in-out">
+<button aria-label="Menu" class="hover:opacity-70 transition-opacity p-2 -ml-2">
+<span class="material-symbols-outlined text-primary dark:text-on-surface" data-icon="menu">menu</span>
+</button>
+<div class="font-headline-md text-headline-md tracking-[0.2em] text-primary dark:text-on-surface font-bold text-center absolute left-1/2 -translate-x-1/2">
+            ITHIHASA
+        </div>
+<button aria-label="Shopping Bag" class="hover:opacity-70 transition-opacity p-2 -mr-2">
+<span class="material-symbols-outlined text-primary dark:text-on-surface" data-icon="shopping_bag">shopping_bag</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-[80px] pb-[96px] md:pb-xxl px-margin-mobile md:px-margin-desktop max-w-[1440px] mx-auto w-full">
+<!-- Hero Section -->
+<section class="mb-xxl text-center pt-xl">
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary mb-md">The Atelier</h1>
+<p class="font-body-md text-body-md text-secondary max-w-2xl mx-auto">Where heritage techniques meet modern editorial excellence. A dedication to the art of the weave.</p>
+</section>
+<!-- The Art of the Weave - Hero Image -->
+<section class="mb-xxl">
+<div class="w-full aspect-[4/3] md:aspect-[21/9] bg-surface-dim overflow-hidden relative">
+<img alt="The Art of the Weave" class="w-full h-full object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-700 ease-in-out" data-alt="A breathtaking, wide-angle editorial shot of a traditional handloom operating in a sun-drenched atelier. Dust motes dance in the shafts of light cutting across the wooden beams. The mood is quiet luxury, emphasizing the intricate threads and the meticulous craftsmanship. Warm tones, high contrast, cinematic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3DSAT-cRFCBXGCmSJdykHPsJTlOjYfA7q6BNk132bGp64eJ2iqtwCTuoyNFKlQMVD2dilkewOkHydj7r2AtugSp47sYzqBv-vTp9PCmI8cgiRi4lbjEC3DQeNpGVVPu2MTKW0RiDYTWR6BWc1lr0OGJquK-huajg7w5maPjNE1ksPP7aABz7-68o7pKmQC1_f9G8F_ZEmjXD6wTuesdKZsvhO_NQrAArkoKXFeefgjbeDBBz-8KVhkQ"/>
+</div>
+<div class="mt-lg md:w-2/3 mx-auto text-center">
+<h2 class="font-headline-md text-headline-md text-primary mb-sm">The Art of the Weave</h2>
+<p class="font-body-md text-body-md text-secondary">Every thread tells a story of patience and precision. Our artisans dedicate weeks to a single piece, honoring centuries of tradition while crafting the heirlooms of tomorrow.</p>
+</div>
+</section>
+<!-- Asymmetric Layout: Heritage Techniques & Master Artisans -->
+<section class="mb-xxl grid grid-cols-1 md:grid-cols-12 gap-margin-mobile md:gap-gutter items-center">
+<div class="md:col-span-5 md:col-start-2 order-2 md:order-1">
+<h3 class="font-label-caps text-label-caps text-primary tracking-widest uppercase mb-sm">Heritage Techniques</h3>
+<h2 class="font-headline-md text-headline-md text-primary mb-md">Master Artisans</h2>
+<p class="font-body-md text-body-md text-secondary mb-lg">Our atelier is home to generations of skill. Each master artisan brings a nuanced understanding of tension, texture, and natural dyes, ensuring every garment possesses a unique soul and unparalleled structural grace.</p>
+<a class="inline-flex items-center gap-2 font-label-caps text-label-caps text-primary border-b border-primary hover:opacity-70 transition-opacity pb-1" href="#">
+                    Discover Their Stories <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+<div class="md:col-span-5 md:col-start-8 order-1 md:order-2">
+<div class="w-full aspect-[3/4] bg-surface-dim overflow-hidden relative">
+<img alt="Master Artisans at work" class="w-full h-full object-cover" data-alt="Close-up portrait of an elderly master artisan's hands working delicately with fine silk threads. The lighting is soft and dramatic, highlighting the texture of the aged hands against the shimmering silk. Shot in a minimalist, high-end editorial style with deep shadows and soft parchment highlights. Quiet luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzH61Elm4aq2E3GntOGntpLhHB8Gex2r_qzabt_8pUDraDBYQzmxM-M_RqAZqCVSR2ZftTpYnUGeWqNC71q_jXpBc72l2HVa3Y3-eq00z6ExHSs0Gj0Zf3MNxv2wwDUunZ-3fF4Lwhss938k7GXxAsKbYUC7u89Xzur_T0PjbJxmtSqrTZrv2v_pqhoCTDkFxGMSNbykpSdthHLXmrdmkfkaYM9xaiJNLxVxO18lR-yKTcaiHvWhJyjA"/>
+</div>
+</div>
+</section>
+<!-- Bento Grid: Process & Sourcing -->
+<section class="mb-xxl">
+<div class="text-center mb-xl">
+<h2 class="font-headline-md text-headline-md text-primary">The Process</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-xs">
+<!-- Sourcing -->
+<div class="relative aspect-square md:aspect-auto md:row-span-2 group overflow-hidden bg-surface-dim">
+<img alt="Sourcing Silks" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" data-alt="Macro photography of raw silk cocoons and vibrant natural dye powders arranged beautifully on a textured parchment surface. High-key lighting, minimalist composition, editorial style. The colors are rich but subdued, reflecting a premium, heritage aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1j2TOix2U37txjviP76IOsmZFysi0H5CTJ42f2QQIkDnz6sBNpmg9BW6rhUye9DiXgTg_AU7xTsuiTzhKDclIzwYFc2iev3fS7pp7qPg-qtB7lxnagOr2rlFK1NpdARSau6rooDC9WQ4iU1o9MOpjG3P7qrrrZ70Ggyl4PxUMvLs5asSqAXhkm2rPLsXbzYQDSUTqcGnwPJ-GJt5stTK4nCXiSJit68mwls-7ATzd8WRrPpowg7pimw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-lg">
+<h3 class="font-headline-md text-headline-md text-on-primary mb-xs">Sourcing the Finest Silks</h3>
+<p class="font-body-sm text-body-sm text-surface-dim opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-y-4 group-hover:translate-y-0">Selecting only pristine, ethically harvested fibers.</p>
+</div>
+</div>
+<!-- Loom -->
+<div class="relative aspect-square group overflow-hidden bg-surface-dim md:col-span-2">
+<img alt="The Handloom" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" data-alt="Abstract, tightly framed shot of the wooden mechanisms of a handloom in motion. Blur indicates movement. High contrast black and white or heavily desaturated tones. Minimalist and structural, focusing on the mechanics of creation in a high-end atelier setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoRSHUE5xyO1XcsWEcbqQZ-8osfHJeYVP04Loirs9yeqbXT0q8losZPgxd6D9ePcKiiuDQa99LcAZobEKhiYGOyJIsVY07Ijphh_kZH0Em7jaCIqH__eX3x5cFS8ZeAt2rxcZuZP007ytPw0CsEYaRP0uSozhau0Z0WlpVVwcBBwkXuHNafyHNNEscHPTr4LbruCsxuitOpHn0brMmCE-WgKJclhiEwFp5IyE0am37K8PhwUfTQWlg5g"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex flex-col justify-end p-lg">
+<h3 class="font-headline-md text-headline-md text-on-primary mb-xs">The Handloom Process</h3>
+</div>
+</div>
+<!-- Finishing -->
+<div class="relative aspect-square group overflow-hidden bg-surface-dim">
+<img alt="Finishing Touches" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" data-alt="Detail shot of a finished textile piece being carefully inspected. Soft, natural light grazing across the textured weave. The focus is on the flawless edge and the subtle sheen of the material. Quiet luxury styling, parchment tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC222nhZznFsJUK_yeLw4YEaojloZpBpdZEZnT1Y6NgCsVaLwRofY2fsBcErvi7ELvOLBwkTBIOi6QQycho-xchhmx9l2-ed2NJ39MX4B3RbNBNGMuz_GFRvlb6cTA7KbXqsGG94VZWJD5MPFZMlFfu3m1qbyxQy2U367sU0Wf38R5J4ZMwIMywxHwE00y-qmIeFBpgAYuDXKDW6r39S-lFW2dpH_sU3hDtRkPWZVEZVVUsqdA93_nzyQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex flex-col justify-end p-lg">
+<h3 class="font-headline-md text-headline-md text-on-primary mb-xs">Finishing</h3>
+</div>
+</div>
+<!-- Detail -->
+<div class="relative aspect-square group overflow-hidden bg-surface-dim">
+<div class="w-full h-full bg-surface-container-high flex flex-col items-center justify-center p-lg text-center border border-surface-variant">
+<span class="material-symbols-outlined text-[48px] text-primary mb-sm font-light" data-icon="architecture">architecture</span>
+<h3 class="font-headline-md text-headline-md text-primary mb-xs">Structural Grace</h3>
+<p class="font-body-sm text-body-sm text-secondary">Design rooted in minimalist philosophy.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 h-16 bg-surface/90 dark:bg-surface-dim/90 backdrop-blur-md border-t border-surface-variant flex justify-around items-center px-margin-mobile pb-safe">
+<button class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-container hover:text-primary transition-colors scale-95 active:scale-90 transition-transform w-16 h-full">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="home">home</span>
+<span class="font-label-caps text-[10px] tracking-widest hidden">HOME</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-container hover:text-primary transition-colors scale-95 active:scale-90 transition-transform w-16 h-full">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="search">search</span>
+<span class="font-label-caps text-[10px] tracking-widest hidden">SEARCH</span>
+</button>
+<!-- Active Tab: Atelier maps closer to Explore/Home, but given nav labels aren't strictly content aligned, we'll keep it simple or default to home. Wait, the prompt says "The Atelier". Let's assume there is no perfect match in the Bottom Nav JSON ["home", "search", "favorite", "person"]. We will leave them all inactive as it's a content page, or make 'home' active. Let's make none active to focus on canvas, or just default home. -->
+<button class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-container hover:text-primary transition-colors scale-95 active:scale-90 transition-transform w-16 h-full">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="favorite">favorite</span>
+<span class="font-label-caps text-[10px] tracking-widest hidden">FAVORITE</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary dark:text-on-secondary-container hover:text-primary transition-colors scale-95 active:scale-90 transition-transform w-16 h-full">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="person">person</span>
+<span class="font-label-caps text-[10px] tracking-widest hidden">PROFILE</span>
+</button>
+</nav>
+</body></html>

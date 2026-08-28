@@ -1,0 +1,327 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Wishlist - ITHIHASA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-low": "#fcf2e3",
+                      "primary-container": "#1c1b1b",
+                      "primary-fixed": "#e5e2e1",
+                      "on-surface-variant": "#444748",
+                      "on-tertiary-container": "#a27f2b",
+                      "surface-container-highest": "#ebe1d2",
+                      "inverse-surface": "#343026",
+                      "surface-variant": "#ebe1d2",
+                      "background": "#fff8f1",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-fixed": "#1d1c16",
+                      "surface-tint": "#5f5e5e",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed": "#1c1b1b",
+                      "surface-dim": "#e2d9ca",
+                      "on-primary": "#ffffff",
+                      "tertiary": "#000000",
+                      "inverse-on-surface": "#f9f0e0",
+                      "error-container": "#ffdad6",
+                      "on-secondary-container": "#67645d",
+                      "on-surface": "#1f1b12",
+                      "outline": "#747878",
+                      "primary": "#000000",
+                      "secondary-fixed": "#e7e2d9",
+                      "tertiary-fixed-dim": "#ebc166",
+                      "on-secondary-fixed-variant": "#494740",
+                      "on-background": "#1f1b12",
+                      "tertiary-container": "#261a00",
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#858383",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-high": "#f0e7d8",
+                      "surface-bright": "#fff8f1",
+                      "on-tertiary-fixed-variant": "#5b4300",
+                      "secondary-container": "#e7e2d9",
+                      "primary-fixed-dim": "#c9c6c5",
+                      "on-tertiary": "#ffffff",
+                      "surface": "#fff8f1",
+                      "secondary-fixed-dim": "#cac6be",
+                      "inverse-primary": "#c9c6c5",
+                      "on-primary-fixed-variant": "#474646",
+                      "on-tertiary-fixed": "#261a00",
+                      "surface-container": "#f6eddd",
+                      "outline-variant": "#c4c7c7",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed": "#ffdf9e",
+                      "secondary": "#615e57"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "lg": "24px",
+                      "margin-desktop": "80px",
+                      "xl": "40px",
+                      "xs": "4px",
+                      "xxl": "64px",
+                      "sm": "8px",
+                      "md": "16px",
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "display-lg-mobile": [
+                              "EB Garamond"
+                      ],
+                      "display-lg": [
+                              "EB Garamond"
+                      ],
+                      "body-sm": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "title-sm": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "EB Garamond"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "26px",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-sm": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-surface antialiased selection:bg-tertiary-fixed selection:text-on-tertiary-fixed min-h-screen flex flex-col pt-16 md:pt-0">
+<!-- Mobile Top Navigation (from JSON) -->
+<header class="md:hidden fixed top-0 w-full z-50 bg-surface/90 dark:bg-surface/90 backdrop-blur-md border-b border-surface-variant dark:border-on-surface-variant/10 transition-all duration-300 ease-in-out h-16">
+<div class="flex justify-between items-center px-margin-mobile h-full w-full">
+<button aria-label="Menu" class="text-primary dark:text-on-surface hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<h1 class="font-display-lg-mobile text-display-lg-mobile tracking-tighter text-on-surface dark:text-surface" style="color: rgb(201, 162, 75); font-family: &quot;EB Garamond&quot;, serif; text-transform: uppercase; letter-spacing: 0.1em;">
+                ITHIHASA
+            </h1>
+<button aria-label="Wishlist" class="text-primary dark:text-on-surface hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-primary dark:text-surface" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+</header>
+<!-- Desktop Top Navigation (Custom for Desktop as per JSON intent) -->
+<nav class="hidden md:flex fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md border-b border-surface-variant transition-all duration-300 h-20 items-center px-margin-desktop justify-between">
+<div class="flex items-center gap-lg">
+<button aria-label="Menu" class="text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<button aria-label="Search" class="text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">search</span>
+</button>
+</div>
+<h1 class="font-display-lg text-display-lg tracking-tighter text-on-surface" style="color: rgb(201, 162, 75); font-family: &quot;EB Garamond&quot;, serif; text-transform: uppercase; letter-spacing: 0.1em;">
+            ITHIHASA
+        </h1>
+<div class="flex items-center gap-lg">
+<button aria-label="Wishlist" class="text-primary hover:opacity-70 transition-opacity relative">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="absolute -top-1 -right-1 flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-fixed-dim opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-tertiary-fixed-dim"></span>
+</span>
+</button>
+<button aria-label="Shopping Bag" class="text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span>
+</button>
+</div>
+</nav>
+<main class="flex-grow w-full max-w-[1440px] mx-auto px-margin-mobile md:px-margin-desktop py-xxl md:pt-[144px]">
+<!-- Header Section -->
+<section class="flex flex-col items-center justify-center text-center mb-xxl">
+<div class="flex items-center justify-center mb-lg">
+<span class="font-display-lg text-display-lg tracking-widest" style="color: rgb(201, 162, 75);">ITHIHASA</span>
+</div>
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg mb-xs">Your Wishlist</h2>
+<p class="font-body-md text-body-md text-secondary">Curated selections awaiting your collection. 4 items.</p>
+</section>
+<!-- Wishlist Grid -->
+<section class="grid grid-cols-2 md:grid-cols-2 gap-x-gutter gap-y-lg md:gap-x-xl md:gap-y-xl">
+<!-- Item 1 -->
+<article class="flex flex-col group">
+<div class="relative w-full aspect-[3/4] bg-surface-container overflow-hidden mb-sm cursor-pointer">
+<img class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" data-alt="A striking digital installation art piece featuring glowing, generative geometric shapes suspended in a vast, minimalist gallery space. The room is illuminated by high-key, soft white lighting that creates a bright, modern light-mode aesthetic. The artwork relies on a sophisticated palette of deep blacks and pristine whites, punctuated by intense accents of vibrant red. The mood is serene yet technologically advanced, perfect for a high-end fashion lookbook." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_Ex8QAsG3bL6aNUw8_s_HpYnDSWPEOWrFcBEQJIbg5uIByH7v83Zb0SCb6XaZZJsST9xjzRqYiJOZl-_txG9og-NdX5GrHu6igDcjpQxGLIZRIuR6TXJXauLgNDlRNPfFcuvyhJfloa4N6axvcn9IwIH7PzDMc74Io-yhvRVdr8iqOsfFfC38lPIBl6o_G9ElrHiVCOhGAgapBRKEekhAvREun7IbRYv1q7btX7vCPv_N8o16iHVpnw">
+<button aria-label="Remove item" class="absolute top-sm right-sm w-8 h-8 flex items-center justify-center rounded-full bg-surface/50 backdrop-blur-sm text-primary hover:bg-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-xs flex-grow">
+<div class="flex justify-between items-start gap-md">
+<h3 class="font-headline-md text-headline-md text-on-surface truncate">Silk Drape Blouse</h3>
+<span class="font-body-md text-body-md whitespace-nowrap">$450</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary truncate">Ivory White • Size M</p>
+<div class="mt-auto pt-sm">
+<button class="w-full py-sm bg-primary text-on-primary font-label-caps text-label-caps transition-colors hover:bg-surface-tint">ADD TO BAG</button>
+</div>
+</div>
+</article>
+<!-- Item 2 -->
+<article class="flex flex-col group">
+<div class="relative w-full aspect-[3/4] bg-surface-container overflow-hidden mb-sm cursor-pointer">
+<img class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" data-alt="A minimalist fashion editorial shot featuring a close-up of a premium leather tote bag resting on a textured parchment pedestal. The lighting is soft and diffused, casting gentle shadows that highlight the bag's immaculate stitching and rich texture. The background is a stark, bright white studio setting, adhering to a quiet luxury aesthetic. The overall mood is sophisticated, tactile, and highly curated." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNY8ZEvEkKhT0armakXZG3oVKMiDbjcFgCSbgwSFdiul1igjyLbzgeRXgx1qfL9bndxNi9HEQEXBQlPO_Gt8--FFhfuL5rKkQkKV9Ofrp2KhItG4lM0ijhqC4xVBCyPzSar7hQx90JhUFRj_G6-21FpEPqzvVUBYisYWGIaXbOzu8PA5XJIa-8bXRcXS_BhkLVENsJs5M_NPFFrR69gVzbcZMl_B_yxNgS_VXL3lmnh4kBDHc5Dz3WVg">
+<button aria-label="Remove item" class="absolute top-sm right-sm w-8 h-8 flex items-center justify-center rounded-full bg-surface/50 backdrop-blur-sm text-primary hover:bg-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-xs flex-grow">
+<div class="flex justify-between items-start gap-md">
+<h3 class="font-headline-md text-headline-md text-on-surface truncate">Heritage Leather Tote</h3>
+<span class="font-body-md text-body-md whitespace-nowrap">$1,200</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary truncate">Obsidian Black</p>
+<div class="mt-auto pt-sm">
+<button class="w-full py-sm border border-primary text-primary font-label-caps text-label-caps transition-colors hover:bg-surface-dim">ADD TO BAG</button>
+</div>
+</div>
+</article>
+<!-- Item 3 -->
+<article class="flex flex-col group">
+<div class="relative w-full aspect-[3/4] bg-surface-container overflow-hidden mb-sm cursor-pointer">
+<img class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" data-alt="A high-contrast editorial photograph of a tailored wool coat draped over a minimalist wooden chair. The scene is bathed in natural, bright daylight streaming from an unseen window, creating striking architectural shadows on a pristine white floor. The aesthetic is clean, modern, and aligned with quiet luxury, focusing entirely on the drape and material quality of the garment. The color palette is strictly neutral." src="https://lh3.googleusercontent.com/aida-public/AB6AXuABayPVyRrZeukWbhJuKXzbVr9dkjGPd7Rry9s4RJHTIZQrKBEq1IqBMBYlAnduE0NAQX2rKTWAKzKZp69tKEsJnX5HrPQMfTuSPBcqjhLw0N3xJH-byJ7LyT3vJAGFmSSloybMvEwj8sGyhcGARi0ePa-0m63NMVp34_E4Ti3761wZTRjXqPaqfVWrIRLhuIJMmM2CKUFJ4_yTHmBHjpJTdi1XFhAtjus5MXaB17RHDf1e7wlNbGji7A">
+<button aria-label="Remove item" class="absolute top-sm right-sm w-8 h-8 flex items-center justify-center rounded-full bg-surface/50 backdrop-blur-sm text-primary hover:bg-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-xs flex-grow">
+<div class="flex justify-between items-start gap-md">
+<h3 class="font-headline-md text-headline-md text-on-surface truncate">Structured Wool Coat</h3>
+<span class="font-body-md text-body-md whitespace-nowrap">$850</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary truncate">Ash Grey • Size L</p>
+<div class="mt-auto pt-sm">
+<button class="w-full py-sm border border-primary text-primary font-label-caps text-label-caps transition-colors hover:bg-surface-dim">ADD TO BAG</button>
+</div>
+</div>
+</article>
+<!-- Item 4 (Sold Out State Example) -->
+<article class="flex flex-col group opacity-70">
+<div class="relative w-full aspect-[3/4] bg-surface-container overflow-hidden mb-sm cursor-not-allowed">
+<img class="w-full h-full object-cover grayscale" data-alt="An ethereal, soft-focus image of delicate pearl earrings resting on a piece of rough-hewn stone. The lighting is extremely soft, almost overexposed, creating a dreamy, high-end jewelry editorial feel. The background is a continuous sweep of warm, parchment-colored seamless paper. The mood is hushed, luxurious, and delicate, emphasizing the contrast between the smooth pearls and the rough stone." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiPiuu91U5MmWx1ir3yCzpG1IWGv-0QELpm1BMjUFWnozBtcwEuzZjACxlMekSdBFZjC9Je89_EmxWqY3BHHq2Us9sVdGWE27c7nzHNlBBG-ames5BUkKMSfAOQ81Sfmf1kRVL0sOCouskvHLbcM0gboTXDR_AjL38p4ZDAH6yUMltQ0jDSt6gDXfYHIVGvy-h-xS5VnSzaGM_PJPds6J1JWvU4TveWwCcWpGnBroWtrqVT7hppK_yMQ">
+<button aria-label="Remove item" class="absolute top-sm right-sm w-8 h-8 flex items-center justify-center rounded-full bg-surface/50 backdrop-blur-sm text-primary hover:bg-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">close</span>
+</button>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<span class="bg-surface/80 px-md py-xs font-label-caps text-label-caps text-primary tracking-widest backdrop-blur-sm">OUT OF STOCK</span>
+</div>
+</div>
+<div class="flex flex-col gap-xs flex-grow">
+<div class="flex justify-between items-start gap-md">
+<h3 class="font-headline-md text-headline-md text-on-surface truncate">Baroque Pearl Drops</h3>
+<span class="font-body-md text-body-md whitespace-nowrap">$320</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary truncate">Gold Vermeil</p>
+<div class="mt-auto pt-sm">
+<button class="w-full py-sm bg-surface-variant text-on-surface-variant font-label-caps text-label-caps cursor-not-allowed" disabled="">NOTIFY ME</button>
+</div>
+</div>
+</article>
+</section>
+</main>
+<!-- Mobile Bottom Navigation (from JSON) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 h-16 pb-safe bg-surface/90 dark:bg-surface/90 backdrop-blur-md border-t border-surface-variant dark:border-on-surface-variant/10">
+<ul class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile h-16">
+<li class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">home</span>
+<span class="sr-only">Home</span>
+</li>
+<li class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">storefront</span>
+<span class="sr-only">Storefront</span>
+</li>
+<li class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">search</span>
+<span class="sr-only">Search</span>
+</li>
+<li class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span>
+<span class="sr-only">Shopping Bag</span>
+</li>
+<li class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">person</span>
+<span class="sr-only">Profile</span>
+</li>
+</ul>
+</nav>
+
+
+</body></html>

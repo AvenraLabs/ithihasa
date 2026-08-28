@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ITHIHASA - Registration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-variant": "#ebe1d2",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#5b4300",
+                      "error-container": "#ffdad6",
+                      "on-tertiary": "#ffffff",
+                      "surface-bright": "#fff8f1",
+                      "on-secondary-fixed": "#1d1c16",
+                      "inverse-on-surface": "#f9f0e0",
+                      "primary-fixed-dim": "#c9c6c5",
+                      "on-tertiary-fixed": "#261a00",
+                      "on-error-container": "#93000a",
+                      "inverse-surface": "#343026",
+                      "tertiary-fixed": "#ffdf9e",
+                      "surface-container-low": "#fcf2e3",
+                      "surface-dim": "#e2d9ca",
+                      "error": "#ba1a1a",
+                      "inverse-primary": "#c9c6c5",
+                      "on-secondary-fixed-variant": "#494740",
+                      "tertiary-container": "#261a00",
+                      "on-surface-variant": "#444748",
+                      "on-primary-container": "#858383",
+                      "tertiary-fixed-dim": "#ebc166",
+                      "surface-container": "#f6eddd",
+                      "on-tertiary-container": "#a27f2b",
+                      "secondary": "#615e57",
+                      "background": "#fff8f1",
+                      "surface-container-highest": "#ebe1d2",
+                      "primary-fixed": "#e5e2e1",
+                      "on-surface": "#1f1b12",
+                      "on-secondary": "#ffffff",
+                      "secondary-fixed-dim": "#cac6be",
+                      "outline": "#747878",
+                      "primary-container": "#1c1b1b",
+                      "surface-tint": "#5f5e5e",
+                      "secondary-fixed": "#e7e2d9",
+                      "secondary-container": "#e7e2d9",
+                      "on-error": "#ffffff",
+                      "primary": "#000000",
+                      "outline-variant": "#c4c7c7",
+                      "surface": "#fff8f1",
+                      "on-primary-fixed": "#1c1b1b",
+                      "tertiary": "#000000",
+                      "on-primary-fixed-variant": "#474646",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-container": "#67645d",
+                      "on-background": "#1f1b12",
+                      "surface-container-high": "#f0e7d8"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "lg": "24px",
+                      "xxl": "64px",
+                      "sm": "8px",
+                      "margin-desktop": "80px",
+                      "md": "16px",
+                      "margin-mobile": "20px",
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "xl": "40px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "EB Garamond"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "title-sm": [
+                              "Manrope"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "display-lg-mobile": [
+                              "EB Garamond"
+                      ],
+                      "display-lg": [
+                              "EB Garamond"
+                      ],
+                      "body-sm": [
+                              "Manrope"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "26px",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-sm": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .input-group {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 10px 0;
+            font-size: 16px;
+            color: #1f1b12;
+            border: none;
+            border-bottom: 1px solid #c4c7c7;
+            outline: none;
+            background: transparent;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus {
+            border-bottom: 1px solid #1f1b12;
+        }
+        
+        .input-group label {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            font-size: 16px;
+            color: #67645d;
+            pointer-events: none;
+            transition: 0.3s ease all;
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        .input-group input:focus ~ label,
+        .input-group input:not(:placeholder-shown) ~ label {
+            top: -20px;
+            font-size: 12px;
+            color: #1f1b12;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col md:flex-row">
+<!-- Left side: Image (Hidden on mobile) -->
+<div class="hidden md:block md:w-1/2 relative bg-surface-variant">
+<div class="absolute inset-0 w-full h-full bg-cover bg-center" data-alt="A high-fashion editorial portrait of a model wearing elegant heritage garments in a sunlit atelier. The lighting is soft and natural, casting delicate shadows across rich textured fabrics. The overall aesthetic is 'Quiet Luxury', characterized by minimalism, refinement, and a muted, sophisticated color palette favoring parchment and ink tones. The composition is expansive, allowing the clothing to serve as the primary visual focus within the bright, modern light-mode setting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBnfZCNFAnp0cHMgp0D0rzdFnBEHMn3HkjMFgeZlGy46wHQz1uPO-kIylK0uhKPn9Ec20fAkmSlIOOc43tCPicxwlx-sUHVGidYfU2g5Y6y5qNYm1Xx5i1ZhGWLmMUANaJfLckkwAKlpr6kZ4NWaQTbJCoNzd0KbaJHrxOcuYgaDx0dPrxprHE9DhJdbzQ5ZnXBhh8xj4_BrNW5Z2ptxHFQEPXuJ4vmpfyRnhBmiowtbPRr9zzcrd1G9w')"></div>
+<div class="absolute inset-0 bg-primary/10"></div>
+<div class="absolute top-margin-desktop left-margin-desktop z-10">
+<h1 class="font-headline-md text-headline-md tracking-[0.2em] text-on-primary">ITHIHASA</h1>
+</div>
+</div>
+<!-- Right side: Form Container -->
+<div class="w-full md:w-1/2 flex flex-col justify-center px-margin-mobile md:px-margin-desktop py-xxl">
+<!-- Mobile Logo -->
+<div class="md:hidden flex justify-center mb-xl">
+<h1 class="font-headline-md text-headline-md tracking-[0.2em] text-primary">ITHIHASA</h1>
+</div>
+<div class="w-full max-w-md mx-auto">
+<div class="mb-xl text-center md:text-left">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg mb-sm">Create Account</h2>
+<p class="font-body-md text-body-md text-secondary">Join our exclusive atelier community.</p>
+</div>
+<form class="flex flex-col gap-sm">
+<div class="input-group">
+<input id="fullName" placeholder=" " required="" type="text"/>
+<label for="fullName">Full Name</label>
+</div>
+<div class="input-group">
+<input id="mobileNumber" placeholder=" " required="" type="tel"/>
+<label for="mobileNumber">Mobile Number</label>
+</div>
+<div class="input-group">
+<input id="password" placeholder=" " required="" type="password"/>
+<label for="password">Password</label>
+</div>
+<div class="input-group">
+<input id="confirmPassword" placeholder=" " required="" type="password"/>
+<label for="confirmPassword">Confirm Password</label>
+</div>
+<button class="mt-lg w-full bg-primary text-on-primary py-md font-label-caps text-label-caps tracking-[0.1em] hover:bg-on-surface-variant transition-colors duration-300" type="submit">
+                    REGISTER
+                </button>
+</form>
+<div class="mt-xl text-center">
+<a class="font-body-sm text-body-sm text-secondary hover:text-primary underline transition-colors" href="#">Already have an account? Login</a>
+</div>
+</div>
+</div>
+</body></html>

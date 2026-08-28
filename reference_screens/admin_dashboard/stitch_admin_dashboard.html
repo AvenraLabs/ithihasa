@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Atelier Admin - Analytics</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-background": "#1f1b12",
+                    "on-tertiary-fixed-variant": "#5b4300",
+                    "surface-container-low": "#fcf2e3",
+                    "outline-variant": "#c4c7c7",
+                    "outline": "#747878",
+                    "surface-dim": "#e2d9ca",
+                    "surface-container-high": "#f0e7d8",
+                    "surface-variant": "#ebe1d2",
+                    "primary": "#000000",
+                    "tertiary-fixed": "#ffdf9e",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#858383",
+                    "on-tertiary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-surface": "#1f1b12",
+                    "on-primary": "#ffffff",
+                    "background": "#fff8f1",
+                    "on-tertiary-fixed": "#261a00",
+                    "secondary-container": "#e7e2d9",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed": "#e7e2d9",
+                    "inverse-primary": "#c9c6c5",
+                    "secondary": "#615e57",
+                    "on-secondary-fixed-variant": "#494740",
+                    "on-secondary": "#ffffff",
+                    "inverse-surface": "#343026",
+                    "primary-container": "#1c1b1b",
+                    "surface-container-highest": "#ebe1d2",
+                    "on-surface-variant": "#444748",
+                    "tertiary": "#000000",
+                    "on-secondary-fixed": "#1d1c16",
+                    "primary-fixed-dim": "#c9c6c5",
+                    "inverse-on-surface": "#f9f0e0",
+                    "tertiary-container": "#261a00",
+                    "primary-fixed": "#e5e2e1",
+                    "on-secondary-container": "#67645d",
+                    "on-primary-fixed-variant": "#474646",
+                    "secondary-fixed-dim": "#cac6be",
+                    "surface": "#fff8f1",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#5f5e5e",
+                    "on-primary-fixed": "#1c1b1b",
+                    "on-error": "#ffffff",
+                    "surface-container": "#f6eddd",
+                    "on-tertiary-container": "#a27f2b",
+                    "surface-bright": "#fff8f1",
+                    "tertiary-fixed-dim": "#ebc166"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "40px",
+                    "sm": "8px",
+                    "md": "16px",
+                    "unit": "4px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "margin-mobile": "20px",
+                    "gutter": "16px",
+                    "margin-desktop": "80px",
+                    "xxl": "64px"
+            },
+            "fontFamily": {
+                    "title-sm": [
+                            "Manrope"
+                    ],
+                    "body-sm": [
+                            "Manrope"
+                    ],
+                    "label-caps": [
+                            "Manrope"
+                    ],
+                    "headline-md": [
+                            "EB Garamond"
+                    ],
+                    "display-lg": [
+                            "EB Garamond"
+                    ],
+                    "display-lg-mobile": [
+                            "EB Garamond"
+                    ],
+                    "body-md": [
+                            "Manrope"
+                    ]
+            },
+            "fontSize": {
+                    "title-sm": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-sm": [
+                            "14px",
+                            {
+                                    "lineHeight": "22px",
+                                    "letterSpacing": "0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-lg-mobile": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "26px",
+                                    "letterSpacing": "0em",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex antialiased">
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen py-lg px-md w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline bg-surface-container-low dark:bg-surface-container-highest z-40">
+<!-- Header -->
+<div class="mb-xl flex items-center gap-md">
+<div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant flex-shrink-0">
+<img alt="Heritage Crest" class="w-full h-full object-cover" data-alt="A macro shot of a luxurious, textured fabric crest representing a heritage fashion brand, illuminated by soft, warm gallery lighting. The aesthetic is extremely high-end, focusing on material quality and quiet luxury in a light mode setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN6YGn433thz6sYn0x7UeWugOYwNt38nb0ZDSkJamplGWA0o_1xeK6yk52C6bB96V3Z-uKAzaMoO9uV8Zl22ZqfmUZ5IWD74TPEKCvfiKdPRcEbT9jMZX7YHUob4O_bBQJNFUePqaAeYXW1JebK2JBIVtHhQ7MDvQdHpM5bsrRXwzyawuCUeGkliSrVaBzz6LTQZ7JWAzBaRgqVgfcPD54IIZJmZYvy7ZNnTDBLisAPKHhlwkUIIEK_g"/>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary dark:text-on-primary-fixed leading-none">Atelier Admin</h2>
+<p class="font-label-caps text-label-caps text-secondary mt-xs uppercase tracking-widest">Heritage Edition</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="flex-grow space-y-md">
+<!-- Active Tab: Dashboard -->
+<li>
+<a class="flex items-center gap-md text-on-tertiary-container dark:text-tertiary-fixed font-semibold px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 scale-100 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Dashboard</span>
+</a>
+</li>
+<!-- Inactive Tabs -->
+<li>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 scale-100 active:scale-95" href="#">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Orders</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 scale-100 active:scale-95" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Inventory</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 scale-100 active:scale-95" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Customers</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 scale-100 active:scale-95" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Marketing</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200 scale-100 active:scale-95" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Settings</span>
+</a>
+</li>
+</ul>
+<!-- Footer Links -->
+<div class="mt-auto border-t border-outline-variant pt-lg">
+<button class="w-full mb-md bg-primary text-on-primary font-label-caps text-label-caps uppercase tracking-widest py-sm px-md rounded-DEFAULT hover:bg-primary/90 transition-colors">
+                View Boutique
+            </button>
+<ul class="space-y-sm">
+<li>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Support</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-md text-secondary dark:text-secondary-fixed-dim px-md py-sm rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all duration-200" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Sign Out</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 w-full relative">
+<!-- TopNavBar (Responsive, acts as mobile header / desktop utility bar) -->
+<header class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-md docked full-width top-0 sticky z-50 bg-surface/90 dark:bg-surface/90 backdrop-blur-md border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-md">
+<!-- Mobile Menu Trigger -->
+<button class="md:hidden text-primary dark:text-on-primary-fixed hover:text-primary dark:hover:text-tertiary-fixed transition-colors duration-300">
+<span class="material-symbols-outlined text-2xl">menu</span>
+</button>
+<span class="font-headline-md text-headline-md tracking-widest text-primary dark:text-on-primary-fixed uppercase hidden md:block">ITHIHASA HERITAGE</span>
+</div>
+<!-- Search Bar (on_left in JSON, but placed centrally for balance in this layout, typical of luxury admin) -->
+<div class="hidden md:flex flex-1 max-w-md mx-xl items-center border-b border-outline-variant focus-within:border-primary transition-colors">
+<span class="material-symbols-outlined text-secondary ml-sm mb-xs">search</span>
+<input class="w-full bg-transparent border-none focus:ring-0 font-body-sm text-body-sm text-on-surface placeholder-secondary pb-xs px-sm" placeholder="Search orders, customers, inventory..." type="text"/>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-lg">
+<button class="text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-tertiary-fixed transition-colors duration-300 cursor-pointer active:opacity-70 transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-tertiary-fixed transition-colors duration-300 cursor-pointer active:opacity-70 transition-all hidden sm:block">
+<span class="material-symbols-outlined">contrast</span>
+</button>
+<div class="flex items-center gap-md pl-md border-l border-outline-variant">
+<span class="font-label-caps text-label-caps text-primary hidden lg:block uppercase tracking-widest">John Doe</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant cursor-pointer active:opacity-70 transition-all">
+<img alt="Administrator profile photo" class="w-full h-full object-cover" data-alt="A minimalist black and white portrait of an administrator in sharp focus, styled with subtle studio lighting, fitting a quiet luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTkIT-CQhYHLXTgYd6Km5cJwNmPNCsItvJQ0JtLxnjYWC5q7UDwxY90j0aj_fIRMIRzzMSLxeTQRS-qgZzWbIeb__q3gxPt_MY3JirzioQ41xcZpYbDaczogsSod7FMvzZZ85nHyfBL4Ui-IViOHdnnHrOBDfgWrahRbKzfU6DKAirXcnxi887vzihyFvwLs3dy_Ar-yvE1kQamcza5BrJQ6gdaeyyI-vKd4ZSFrSCjvs8k2-ri7GDGg"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="px-margin-mobile md:px-margin-desktop py-xl space-y-xxl max-w-[1440px] mx-auto">
+<!-- Hero Section -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-lg">
+<div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">Good Morning, Administrator</h1>
+<p class="font-body-md text-body-md text-secondary mt-sm">Here is the performance overview for Ithihasa Atelier today.</p>
+</div>
+<div class="flex items-center gap-md font-label-caps text-label-caps uppercase tracking-widest text-secondary">
+<span>Oct 24, 2023</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">sync</span> Live</span>
+</div>
+</section>
+<!-- Metrics Grid -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
+<!-- Metric 1: Total Revenue -->
+<div class="bg-surface-container-low border border-outline-variant p-lg rounded-none hover:bg-surface-container-high transition-colors duration-300 group">
+<div class="flex justify-between items-start mb-xl">
+<h3 class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">Total Revenue</h3>
+<span class="material-symbols-outlined text-on-surface">account_balance_wallet</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-on-surface text-3xl">$124,500.00</div>
+<div class="flex items-center gap-sm mt-sm">
+<span class="flex items-center text-primary-container font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span class="ml-xs">+12.5%</span>
+</span>
+<span class="font-body-sm text-body-sm text-secondary text-xs">vs last month</span>
+</div>
+</div>
+</div>
+<!-- Metric 2: Orders -->
+<div class="bg-surface-container-low border border-outline-variant p-lg rounded-none hover:bg-surface-container-high transition-colors duration-300 group">
+<div class="flex justify-between items-start mb-xl">
+<h3 class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">Orders</h3>
+<span class="material-symbols-outlined text-on-surface">local_mall</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-on-surface text-3xl">1,204</div>
+<div class="flex items-center gap-sm mt-sm">
+<span class="flex items-center text-primary-container font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span class="ml-xs">+8.2%</span>
+</span>
+<span class="font-body-sm text-body-sm text-secondary text-xs">vs last month</span>
+</div>
+</div>
+</div>
+<!-- Metric 3: Active Customers -->
+<div class="bg-surface-container-low border border-outline-variant p-lg rounded-none hover:bg-surface-container-high transition-colors duration-300 group">
+<div class="flex justify-between items-start mb-xl">
+<h3 class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">Active Customers</h3>
+<span class="material-symbols-outlined text-on-surface">group</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-on-surface text-3xl">8,432</div>
+<div class="flex items-center gap-sm mt-sm">
+<span class="flex items-center text-primary-container font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span class="ml-xs">+4.1%</span>
+</span>
+<span class="font-body-sm text-body-sm text-secondary text-xs">vs last month</span>
+</div>
+</div>
+</div>
+<!-- Metric 4: Average Order Value -->
+<div class="bg-surface-container-low border border-outline-variant p-lg rounded-none hover:bg-surface-container-high transition-colors duration-300 group">
+<div class="flex justify-between items-start mb-xl">
+<h3 class="font-label-caps text-label-caps uppercase tracking-widest text-secondary">Avg. Order Value</h3>
+<span class="material-symbols-outlined text-on-surface">receipt_long</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-on-surface text-3xl">$850.00</div>
+<div class="flex items-center gap-sm mt-sm">
+<span class="flex items-center text-secondary font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[16px]">trending_flat</span>
+<span class="ml-xs">0.0%</span>
+</span>
+<span class="font-body-sm text-body-sm text-secondary text-xs">vs last month</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Data Section -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-xl">
+<!-- Charts Area (Spans 2 columns on large screens) -->
+<div class="lg:col-span-2 space-y-xl">
+<!-- Sales Over Time -->
+<div class="border border-outline-variant p-lg bg-surface-container-lowest">
+<div class="flex justify-between items-center mb-xl border-b border-outline-variant pb-md">
+<h2 class="font-title-sm text-title-sm text-on-surface">Sales Over Time</h2>
+<button class="font-label-caps text-label-caps uppercase tracking-widest text-secondary hover:text-primary transition-colors flex items-center gap-xs">
+                                Filter <span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+<div class="h-64 w-full bg-surface-container-low relative flex items-end justify-between px-md pt-lg pb-md">
+<!-- Abstract Representation of a line chart using Tailwind -->
+<div class="absolute inset-0 border-b border-l border-outline-variant ml-xl mb-xl opacity-30"></div>
+<!-- Grid lines -->
+<div class="absolute inset-x-xl bottom-1/4 border-b border-outline-variant opacity-10"></div>
+<div class="absolute inset-x-xl bottom-2/4 border-b border-outline-variant opacity-10"></div>
+<div class="absolute inset-x-xl bottom-3/4 border-b border-outline-variant opacity-10"></div>
+<!-- Line representation (CSS drawn) -->
+<svg class="absolute inset-0 w-full h-full p-xl" preserveaspectratio="none" viewbox="0 0 100 100">
+<polyline class="text-primary opacity-80" fill="none" points="0,80 20,60 40,70 60,30 80,45 100,10" stroke="currentColor" stroke-width="1.5"></polyline>
+<circle class="text-primary" cx="100" cy="10" fill="currentColor" r="2"></circle>
+</svg>
+<!-- X Axis labels -->
+<div class="absolute bottom-sm left-xl right-xl flex justify-between font-label-caps text-label-caps text-secondary text-[10px]">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span>Thu</span>
+<span>Fri</span>
+<span>Sat</span>
+<span>Sun</span>
+</div>
+</div>
+</div>
+<!-- Category Performance -->
+<div class="border border-outline-variant p-lg bg-surface-container-lowest">
+<div class="flex justify-between items-center mb-xl border-b border-outline-variant pb-md">
+<h2 class="font-title-sm text-title-sm text-on-surface">Category Performance</h2>
+</div>
+<div class="space-y-md">
+<!-- Category 1 -->
+<div>
+<div class="flex justify-between mb-xs font-label-caps text-label-caps text-on-surface">
+<span>Outerwear</span>
+<span>$45,200</span>
+</div>
+<div class="w-full bg-surface-container-high h-2">
+<div class="bg-primary h-2" style="width: 75%"></div>
+</div>
+</div>
+<!-- Category 2 -->
+<div>
+<div class="flex justify-between mb-xs font-label-caps text-label-caps text-on-surface">
+<span>Dresses</span>
+<span>$32,100</span>
+</div>
+<div class="w-full bg-surface-container-high h-2">
+<div class="bg-primary h-2 opacity-80" style="width: 55%"></div>
+</div>
+</div>
+<!-- Category 3 -->
+<div>
+<div class="flex justify-between mb-xs font-label-caps text-label-caps text-on-surface">
+<span>Accessories</span>
+<span>$28,500</span>
+</div>
+<div class="w-full bg-surface-container-high h-2">
+<div class="bg-primary h-2 opacity-60" style="width: 45%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Activity Feed -->
+<div class="bg-surface-container-lowest border border-outline-variant p-lg flex flex-col h-full">
+<div class="flex justify-between items-center mb-xl border-b border-outline-variant pb-md">
+<h2 class="font-title-sm text-title-sm text-on-surface">Recent Activity</h2>
+<button class="font-label-caps text-label-caps uppercase tracking-widest text-secondary hover:text-primary transition-colors">
+                            View All
+                        </button>
+</div>
+<div class="flex-1 space-y-lg overflow-y-auto pr-sm">
+<!-- Activity Item 1 -->
+<div class="flex gap-md group cursor-default">
+<div class="w-8 h-8 bg-surface-container-high rounded-full flex items-center justify-center flex-shrink-0 mt-xs group-hover:bg-primary group-hover:text-on-primary transition-colors duration-300">
+<span class="material-symbols-outlined text-[16px]">local_mall</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-title-sm font-semibold">New Order #8901</span> placed by Eleanor Vance.</p>
+<p class="font-label-caps text-label-caps text-secondary mt-xs">2 mins ago • $1,250.00</p>
+</div>
+</div>
+<!-- Activity Item 2 -->
+<div class="flex gap-md group cursor-default">
+<div class="w-8 h-8 bg-surface-container-high rounded-full flex items-center justify-center flex-shrink-0 mt-xs group-hover:bg-primary group-hover:text-on-primary transition-colors duration-300">
+<span class="material-symbols-outlined text-[16px]">person_add</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-title-sm font-semibold">New Signup:</span> Arthur Pendelton registered an account.</p>
+<p class="font-label-caps text-label-caps text-secondary mt-xs">15 mins ago</p>
+</div>
+</div>
+<!-- Activity Item 3 -->
+<div class="flex gap-md group cursor-default">
+<div class="w-8 h-8 bg-surface-container-high rounded-full flex items-center justify-center flex-shrink-0 mt-xs group-hover:bg-primary group-hover:text-on-primary transition-colors duration-300">
+<span class="material-symbols-outlined text-[16px]">local_mall</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-title-sm font-semibold">New Order #8900</span> placed by Sarah Jenkins.</p>
+<p class="font-label-caps text-label-caps text-secondary mt-xs">1 hour ago • $890.00</p>
+</div>
+</div>
+<!-- Activity Item 4 -->
+<div class="flex gap-md group cursor-default">
+<div class="w-8 h-8 bg-surface-container-high rounded-full flex items-center justify-center flex-shrink-0 mt-xs group-hover:bg-primary group-hover:text-on-primary transition-colors duration-300">
+<span class="material-symbols-outlined text-[16px]">inventory_2</span>
+</div>
+<div>
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-title-sm font-semibold">Low Stock Alert:</span> Silk Evening Gown (Size M) is below threshold.</p>
+<p class="font-label-caps text-label-caps text-secondary mt-xs">3 hours ago</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Ithihasa - Shop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1f1b12",
+                        "surface": "#fff8f1",
+                        "secondary-container": "#e7e2d9",
+                        "on-tertiary-fixed": "#261a00",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#fcf2e3",
+                        "tertiary": "#000000",
+                        "tertiary-fixed-dim": "#ebc166",
+                        "surface-container-high": "#f0e7d8",
+                        "inverse-primary": "#c9c6c5",
+                        "on-primary-container": "#858383",
+                        "on-primary-fixed-variant": "#474646",
+                        "on-secondary-container": "#67645d",
+                        "error": "#ba1a1a",
+                        "secondary": "#615e57",
+                        "surface-variant": "#ebe1d2",
+                        "surface-tint": "#5f5e5e",
+                        "outline": "#747878",
+                        "on-surface-variant": "#444748",
+                        "surface-container-highest": "#ebe1d2",
+                        "surface-container": "#f6eddd",
+                        "inverse-surface": "#343026",
+                        "on-background": "#1f1b12",
+                        "surface-bright": "#fff8f1",
+                        "on-secondary-fixed-variant": "#494740",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "on-secondary-fixed": "#1d1c16",
+                        "secondary-fixed-dim": "#cac6be",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#5b4300",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#261a00",
+                        "on-primary-fixed": "#1c1b1b",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "primary": "#000000",
+                        "on-tertiary-container": "#a27f2b",
+                        "outline-variant": "#c4c7c7",
+                        "primary-fixed": "#e5e2e1",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#f9f0e0",
+                        "surface-dim": "#e2d9ca",
+                        "background": "#fff8f1",
+                        "tertiary-fixed": "#ffdf9e",
+                        "secondary-fixed": "#e7e2d9",
+                        "primary-container": "#1c1b1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xxl": "64px",
+                        "unit": "4px",
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "80px",
+                        "xl": "40px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["EB Garamond"],
+                        "display-lg": ["EB Garamond"],
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "title-sm": ["Manrope"],
+                        "body-sm": ["Manrope"],
+                        "headline-md": ["EB Garamond"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "title-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.02em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen pb-safe pb-24 md:pb-0">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 dark:bg-surface/90 backdrop-blur-md border-b border-surface-variant dark:border-on-surface-variant/10 transition-all duration-300 ease-in-out">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 w-full max-w-[1440px] mx-auto">
+<button class="text-primary dark:text-on-surface hover:opacity-70 transition-opacity p-2 -ml-2 hidden md:block">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="flex-1 flex justify-center">
+<span class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg tracking-widest" style="color: rgb(201, 162, 75); font-family: &quot;EB Garamond&quot;, serif; text-transform: uppercase;">ITHIHASA</span>
+</div>
+<button class="text-primary dark:text-on-surface hover:opacity-70 transition-opacity p-2 -mr-2">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="pt-24 px-margin-mobile md:px-margin-desktop max-w-[1440px] mx-auto">
+<!-- Category Header & Controls -->
+<div class="mb-lg flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div>
+<nav class="flex items-center gap-2 text-secondary font-label-caps text-label-caps mb-xs">
+<a class="hover:text-primary transition-colors" href="#">HOME</a>
+<span class="">/</span>
+<span class="text-primary">SHOP</span>
+</nav>
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg">New Arrivals</h1>
+</div>
+<div class="flex items-center gap-4 border-t md:border-t-0 border-surface-variant pt-4 md:pt-0">
+<button class="flex items-center gap-2 font-label-caps text-label-caps text-primary hover:opacity-70 transition-opacity" onclick="document.getElementById('filter-sheet').classList.remove('translate-y-full')">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+                    FILTERS
+                </button>
+<button class="flex items-center gap-2 font-label-caps text-label-caps text-primary hover:opacity-70 transition-opacity ml-auto md:ml-4">
+                    SORT BY
+                    <span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Product Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-x-gutter gap-y-xl md:gap-x-lg md:gap-y-xxl">
+<!-- Product Card 1 -->
+<article class="group cursor-pointer">
+<div class="relative aspect-[3/4] mb-md overflow-hidden bg-surface-container-low">
+<img class="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0 absolute inset-0 z-10" data-alt="A high-end editorial fashion shot of a minimalist silk dress in a serene, naturally lit studio. The soft, diffuse lighting emphasizes the texture and drape of the fabric against a pristine, light-mode background. The aesthetic is quiet luxury, emphasizing clean lines, subtle elegance, and premium heritage quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEj8k-JoFT9jRJC3g7QRo1lBfJXDGUq5DxNiv9Fum7tNMQoSE1gqt0ZXNgvs7PPbal5CcBXxKmTABJwOKJL_U3QIYWNuOrZ5Utu-jRxTbSCaU0F0TT5mqvNmrJAzemXx-h2fzmoqwrsdHx1-WOa7oFYLxga9LAzGrVMDFYIGED3KFpBNLqNByXR84OvEaQFiGnl8ZpHtfWK-2LBwDBkrZPEYZtXuufaKkjjWMRbSx8Jes70NopMb8JrA">
+<img class="w-full h-full object-cover absolute inset-0 z-0" data-alt="A detailed close-up shot of the same minimalist silk dress, focusing on the meticulous stitching and premium fabric texture. Soft, warm natural light creates a sophisticated, tactile feel. The aesthetic aligns perfectly with quiet luxury and high-contrast editorial fashion photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzSVktkFIdn1zuW1m36UpTYOuNVL8lEtbJFTuF6yD0tOT3bQjQxF0G6PjLIR40aGyQYQv81gmOgK3oU7-guj9yoFPbN9falq4y-rFvgbiE8W8yTbp6EGyTepkXg-2UAk82gQmVJm75rzdmusP9T5-lHH_r6rEc5pGdbIEE8UwuTsRb3mcjUakdv1hh2MYfkzC51Dsupyu-xERbFRFoc9FEWOicKsO0XDt_BtK0o4YkcHZ5yQVPcL5olA">
+<button class="absolute top-2 right-2 z-20 p-2 text-primary opacity-0 group-hover:opacity-100 transition-opacity md:flex hidden hover:scale-110 duration-200">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="flex justify-between items-start">
+<h3 class="font-body-md text-body-md text-primary truncate pr-4">Silk Crepe Slip Dress</h3>
+<span class="font-body-md text-body-md text-primary tabular-nums">$495</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-1">Ivory</p>
+</article>
+<!-- Product Card 2 -->
+<article class="group cursor-pointer">
+<div class="relative aspect-[3/4] mb-md overflow-hidden bg-surface-container-low">
+<img class="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0 absolute inset-0 z-10" data-alt="A sophisticated editorial shot of a structured linen blazer worn by a model in a stark, minimalist environment. The high-key lighting casts subtle shadows, highlighting the garment's precise tailoring. The mood is modern, serene, and deeply rooted in a quiet luxury aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyYC_omP1_PztwXgTG3_jmMIi5yKywOXf2PteAhQyj74Xe_kga1biTcV7XrA54LuMfhNaoruio7SkkqchiFWSPU6zgxMGMLrX9_TuzfuE2en3TCeTOhZttnjuvXo13R0vOBbE7Qd9X9SX2lzthxcJubhePwsiv_wcBOu8jW_x4WSAIbScqHZ0r5wj_l5AaA8XQO41j3Rui321h0Vs817twt8JFoNwAEPbAxF9p8sUNf3jyhQXHYq9gpg">
+<img class="w-full h-full object-cover absolute inset-0 z-0" data-alt="A lifestyle shot of the structured linen blazer draped over a vintage wooden chair in a sunlit, airy room. The focus is on the interplay of light and texture, evoking a sense of heritage and timeless elegance in a light-mode palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUGg96bjrfU6zdm2MCN_NifoadWpqc3AqBBoLFFd2M3VPaXphVwzcepJqvQ4geYiGpmrPwrwN1Y6_JUl1brb94OuJabGS1ZsoF5vPDD5NnN-MDluCE9NMuVUVl9rTUqtUePV6nCw0DryqtLZ04lf-8UaNH51tyBjS_8OcCANme8Rg17OIhlmqCoig_HSN-iZqoRtkvoiiQmVlfyyXhrmIkXhwEkG_BLICtxlEPyaDY_0mPQxpV9-YQiA">
+<button class="absolute top-2 right-2 z-20 p-2 text-primary opacity-0 group-hover:opacity-100 transition-opacity md:flex hidden hover:scale-110 duration-200">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="flex justify-between items-start">
+<h3 class="font-body-md text-body-md text-primary truncate pr-4">Tailored Linen Blazer</h3>
+<span class="font-body-md text-body-md text-primary tabular-nums">$750</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-1">Oat</p>
+</article>
+<!-- Product Card 3 -->
+<article class="group cursor-pointer">
+<div class="relative aspect-[3/4] mb-md overflow-hidden bg-surface-container-low">
+<img class="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0 absolute inset-0 z-10" data-alt="An elegant flat lay of wide-leg trousers on a textured parchment background. The lighting is soft and directional, creating a sense of depth and luxury. The styling is minimal, focusing entirely on the garment's silhouette and premium material." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF7HBT2td9y8_CI6UEl5Z7QYYkeez4impznv6gDirCt5KYluQoSG62nQSMkuojNYTk2eeMDXs9HYleIpl64zFytnjkT8nlFZnyyy9L-DjSRl2qqdYBCZgi4X2jlswk5mkeeNDRkVR2l5qXo4XCAd53fSkjX5l-0cjyWQFG2fq2e5Rw5YPEQWbos1k8VtGYQfujRMbvbGyUiyWl3URnM0R3y2jABH_-Mjaqg7H-m4juogZ8rWsS14P4ow">
+<img class="w-full h-full object-cover absolute inset-0 z-0" data-alt="A dynamic full-body shot of the wide-leg trousers in motion, captured in a bright, modern architectural space. The fluidity of the fabric is highlighted against the clean lines of the setting, reflecting a refined, editorial approach." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjShN-YEp9Mo9KdSg7v-VdYmzabNSb2ns0qujWrtT5zKhSF4qLGObK2vzwgrdQ-Z882F4PNnAvwR7cgzADZ_r8YRO4IZA9dK9T9-217QDtBr8xwrfcEhFTULmwZJEJgmTPYwwU1M0TLTCAop22cGiC8aHCFb4DPkjjWtJ5Ng8yTqALpJsMDgtdtkCK44UkmtQXp5GfeTu3yJnmp_IaageDuV85ublKg9sSeQZ9wB8CATAY1QTX20J1wA">
+<button class="absolute top-2 right-2 z-20 p-2 text-primary opacity-0 group-hover:opacity-100 transition-opacity md:flex hidden hover:scale-110 duration-200">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="flex justify-between items-start">
+<h3 class="font-body-md text-body-md text-primary truncate pr-4">Pleated Wool Trousers</h3>
+<span class="font-body-md text-body-md text-primary tabular-nums">$520</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-1">Charcoal</p>
+</article>
+<!-- Product Card 4 -->
+<article class="group cursor-pointer">
+<div class="relative aspect-[3/4] mb-md overflow-hidden bg-surface-container-low">
+<img class="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0 absolute inset-0 z-10" data-alt="A striking portrait of a model wearing a heavy knit cashmere sweater, set against a pristine white studio backdrop. The lighting is crisp and even, emphasizing the rich texture of the knitwear in a luxurious, minimalist context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvpv8EOtkE6pWda0HfFa3nybd2E9nN9uCiueQktlpDnDfmoqXsY22tIuTBaVamtiScKp9g7IpayQyp8Xd-r9MDJzvaLwWnPSUglEIPV5kDNXbD_8vG8OJK7Wr702yLN8CFKkF_S_OQYDOHPjCPGuiQFXRrvp1-lwY_d0IG-WXWXphaHSmWDTUehTlNvAGm1_u-oCe8rmJ745Z1LaGl7-aPMC9DGcdXuFdPF8QdzBXmnxckYpKFm0x4qA">
+<img class="w-full h-full object-cover absolute inset-0 z-0" data-alt="A detailed, macro shot of the cashmere sweater's intricate knit pattern. The shallow depth of field draws attention to the supreme quality and softness of the yarn, perfectly encapsulating the brand's quiet luxury ethos." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGrS3TS2IwGGJbjCPW2fgA19T-nzcVNc1YTGiipBBO-opOD7WM70a202ow_75FUfaI33JLoR5BLYYKLetwf6Tema2Mn49fc_I8oHMCvFYtUAvxtNaCTYo5UIGbjtMYY5Jvs3fh0rIcWjCThalauhM4TxzWgObYvaP8VdV83ftgrfy3mhQa7bXaKehm83ybGDoGq3PwoyxYDbWrkyeGJ7SLYP9DmfygZNm68C8OnAP82qBbn7gXTNhvUg">
+<button class="absolute top-2 right-2 z-20 p-2 text-primary opacity-0 group-hover:opacity-100 transition-opacity md:flex hidden hover:scale-110 duration-200">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+</button>
+</div>
+<div class="flex justify-between items-start">
+<h3 class="font-body-md text-body-md text-primary truncate pr-4">Cashmere Crewneck</h3>
+<span class="font-body-md text-body-md text-primary tabular-nums">$895</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-1">Sand</p>
+</article>
+</div>
+</main>
+<!-- Bottom Nav (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile bg-surface/90 dark:bg-surface/90 backdrop-blur-md border-t border-surface-variant dark:border-on-surface-variant/10 h-16 pb-safe md:hidden">
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</a>
+<a class="relative flex flex-col items-center justify-center text-primary dark:text-tertiary-fixed-dim after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-tertiary-fixed-dim after:rounded-full active:scale-95 transition-transform duration-200 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-surface active:scale-95 transition-transform duration-200 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</a>
+</nav>
+<!-- Filter Bottom Sheet -->
+<div class="fixed inset-x-0 bottom-0 z-[60] bg-surface translate-y-full transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] rounded-t-xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] h-[80vh] flex flex-col md:w-[400px] md:right-0 md:left-auto md:h-screen md:rounded-none" id="filter-sheet">
+<div class="flex justify-center pt-3 pb-2 md:hidden">
+<div class="w-12 h-1 bg-surface-variant rounded-full"></div>
+</div>
+<div class="flex justify-between items-center px-margin-mobile py-md border-b border-surface-variant">
+<h2 class="font-headline-md text-headline-md text-primary">Filters</h2>
+<button class="p-2 text-primary hover:opacity-70 transition-opacity" onclick="document.getElementById('filter-sheet').classList.add('translate-y-full')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto px-margin-mobile py-lg">
+<!-- Filter Options (Mockup) -->
+<div class="mb-lg">
+<h3 class="font-label-caps text-label-caps text-secondary mb-md">CATEGORY</h3>
+<div class="space-y-sm">
+<label class="flex items-center gap-3 font-body-md text-body-md cursor-pointer group">
+<input checked="" class="w-5 h-5 border-surface-variant rounded-sm text-primary focus:ring-primary focus:ring-offset-surface bg-transparent" type="checkbox">
+<span class="group-hover:text-primary transition-colors text-primary">All Clothing</span>
+</label>
+<label class="flex items-center gap-3 font-body-md text-body-md cursor-pointer group">
+<input class="w-5 h-5 border-surface-variant rounded-sm text-primary focus:ring-primary focus:ring-offset-surface bg-transparent" type="checkbox">
+<span class="group-hover:text-primary transition-colors text-secondary">Dresses</span>
+</label>
+<label class="flex items-center gap-3 font-body-md text-body-md cursor-pointer group">
+<input class="w-5 h-5 border-surface-variant rounded-sm text-primary focus:ring-primary focus:ring-offset-surface bg-transparent" type="checkbox">
+<span class="group-hover:text-primary transition-colors text-secondary">Outerwear</span>
+</label>
+</div>
+</div>
+<div class="mb-lg border-t border-surface-variant pt-lg">
+<h3 class="font-label-caps text-label-caps text-secondary mb-md">COLOR</h3>
+<div class="flex flex-wrap gap-3">
+<button class="w-8 h-8 rounded-full bg-[#f5f5dc] border border-surface-variant ring-2 ring-primary ring-offset-2 ring-offset-surface"></button>
+<button class="w-8 h-8 rounded-full bg-[#000000] border border-surface-variant"></button>
+<button class="w-8 h-8 rounded-full bg-[#808080] border border-surface-variant"></button>
+<button class="w-8 h-8 rounded-full bg-[#fdf5e6] border border-surface-variant"></button>
+</div>
+</div>
+</div>
+<div class="p-margin-mobile border-t border-surface-variant pb-safe">
+<button class="w-full bg-primary text-on-primary font-label-caps text-label-caps py-4 tracking-widest hover:bg-primary/90 transition-colors" onclick="document.getElementById('filter-sheet').classList.add('translate-y-full')">
+                VIEW RESULTS (24)
+            </button>
+</div>
+</div>
+<!-- Backdrop for bottom sheet -->
+<div class="fixed inset-0 bg-tertiary/40 z-50 hidden opacity-0 transition-opacity duration-300" id="sheet-backdrop"></div>
+<script>
+        // Simple script to handle bottom sheet backdrop
+        const sheet = document.getElementById('filter-sheet');
+        const backdrop = document.getElementById('sheet-backdrop');
+        
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    if (sheet.classList.contains('translate-y-full')) {
+                        backdrop.classList.remove('opacity-100');
+                        setTimeout(() => backdrop.classList.add('hidden'), 300);
+                    } else {
+                        backdrop.classList.remove('hidden');
+                        // Small delay to allow display:block to apply before animating opacity
+                        setTimeout(() => backdrop.classList.add('opacity-100'), 10);
+                    }
+                }
+            });
+        });
+        
+        observer.observe(sheet, { attributes: true });
+        
+        backdrop.addEventListener('click', () => {
+            sheet.classList.add('translate-y-full');
+        });
+    </script>
+
+
+</body></html>

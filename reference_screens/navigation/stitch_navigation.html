@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Navigation Drawer - ITHIHASA</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;700&amp;family=Manrope:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#cac6be",
+                        "surface-tint": "#5f5e5e",
+                        "on-tertiary": "#ffffff",
+                        "background": "#fff8f1",
+                        "on-surface": "#1f1b12",
+                        "primary-fixed": "#e5e2e1",
+                        "surface-container": "#f6eddd",
+                        "on-background": "#1f1b12",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#261a00",
+                        "primary-fixed-dim": "#c9c6c5",
+                        "tertiary": "#000000",
+                        "on-primary-fixed-variant": "#474646",
+                        "secondary-fixed": "#e7e2d9",
+                        "on-secondary-fixed": "#1d1c16",
+                        "on-primary-container": "#858383",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "secondary": "#615e57",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#c4c7c7",
+                        "tertiary-fixed-dim": "#ebc166",
+                        "on-secondary": "#ffffff",
+                        "outline": "#747878",
+                        "on-tertiary-container": "#a27f2b",
+                        "on-secondary-fixed-variant": "#494740",
+                        "surface-container-highest": "#ebe1d2",
+                        "secondary-container": "#e7e2d9",
+                        "inverse-primary": "#c9c6c5",
+                        "tertiary-fixed": "#ffdf9e",
+                        "surface-container-high": "#f0e7d8",
+                        "on-primary-fixed": "#1c1b1b",
+                        "on-surface-variant": "#444748",
+                        "surface-bright": "#fff8f1",
+                        "inverse-on-surface": "#f9f0e0",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#5b4300",
+                        "on-secondary-container": "#67645d",
+                        "surface": "#fff8f1",
+                        "surface-variant": "#ebe1d2",
+                        "surface-container-low": "#fcf2e3",
+                        "on-tertiary-fixed": "#261a00",
+                        "primary": "#000000",
+                        "primary-container": "#1c1b1b",
+                        "surface-dim": "#e2d9ca",
+                        "inverse-surface": "#343026"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "unit": "4px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "margin-desktop": "80px",
+                        "xxl": "64px",
+                        "lg": "24px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["EB Garamond"],
+                        "title-sm": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "display-lg": ["EB Garamond"],
+                        "label-caps": ["Manrope"],
+                        "headline-md": ["EB Garamond"],
+                        "body-sm": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "title-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-sm": ["14px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-variant min-h-screen flex text-on-surface antialiased overflow-hidden font-body-md text-body-md">
+<!-- Overlay -->
+<div class="fixed inset-0 bg-tertiary/40 backdrop-blur-sm z-40 transition-opacity duration-500 ease-out"></div>
+<!-- Navigation Drawer -->
+<aside class="fixed top-0 left-0 h-full w-80 bg-background dark:bg-background flat no shadows z-50 transform translate-x-0 transition-transform duration-500 ease-out flex flex-col border-r border-surface-variant">
+<!-- Header -->
+<div class="flex items-center justify-between p-lg pt-xl mb-md">
+<h2 class="font-display-lg text-display-lg text-tertiary-fixed-dim">ITHIHASA</h2>
+<button aria-label="Close navigation" class="text-secondary hover:text-primary transition-colors p-sm rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 flex flex-col px-lg space-y-md overflow-y-auto">
+<a aria-current="page" class="group flex items-center space-x-md py-sm text-primary border-b border-primary duration-500 ease-out" href="#">
+<span class="material-symbols-outlined text-tertiary-fixed-dim group-hover:opacity-70 transition-opacity">auto_awesome</span>
+<span class="font-label-caps text-label-caps tracking-widest uppercase">New Arrivals</span>
+</a>
+<a class="group flex items-center space-x-md py-sm text-secondary hover:text-primary transition-colors duration-500 ease-out" href="#">
+<span class="material-symbols-outlined text-secondary group-hover:text-tertiary-fixed-dim transition-colors">auto_stories</span>
+<span class="font-label-caps text-label-caps tracking-widest uppercase">Collections</span>
+</a>
+<a class="group flex items-center space-x-md py-sm text-secondary hover:text-primary transition-colors duration-500 ease-out" href="#">
+<span class="material-symbols-outlined text-secondary group-hover:text-tertiary-fixed-dim transition-colors">architecture</span>
+<span class="font-label-caps text-label-caps tracking-widest uppercase">The Atelier</span>
+</a>
+<a class="group flex items-center space-x-md py-sm text-secondary hover:text-primary transition-colors duration-500 ease-out" href="#">
+<span class="material-symbols-outlined text-secondary group-hover:text-tertiary-fixed-dim transition-colors">eco</span>
+<span class="font-label-caps text-label-caps tracking-widest uppercase">Sustainability</span>
+</a>
+<a class="group flex items-center space-x-md py-sm text-secondary hover:text-primary transition-colors duration-500 ease-out" href="#">
+<span class="material-symbols-outlined text-secondary group-hover:text-tertiary-fixed-dim transition-colors">contact_support</span>
+<span class="font-label-caps text-label-caps tracking-widest uppercase">Customer Care</span>
+</a>
+</nav>
+<!-- Footer Area -->
+<div class="p-lg mt-auto border-t border-surface-variant">
+<div class="flex items-center space-x-md mb-sm">
+<span class="material-symbols-outlined text-secondary text-sm">language</span>
+<span class="font-label-caps text-label-caps text-secondary uppercase">EN / USD</span>
+</div>
+<p class="font-body-sm text-body-sm text-outline-variant">© 2024 ITHIHASA</p>
+</div>
+</aside>
+</body></html>

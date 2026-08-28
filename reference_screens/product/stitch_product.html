@@ -1,0 +1,400 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Ithihasa - Product Detail</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface": "#1f1b12",
+                      "surface": "#fff8f1",
+                      "secondary-container": "#e7e2d9",
+                      "on-tertiary-fixed": "#261a00",
+                      "on-error": "#ffffff",
+                      "surface-container-low": "#fcf2e3",
+                      "tertiary": "#000000",
+                      "tertiary-fixed-dim": "#ebc166",
+                      "surface-container-high": "#f0e7d8",
+                      "inverse-primary": "#c9c6c5",
+                      "on-primary-container": "#858383",
+                      "on-primary-fixed-variant": "#474646",
+                      "on-secondary-container": "#67645d",
+                      "error": "#ba1a1a",
+                      "secondary": "#615e57",
+                      "surface-variant": "#ebe1d2",
+                      "surface-tint": "#5f5e5e",
+                      "outline": "#747878",
+                      "on-surface-variant": "#444748",
+                      "surface-container-highest": "#ebe1d2",
+                      "surface-container": "#f6eddd",
+                      "inverse-surface": "#343026",
+                      "on-background": "#1f1b12",
+                      "surface-bright": "#fff8f1",
+                      "on-secondary-fixed-variant": "#494740",
+                      "primary-fixed-dim": "#c9c6c5",
+                      "on-secondary-fixed": "#1d1c16",
+                      "secondary-fixed-dim": "#cac6be",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-fixed-variant": "#5b4300",
+                      "error-container": "#ffdad6",
+                      "tertiary-container": "#261a00",
+                      "on-primary-fixed": "#1c1b1b",
+                      "on-secondary": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "primary": "#000000",
+                      "on-tertiary-container": "#a27f2b",
+                      "outline-variant": "#c4c7c7",
+                      "primary-fixed": "#e5e2e1",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "inverse-on-surface": "#f9f0e0",
+                      "surface-dim": "#e2d9ca",
+                      "background": "#fff8f1",
+                      "tertiary-fixed": "#ffdf9e",
+                      "secondary-fixed": "#e7e2d9",
+                      "primary-container": "#1c1b1b"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xxl": "64px",
+                      "unit": "4px",
+                      "gutter": "16px",
+                      "margin-mobile": "20px",
+                      "margin-desktop": "80px",
+                      "xl": "40px",
+                      "md": "16px",
+                      "sm": "8px",
+                      "xs": "4px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "display-lg-mobile": [
+                              "EB Garamond"
+                      ],
+                      "display-lg": [
+                              "EB Garamond"
+                      ],
+                      "label-caps": [
+                              "Manrope"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "title-sm": [
+                              "Manrope"
+                      ],
+                      "body-sm": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "EB Garamond"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "26px",
+                                      "letterSpacing": "0em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-sm": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "22px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        /* Custom utilities for smooth scroll snap and hiding scrollbars */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .snap-x-mandatory {
+            scroll-snap-type: x mandatory;
+        }
+        .snap-center {
+            scroll-snap-align: center;
+        }
+        
+        /* Bottom sheet animation */
+        #size-sheet {
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #size-sheet.open {
+            transform: translateY(0);
+        }
+        #scrim {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #scrim.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased pb-24 md:pb-0">
+<!-- Top Navigation (Mobile/Desktop Hybrid for PDP) -->
+<header class="fixed top-0 w-full z-40 bg-surface/90 backdrop-blur-md border-b border-surface-variant flex justify-between items-center px-margin-mobile h-16 transition-all duration-300 ease-in-out md:px-margin-desktop">
+<button aria-label="Go Back" class="p-2 -ml-2 text-primary hover:opacity-70 transition-opacity" onclick="history.back()">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 300;">arrow_back_ios_new</span>
+</button>
+<div class="flex items-center justify-center h-12"><span class="font-display-lg-mobile text-display-lg-mobile tracking-[0.2em] uppercase" style="color: rgb(201, 162, 75); font-family: &quot;EB Garamond&quot;, serif;">Ithihasa</span></div>
+<button aria-label="Favorite" class="p-2 -mr-2 text-primary hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-variation-settings: 'wght' 300;">favorite_border</span>
+</button>
+</header>
+<main class="pt-16 md:grid md:grid-cols-12 md:gap-gutter md:px-margin-desktop md:pt-margin-desktop md:max-w-[1440px] md:mx-auto">
+<!-- Image Gallery (Full width mobile, 7 cols desktop) -->
+<section class="md:col-span-7 w-full overflow-hidden relative">
+<div class="flex overflow-x-auto snap-x-mandatory hide-scrollbar w-full h-[70vh] md:h-[85vh]" id="gallery">
+<div class="flex-shrink-0 w-full snap-center h-full">
+<img class="w-full h-full object-cover" data-alt="A striking digital installation art piece featuring glowing, generative geometric shapes suspended in a vast, minimalist gallery space. The room is illuminated by high-key, soft white lighting that creates a bright, modern light-mode aesthetic. The artwork relies on a sophisticated palette of deep blacks and pristine whites, punctuated by intense accents of vibrant red. The mood is serene yet technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9GQIvPrZ9cm35jTRwjxvcLE1YHs2BtiWyS__EueYorlCRNq3OGVSM24UPXNWfqznAY5Q2O3YW5LkW-UwY2sSkwlAa8gmQXrG1-SsemapoM9RPWVg388rn5_VLozPJSTGowObaIBK8-THiigKXFyAv6WRlLOZJgmBnH_J2aaZYh2O6XcsTsDlKue6TI9M061Fb_vUiI1gm881YtQFTuyS8MxT6s7g-dg3K-PgRFh2PLDp6DOC4bGY0Rw">
+</div>
+<div class="flex-shrink-0 w-full snap-center h-full">
+<img class="w-full h-full object-cover" data-alt="A striking digital installation art piece featuring glowing, generative geometric shapes suspended in a vast, minimalist gallery space. The room is illuminated by high-key, soft white lighting that creates a bright, modern light-mode aesthetic. The artwork relies on a sophisticated palette of deep blacks and pristine whites, punctuated by intense accents of vibrant red. The mood is serene yet technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDx76TTfxenIQ5WTlWXj2nExHYQUgx6VMV1Nm_0xpEGTUMcX9g74gIlMbP-WM5oRTY3fqg08ChVUFCV9vG-qcQUs8rs2MPNGpagkeocT-d1e81E4nQHHiQXi8MXMiRMBhy45yh734IQpLT3ucFD9KUAypcaSrRuP_NJ3-fv0rhb5xtIxawvWorgrZ2X_lyLhJpAj_SK82nqVLbBvnFfY4aenpHn6WRtjjHb2T1J9yMRd8OetuAg4wiziQ">
+</div>
+<div class="flex-shrink-0 w-full snap-center h-full">
+<img class="w-full h-full object-cover" data-alt="A striking digital installation art piece featuring glowing, generative geometric shapes suspended in a vast, minimalist gallery space. The room is illuminated by high-key, soft white lighting that creates a bright, modern light-mode aesthetic. The artwork relies on a sophisticated palette of deep blacks and pristine whites, punctuated by intense accents of vibrant red. The mood is serene yet technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0AAkWdHCwoqRjzShlcU-AkB86pleYWw7QagAJ6oVprGhi8Twt3v1JJIir5xEUMNeM4iLxLud7lVEB94qiA2-wxW5yxfqI9v5gVZAsk6Bsa5OpVCIad0HooA6JZJSWa7GvAW9rN4tQFhihbDfEm1HIHTlP3AKVb7sDfatVtOWB4U9XRtY1pKSuwAbz8jmEDUKYGy6B4HwI-3Xskk3aQrLs8MGSzclNJMOuPwQT3jZe6L6sMzDIWIul-A">
+</div>
+</div>
+<!-- Mobile Swipe Indicators -->
+<div class="absolute bottom-4 left-0 w-full flex justify-center gap-2 md:hidden" id="gallery-dots">
+<div class="w-2 h-2 rounded-full bg-primary transition-all duration-300"></div>
+<div class="w-2 h-2 rounded-full bg-primary/30 transition-all duration-300"></div>
+<div class="w-2 h-2 rounded-full bg-primary/30 transition-all duration-300"></div>
+</div>
+</section>
+<!-- Product Info (5 cols desktop) -->
+<section class="px-margin-mobile py-lg md:col-span-5 md:px-0 md:py-0 md:sticky md:top-24 md:self-start">
+<div class="mb-lg">
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg mb-sm text-primary">The Obsidian Drape</h1>
+<p class="font-body-md text-body-md tabular-nums text-secondary tracking-widest uppercase text-sm mb-md">INR 45,000</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Handwoven Kanjeevaram silk infused with contemporary asymmetric tailoring. A study in structural grace and heritage luxury.</p>
+</div>
+<!-- Size Selector Trigger -->
+<button class="w-full border-b border-outline-variant py-md flex justify-between items-center group mb-xl" onclick="toggleSizeSheet()">
+<div class="flex flex-col items-start">
+<span class="font-label-caps text-label-caps text-secondary mb-xs">Size</span>
+<span class="font-title-sm text-title-sm text-primary" id="selected-size">Select Size</span>
+</div>
+<span class="material-symbols-outlined text-secondary group-hover:text-primary transition-colors" style="font-variation-settings: 'wght' 300;">expand_more</span>
+</button>
+<!-- Desktop Add to Bag (Hidden on Mobile) -->
+<button class="hidden md:block w-full bg-primary text-surface font-label-caps text-label-caps py-lg tracking-[0.2em] hover:bg-surface-tint transition-colors mb-xl uppercase">
+                Add to Bag
+            </button>
+<!-- Accordions for Details -->
+<div class="border-t border-outline-variant">
+<details class="group py-md border-b border-outline-variant" open="">
+<summary class="flex justify-between items-center cursor-pointer list-none font-title-sm text-title-sm text-primary">
+<span class="">Fabric &amp; Heritage</span>
+<span class="material-symbols-outlined text-secondary group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="pt-sm pb-xs font-body-sm text-body-sm text-on-surface-variant">
+                        Crafted from 100% pure Mulberry silk, handwoven on traditional pit looms in Kanchipuram over 45 days. The intricate Zari work employs real silver thread dipped in gold.
+                    </div>
+</details>
+<details class="group py-md border-b border-outline-variant">
+<summary class="flex justify-between items-center cursor-pointer list-none font-title-sm text-title-sm text-primary">
+<span class="">Care Instructions</span>
+<span class="material-symbols-outlined text-secondary group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="pt-sm pb-xs font-body-sm text-body-sm text-on-surface-variant">
+                        Strictly dry clean only. Store folded in a breathable cotton muslin bag. Avoid direct exposure to sunlight or perfumes.
+                    </div>
+</details>
+<details class="group py-md border-b border-outline-variant">
+<summary class="flex justify-between items-center cursor-pointer list-none font-title-sm text-title-sm text-primary">
+<span class="">Sustainability</span>
+<span class="material-symbols-outlined text-secondary group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="pt-sm pb-xs font-body-sm text-body-sm text-on-surface-variant">
+                        Our weavers are compensated well above fair-trade standards. Dyes are natural and water systems are closed-loop to ensure zero environmental runoff.
+                    </div>
+</details>
+</div>
+</section>
+</main>
+<!-- Complete the Look -->
+<section class="py-xxl px-margin-mobile md:px-margin-desktop md:max-w-[1440px] md:mx-auto">
+<h2 class="font-headline-md text-headline-md text-primary mb-lg text-center">Complete the Look</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter">
+<!-- Product Card 1 -->
+<a class="group block cursor-pointer" href="#">
+<div class="w-full aspect-[3/4] mb-md overflow-hidden bg-surface-container relative">
+<img class="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0 absolute inset-0 z-10" data-alt="A striking digital installation art piece featuring glowing, generative geometric shapes suspended in a vast, minimalist gallery space. The room is illuminated by high-key, soft white lighting that creates a bright, modern light-mode aesthetic. The artwork relies on a sophisticated palette of deep blacks and pristine whites, punctuated by intense accents of vibrant red. The mood is serene yet technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnIbyMnLieqIDjG7E3JgHDmMFlRvEuuVCz5JnYERBvEtBgb_pC0h60KYbAMj4JmwZ8KzelSJxpz9eL6WbvUvap1g8XAq3A1u9njq71jarcmOH5fwvT0W5K92zY49OIYKuiRaKPeIj0UHu_141EWIJDNAmi5iq_d7OBoKCqJAuiR8z_MDCyewYxtmzLhiAqp_5XpCn9csBJ012rdeLOjGLSeCD1qz-i7aOcD2gwvZb-HgpgyPFOONkjGQ">
+<img class="w-full h-full object-cover absolute inset-0" data-alt="A striking digital installation art piece featuring glowing, generative geometric shapes suspended in a vast, minimalist gallery space. The room is illuminated by high-key, soft white lighting that creates a bright, modern light-mode aesthetic. The artwork relies on a sophisticated palette of deep blacks and pristine whites, punctuated by intense accents of vibrant red. The mood is serene yet technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnPa5LplCc7wV1m_8_OzOQwa2GesiMe1qK4wxcnxwlv9taKjF0RSdx917CL27w9GjWAqi6Xpc3r9mILY15KWJAaHaW5Ic49m0SUv0vEG7KQLY5yzp7R8UwSwnPYq92fIwz2Fx19wN5YEllbgxCjvH_J2rtKc0kJ72YPVihABjt2nPwherKIQyL_A0eCUjHkj-A4Nli4xR3-8bbQ50mZYRlQyx6sTgShnORN8qTssZ1_QvRIG9UNwrmcA">
+</div>
+<h3 class="font-title-sm text-title-sm text-primary">Minimalist Cuff</h3>
+<p class="font-body-sm text-body-sm text-secondary mt-xs tabular-nums tracking-wider">INR 12,500</p>
+</a>
+<!-- Product Card 2 -->
+<a class="group block cursor-pointer" href="#">
+<div class="w-full aspect-[3/4] mb-md overflow-hidden bg-surface-container relative">
+<img class="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0 absolute inset-0 z-10" data-alt="A striking digital installation art piece featuring glowing, generative geometric shapes suspended in a vast, minimalist gallery space. The room is illuminated by high-key, soft white lighting that creates a bright, modern light-mode aesthetic. The artwork relies on a sophisticated palette of deep blacks and pristine whites, punctuated by intense accents of vibrant red. The mood is serene yet technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNhCCTg5FGXnh-zv7Pjnt5TISpuy_074r3JIt34P7HY01ngbMmfbL__CAfUV5x4kwJSrxRfhuJIE3gyZAYYir_NkDuWAXUKo6wxK0Xw9NUYVfgXPArcT3djFkx8ifpcgshn4WvMmZpNyHIn7Y_D2Z3-t-zdUGarqlxujKr9eZZzOiQ4yC_epdOouMemo3vgzvsTDsM-3xkvzr3i2yXOn2MbvlyTuz8TM-Cd9KfXCmJraalYvx2rTl15w">
+<img class="w-full h-full object-cover absolute inset-0" data-alt="A striking digital installation art piece featuring glowing, generative geometric shapes suspended in a vast, minimalist gallery space. The room is illuminated by high-key, soft white lighting that creates a bright, modern light-mode aesthetic. The artwork relies on a sophisticated palette of deep blacks and pristine whites, punctuated by intense accents of vibrant red. The mood is serene yet technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZW5ahlqQzELdrLC3TXjaZh_-vRHkK2KEK7WeXThTMTfS64cPrq0JXxGA59V3Ijw7tU0WZi-xt7cQF1YhgovOX2yjkVZ8zQ9PR-SwsOG_c87wSJ7HiPtqbRWXiaC05s8l-mWB5w_XJNFEtYSu3waqTnat3YnwOg_VG5Oql0DunsiYEJdTRz-O146SsY2PIVif-WqQaG7Iv4Mk8vbTWWLwTNszRsy1Nr8Vytq9TJEkuEpo61UDlA5xhYw">
+</div>
+<h3 class="font-title-sm text-title-sm text-primary">Silk Clutch</h3>
+<p class="font-body-sm text-body-sm text-secondary mt-xs tabular-nums tracking-wider">INR 18,000</p>
+</a>
+</div>
+</section>
+<!-- Mobile Sticky CTA -->
+<div class="fixed bottom-0 left-0 w-full z-30 p-margin-mobile bg-surface/90 backdrop-blur-md border-t border-surface-variant md:hidden pb-safe">
+<button class="w-full bg-primary text-surface font-label-caps text-label-caps py-md tracking-[0.2em] uppercase active:scale-[0.98] transition-transform">
+            Add to Bag
+        </button>
+</div>
+<!-- Scrim for Bottom Sheet -->
+<div class="fixed inset-0 bg-primary/40 z-50 backdrop-blur-sm" id="scrim" onclick="toggleSizeSheet()"></div>
+<!-- Size Bottom Sheet -->
+<div class="fixed bottom-0 left-0 w-full bg-surface z-50 rounded-t-xl pt-lg pb-safe md:w-[400px] md:left-auto md:right-0 md:h-full md:rounded-none md:border-l md:border-surface-variant flex flex-col" id="size-sheet">
+<!-- Drag Handle / Header -->
+<div class="w-12 h-1 bg-outline-variant mx-auto mb-lg rounded-full md:hidden"></div>
+<div class="flex justify-between items-center px-margin-mobile mb-lg md:px-lg md:pt-margin-desktop">
+<h3 class="font-headline-md text-headline-md text-primary">Select Size</h3>
+<button class="p-2 -mr-2 text-secondary hover:text-primary transition-colors" onclick="toggleSizeSheet()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Options -->
+<div class="px-margin-mobile md:px-lg flex-1 overflow-y-auto">
+<ul class="flex flex-col gap-sm">
+<li class="">
+<button class="w-full flex justify-between items-center py-md border-b border-surface-variant text-left hover:bg-surface-container-low transition-colors px-2 rounded group" onclick="selectSize('XS')">
+<span class="font-title-sm text-title-sm text-primary group-hover:tracking-wider transition-all">XS (Extra Small)</span>
+<span class="font-body-sm text-body-sm text-secondary">EU 34</span>
+</button>
+</li>
+<li class="">
+<button class="w-full flex justify-between items-center py-md border-b border-surface-variant text-left hover:bg-surface-container-low transition-colors px-2 rounded group" onclick="selectSize('S')">
+<span class="font-title-sm text-title-sm text-primary group-hover:tracking-wider transition-all">S (Small)</span>
+<span class="font-body-sm text-body-sm text-secondary">EU 36</span>
+</button>
+</li>
+<li class="">
+<button class="w-full flex justify-between items-center py-md border-b border-surface-variant text-left hover:bg-surface-container-low transition-colors px-2 rounded group" onclick="selectSize('M')">
+<span class="font-title-sm text-title-sm text-primary group-hover:tracking-wider transition-all">M (Medium)</span>
+<span class="font-body-sm text-body-sm text-secondary">EU 38</span>
+</button>
+</li>
+<li class="">
+<button class="w-full flex justify-between items-center py-md border-b border-surface-variant text-left hover:bg-surface-container-low transition-colors px-2 rounded group" onclick="selectSize('L')">
+<span class="font-title-sm text-title-sm text-primary group-hover:tracking-wider transition-all">L (Large)</span>
+<span class="font-body-sm text-body-sm text-secondary">EU 40</span>
+</button>
+</li>
+</ul>
+<a class="inline-block mt-lg font-label-caps text-label-caps text-secondary underline hover:text-primary transition-colors uppercase" href="#">Size Guide</a>
+</div>
+</div>
+<script>
+        // Gallery Scroll Indicators
+        const gallery = document.getElementById('gallery');
+        const dots = document.getElementById('gallery-dots').children;
+
+        gallery.addEventListener('scroll', () => {
+            const scrollLeft = gallery.scrollLeft;
+            const width = gallery.clientWidth;
+            const index = Math.round(scrollLeft / width);
+            
+            Array.from(dots).forEach((dot, i) => {
+                if (i === index) {
+                    dot.classList.remove('bg-primary/30');
+                    dot.classList.add('bg-primary');
+                } else {
+                    dot.classList.remove('bg-primary');
+                    dot.classList.add('bg-primary/30');
+                }
+            });
+        });
+
+        // Bottom Sheet Logic
+        const sheet = document.getElementById('size-sheet');
+        const scrim = document.getElementById('scrim');
+        const sizeLabel = document.getElementById('selected-size');
+
+        function toggleSizeSheet() {
+            sheet.classList.toggle('open');
+            scrim.classList.toggle('open');
+            // Prevent body scroll when open on mobile
+            if(window.innerWidth < 768) {
+                document.body.style.overflow = sheet.classList.contains('open') ? 'hidden' : '';
+            }
+        }
+
+        function selectSize(size) {
+            sizeLabel.textContent = size;
+            sizeLabel.classList.add('text-on-surface'); // Ensure it looks selected
+            toggleSizeSheet();
+        }
+    </script>
+
+
+</body></html>
