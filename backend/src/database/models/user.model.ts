@@ -3,7 +3,7 @@ import { sequelize } from '../../config/database.js';
 
 export interface UserAttributes {
   id: string;
-  email: string;
+  email?: string | null;
   name: string;
   password_hash?: string | null;
   phone?: string | null;
@@ -18,12 +18,12 @@ export interface UserAttributes {
 
 export type UserCreationAttributes = Optional<
   UserAttributes,
-  'id' | 'password_hash' | 'phone' | 'phone_verified' | 'role' | 'avatar_url' | 'google_id' | 'status'
+  'id' | 'email' | 'password_hash' | 'phone' | 'phone_verified' | 'role' | 'avatar_url' | 'google_id' | 'status'
 >;
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   declare public id: string;
-  declare public email: string;
+  declare public email: string | null;
   declare public name: string;
   declare public password_hash: string | null;
   declare public phone: string | null;
@@ -46,9 +46,8 @@ User.init(
     },
     email: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       unique: true,
-      validate: { isEmail: true },
     },
     name: {
       type: DataTypes.STRING,

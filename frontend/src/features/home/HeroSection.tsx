@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchStorefrontData } from '../../api/merchandising.js';
+import { resolveMediaUrl } from '../../api/client.js';
 
 export const HeroSection: React.FC = () => {
   const navigate = useNavigate();
@@ -20,19 +21,25 @@ export const HeroSection: React.FC = () => {
     ctaLink: '/shop',
   };
 
+  const resolvedHeroImage = resolveMediaUrl(hero.imageUrl);
+
   return (
     <section className="relative w-full h-[85vh] md:h-screen flex items-end justify-center pb-16 md:pb-24 px-5 md:px-20 bg-[var(--bg-secondary)] overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 w-full h-full">
         {/* Subtle overlay for text legibility */}
         <div className="absolute inset-0 bg-black/25 z-10" />
-        <img
-          src={hero.imageUrl}
-          alt={hero.title}
-          className="w-full h-full object-cover object-center transition-all duration-700"
-          loading="eager"
-          fetchPriority="high"
-        />
+        {resolvedHeroImage ? (
+          <img
+            src={resolvedHeroImage}
+            alt={hero.title || 'Heritage Hero'}
+            className="w-full h-full object-cover object-center transition-all duration-700"
+            loading="eager"
+            fetchPriority="high"
+          />
+        ) : (
+          <div className="w-full h-full bg-[var(--bg-secondary)]" />
+        )}
       </div>
 
       {/* Hero Content matching Stitch Specification */}

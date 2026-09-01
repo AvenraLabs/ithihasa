@@ -42,11 +42,47 @@ export function DashboardView({ onNavigateToOrders }) {
   }, []);
 
   const overview = data?.overview || {
-    totalRevenue: 1248500,
-    totalOrders: 148,
-    totalCustomers: 2481,
-    averageOrderValue: 34500,
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalCustomers: 0,
+    averageOrderValue: 0,
+    revenueGrowth: '0.0%',
+    ordersGrowth: '0.0%',
+    patronsGrowth: '0.0%',
+    aovGrowth: '0.0%',
   };
+
+  const revenueCurve = data?.revenueCurve || [
+    { day: 'Mon', revenue: 0 },
+    { day: 'Tue', revenue: 0 },
+    { day: 'Wed', revenue: 0 },
+    { day: 'Thu', revenue: 0 },
+    { day: 'Fri', revenue: 0 },
+    { day: 'Sat', revenue: 0 },
+    { day: 'Sun', revenue: 0 },
+  ];
+
+  // Dynamically calculate SVG chart coordinates
+  const maxRevenue = Math.max(...revenueCurve.map((c) => Number(c.revenue || 0)), 1000);
+  const chartPoints = revenueCurve.map((item, idx) => {
+    const x = revenueCurve.length > 1 ? (idx / (revenueCurve.length - 1)) * 100 : 50;
+    const val = Number(item.revenue || 0);
+    // Y mapped between 15 (top) and 85 (bottom)
+    const y = val > 0 ? 85 - (val / maxRevenue) * 70 : 85;
+    return { x, y, ...item };
+  });
+
+  const polylineStr = chartPoints.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const polygonStr = `0,85 ${polylineStr} 100,85`;
+
+  const categoryData = data?.categoryPerformance || {
+    month: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase(),
+    items: [],
+  };
+
+  const maxCatRev = Math.max(...(categoryData.items?.map((i) => Number(i.revenue || 0)) || []), 1);
+
+  const recentActivity = data?.recentActivity || [];
 
   return (
     <div className="p-5 md:p-10 max-w-[1440px] w-full mx-auto space-y-8 flex-1">
@@ -65,7 +101,7 @@ export function DashboardView({ onNavigateToOrders }) {
           <span>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           <span className="w-1 h-1 rounded-full bg-[var(--gold)]" />
           <span className="flex items-center gap-1.5 text-[var(--gold)]">
-            <RefreshCw size={12} className="animate-spin" /> LIVE
+            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> LIVE
           </span>
         </div>
       </section>
@@ -87,8 +123,13 @@ export function DashboardView({ onNavigateToOrders }) {
               {formatINR(overview.totalRevenue)}
             </div>
             <div className="flex items-center gap-1.5 mt-2.5">
-              <span className="flex items-center text-emerald-600 dark:text-emerald-400 font-semibold text-[12px]">
-                <TrendingUp size={14} className="mr-0.5" /> +12.5%
+              <span className={`flex items-center font-semibold text-[12px] ${
+                overview.revenueGrowth?.startsWith('+')
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-[var(--text-secondary)]'
+              }`}>
+                {overview.revenueGrowth?.startsWith('+') ? <TrendingUp size={14} className="mr-0.5" /> : <Minus size={14} className="mr-0.5" />}
+                {overview.revenueGrowth || '0.0%'}
               </span>
               <span className="text-[12px] text-[var(--text-muted)]">vs last month</span>
             </div>
@@ -110,11 +151,16 @@ export function DashboardView({ onNavigateToOrders }) {
           </div>
           <div>
             <div className="font-garamond text-[28px] md:text-[32px] text-[var(--text-primary)] font-normal tabular-nums leading-none">
-              {overview.totalOrders.toLocaleString('en-IN')}
+              {(overview.totalOrders || 0).toLocaleString('en-IN')}
             </div>
             <div className="flex items-center gap-1.5 mt-2.5">
-              <span className="flex items-center text-emerald-600 dark:text-emerald-400 font-semibold text-[12px]">
-                <TrendingUp size={14} className="mr-0.5" /> +8.2%
+              <span className={`flex items-center font-semibold text-[12px] ${
+                overview.ordersGrowth?.startsWith('+')
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-[var(--text-secondary)]'
+              }`}>
+                {overview.ordersGrowth?.startsWith('+') ? <TrendingUp size={14} className="mr-0.5" /> : <Minus size={14} className="mr-0.5" />}
+                {overview.ordersGrowth || '0.0%'}
               </span>
               <span className="text-[12px] text-[var(--text-muted)]">vs last month</span>
             </div>
@@ -133,11 +179,16 @@ export function DashboardView({ onNavigateToOrders }) {
           </div>
           <div>
             <div className="font-garamond text-[28px] md:text-[32px] text-[var(--text-primary)] font-normal tabular-nums leading-none">
-              {overview.totalCustomers.toLocaleString('en-IN')}
+              {(overview.totalCustomers || 0).toLocaleString('en-IN')}
             </div>
             <div className="flex items-center gap-1.5 mt-2.5">
-              <span className="flex items-center text-emerald-600 dark:text-emerald-400 font-semibold text-[12px]">
-                <TrendingUp size={14} className="mr-0.5" /> +4.1%
+              <span className={`flex items-center font-semibold text-[12px] ${
+                overview.patronsGrowth?.startsWith('+')
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-[var(--text-secondary)]'
+              }`}>
+                {overview.patronsGrowth?.startsWith('+') ? <TrendingUp size={14} className="mr-0.5" /> : <Minus size={14} className="mr-0.5" />}
+                {overview.patronsGrowth || '0.0%'}
               </span>
               <span className="text-[12px] text-[var(--text-muted)]">vs last month</span>
             </div>
@@ -159,8 +210,13 @@ export function DashboardView({ onNavigateToOrders }) {
               {formatINR(overview.averageOrderValue)}
             </div>
             <div className="flex items-center gap-1.5 mt-2.5">
-              <span className="flex items-center text-[var(--text-secondary)] font-semibold text-[12px]">
-                <Minus size={14} className="mr-0.5" /> 0.0%
+              <span className={`flex items-center font-semibold text-[12px] ${
+                overview.aovGrowth?.startsWith('+')
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-[var(--text-secondary)]'
+              }`}>
+                {overview.aovGrowth?.startsWith('+') ? <TrendingUp size={14} className="mr-0.5" /> : <Minus size={14} className="mr-0.5" />}
+                {overview.aovGrowth || '0.0%'}
               </span>
               <span className="text-[12px] text-[var(--text-muted)]">vs last month</span>
             </div>
@@ -209,7 +265,7 @@ export function DashboardView({ onNavigateToOrders }) {
               </div>
             </div>
 
-            {/* SVG Curve Chart matching Stitch Line Style */}
+            {/* Dynamic SVG Curve Chart */}
             <div className="h-64 w-full bg-[var(--bg-secondary)]/50 border border-[var(--border-color)] relative flex items-end justify-between p-4 overflow-hidden rounded-sm">
               {/* Grid horizontal lines */}
               <div className="absolute inset-x-8 top-1/4 border-b border-[var(--border-color)]/50" />
@@ -228,30 +284,31 @@ export function DashboardView({ onNavigateToOrders }) {
                     <stop offset="100%" stopColor="var(--gold)" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
-                <polygon
-                  points="0,80 16,60 33,68 50,38 66,50 83,30 100,15 100,100 0,100"
-                  fill="url(#chartGrad)"
-                />
+                <polygon points={polygonStr} fill="url(#chartGrad)" />
                 <polyline
-                  points="0,80 16,60 33,68 50,38 66,50 83,30 100,15"
+                  points={polylineStr}
                   fill="none"
                   stroke="var(--text-primary)"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                <circle cx="100" cy="15" r="4" fill="var(--gold)" />
+                {chartPoints.map((p, i) => (
+                  <circle
+                    key={i}
+                    cx={p.x}
+                    cy={p.y}
+                    r={i === chartPoints.length - 1 ? 4 : 2.5}
+                    fill="var(--gold)"
+                  />
+                ))}
               </svg>
 
               {/* X Axis Labels */}
               <div className="absolute bottom-2 left-8 right-8 flex justify-between label-caps text-[10px] text-[var(--text-secondary)]">
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
-                <span>Sun</span>
+                {revenueCurve.map((item, idx) => (
+                  <span key={idx}>{item.day}</span>
+                ))}
               </div>
             </div>
           </div>
@@ -262,42 +319,35 @@ export function DashboardView({ onNavigateToOrders }) {
               <h2 className="font-garamond text-[20px] font-normal text-[var(--text-primary)]">
                 Category Performance
               </h2>
-              <span className="label-caps text-[11px] text-[var(--gold)]">OCTOBER 2026</span>
+              <span className="label-caps text-[11px] text-[var(--gold)]">{categoryData.month}</span>
             </div>
 
             <div className="space-y-4">
-              {/* Category 1: Outerwear */}
-              <div>
-                <div className="flex justify-between mb-1.5 font-manrope text-[13px]">
-                  <span className="font-medium text-[var(--text-primary)]">Bandhgalas & Outerwear</span>
-                  <span className="tabular-nums font-semibold text-[var(--text-primary)]">₹4,52,000</span>
+              {categoryData.items && categoryData.items.length > 0 ? (
+                categoryData.items.map((cat, idx) => {
+                  const rev = Number(cat.revenue || 0);
+                  const pct = maxCatRev > 0 ? Math.round((rev / maxCatRev) * 100) : 0;
+                  const barColors = ['bg-[var(--text-primary)]', 'bg-[var(--gold)]', 'bg-[var(--text-secondary)]'];
+                  return (
+                    <div key={cat.id || idx}>
+                      <div className="flex justify-between mb-1.5 font-manrope text-[13px]">
+                        <span className="font-medium text-[var(--text-primary)]">{cat.name}</span>
+                        <span className="tabular-nums font-semibold text-[var(--text-primary)]">{formatINR(rev)}</span>
+                      </div>
+                      <div className="w-full bg-[var(--bg-secondary)] h-2.5 rounded-full overflow-hidden">
+                        <div
+                          className={`${barColors[idx % barColors.length]} h-full rounded-full transition-all duration-500`}
+                          style={{ width: `${Math.max(pct, 4)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="py-6 text-center text-[var(--text-muted)] text-[13px]">
+                  No sales recorded across categories for this period yet.
                 </div>
-                <div className="w-full bg-[var(--bg-secondary)] h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-[var(--text-primary)] h-full rounded-full" style={{ width: '75%' }} />
-                </div>
-              </div>
-
-              {/* Category 2: Dresses & Kurtas */}
-              <div>
-                <div className="flex justify-between mb-1.5 font-manrope text-[13px]">
-                  <span className="font-medium text-[var(--text-primary)]">Heritage Silk Kurtas</span>
-                  <span className="tabular-nums font-semibold text-[var(--text-primary)]">₹3,21,000</span>
-                </div>
-                <div className="w-full bg-[var(--bg-secondary)] h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-[var(--gold)] h-full rounded-full opacity-90" style={{ width: '55%' }} />
-                </div>
-              </div>
-
-              {/* Category 3: Shawls & Accessories */}
-              <div>
-                <div className="flex justify-between mb-1.5 font-manrope text-[13px]">
-                  <span className="font-medium text-[var(--text-primary)]">Royal Pashmina Shawls</span>
-                  <span className="tabular-nums font-semibold text-[var(--text-primary)]">₹2,85,000</span>
-                </div>
-                <div className="w-full bg-[var(--bg-secondary)] h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-[var(--text-secondary)] h-full rounded-full opacity-70" style={{ width: '45%' }} />
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -317,65 +367,47 @@ export function DashboardView({ onNavigateToOrders }) {
           </div>
 
           <div className="flex-1 space-y-5 overflow-y-auto pr-1">
-            {/* Activity 1 */}
-            <div onClick={onNavigateToOrders} className="flex items-start gap-3.5 group cursor-pointer">
-              <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center shrink-0 mt-0.5 text-[var(--text-primary)] group-hover:bg-[var(--gold)] group-hover:text-black transition-colors">
-                <ShoppingBag size={14} />
-              </div>
-              <div>
-                <p className="text-[13px] text-[var(--text-primary)] leading-snug">
-                  <span className="font-semibold">New Order #ITH-4920</span> placed by Eleanor Vance.
-                </p>
-                <p className="label-caps text-[10px] text-[var(--text-muted)] mt-1 tracking-wider">
-                  2 mins ago • ₹34,500
-                </p>
-              </div>
-            </div>
+            {recentActivity.length > 0 ? (
+              recentActivity.map((act) => {
+                const isOrder = act.type === 'order';
+                const isPatron = act.type === 'patron';
+                const isInventory = act.type === 'inventory';
 
-            {/* Activity 2 */}
-            <div className="flex items-start gap-3.5 group cursor-default">
-              <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center shrink-0 mt-0.5 text-[var(--text-primary)] group-hover:bg-[var(--gold)] group-hover:text-black transition-colors">
-                <UserPlus size={14} />
+                return (
+                  <div
+                    key={act.id}
+                    onClick={isOrder ? onNavigateToOrders : undefined}
+                    className={`flex items-start gap-3.5 group ${isOrder ? 'cursor-pointer' : 'cursor-default'}`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 border transition-colors ${
+                        isInventory
+                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
+                          : 'bg-[var(--bg-secondary)] border-[var(--border-color)] text-[var(--text-primary)] group-hover:bg-[var(--gold)] group-hover:text-black'
+                      }`}
+                    >
+                      {isOrder && <ShoppingBag size={14} />}
+                      {isPatron && <UserPlus size={14} />}
+                      {isInventory && <AlertTriangle size={14} />}
+                    </div>
+                    <div>
+                      <p className="text-[13px] text-[var(--text-primary)] leading-snug">
+                        <span className="font-semibold">{act.title} </span>
+                        {act.description}
+                      </p>
+                      <p className="label-caps text-[10px] text-[var(--text-muted)] mt-1 tracking-wider">
+                        {act.timeAgo}
+                        {act.amount !== undefined && ` • ${formatINR(act.amount)}`}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="py-12 text-center text-[var(--text-muted)] text-[13px]">
+                No recent activity recorded yet. Live events will appear here.
               </div>
-              <div>
-                <p className="text-[13px] text-[var(--text-primary)] leading-snug">
-                  <span className="font-semibold">New Patron:</span> Arthur Pendelton registered an account.
-                </p>
-                <p className="label-caps text-[10px] text-[var(--text-muted)] mt-1 tracking-wider">
-                  15 mins ago
-                </p>
-              </div>
-            </div>
-
-            {/* Activity 3 */}
-            <div onClick={onNavigateToOrders} className="flex items-start gap-3.5 group cursor-pointer">
-              <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center shrink-0 mt-0.5 text-[var(--text-primary)] group-hover:bg-[var(--gold)] group-hover:text-black transition-colors">
-                <ShoppingBag size={14} />
-              </div>
-              <div>
-                <p className="text-[13px] text-[var(--text-primary)] leading-snug">
-                  <span className="font-semibold">New Order #ITH-4919</span> placed by Marcus James.
-                </p>
-                <p className="label-caps text-[10px] text-[var(--text-muted)] mt-1 tracking-wider">
-                  1 hour ago • ₹48,000
-                </p>
-              </div>
-            </div>
-
-            {/* Activity 4 */}
-            <div className="flex items-start gap-3.5 group cursor-default">
-              <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5 text-amber-600 dark:text-amber-400">
-                <AlertTriangle size={14} />
-              </div>
-              <div>
-                <p className="text-[13px] text-[var(--text-primary)] leading-snug">
-                  <span className="font-semibold text-amber-600 dark:text-amber-400">Low Stock Alert:</span> Pure Pashmina Regal Stole reached threshold.
-                </p>
-                <p className="label-caps text-[10px] text-[var(--text-muted)] mt-1 tracking-wider">
-                  3 hours ago
-                </p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </section>

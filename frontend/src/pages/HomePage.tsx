@@ -8,14 +8,8 @@ export const HomePage: React.FC = () => {
       {/* 1. Hero Section */}
       <HeroSection />
 
-      {/* 2. Spacer */}
-      <div className="h-12 md:h-16" />
-
-      {/* 3. Timeless Silhouettes Product Section */}
+      {/* 2. Timeless Silhouettes Product Section (Padding is encapsulated within the component when enabled) */}
       <FeaturedSilhouettes />
-
-      {/* 4. Bottom Spacer */}
-      <div className="h-16 md:h-20" />
     </div>
   );
 };

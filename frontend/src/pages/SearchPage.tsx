@@ -7,23 +7,45 @@ import { Link } from 'react-router-dom';
 
 export const SearchPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [recentSearches, setRecentSearches] = useState<string[]>([
-    'Varanasi Silk Kurtas',
-    'Imperial Bandhgala',
-    'Black T Shirt',
-    'Mulberry Silk',
-  ]);
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('ithihasa_recent_searches');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const { data: cms } = useQuery({
     queryKey: ['storefront'],
     queryFn: fetchStorefrontData,
   });
 
+  const saveRecentSearch = (term: string) => {
+    const clean = term.trim();
+    if (!clean) return;
+    setRecentSearches((prev) => {
+      const filtered = prev.filter((t) => t.toLowerCase() !== clean.toLowerCase());
+      const updated = [clean, ...filtered].slice(0, 6);
+      try {
+        localStorage.setItem('ithihasa_recent_searches', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const clearAllRecent = () => {
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem('ithihasa_recent_searches');
+    } catch {}
+  };
+
   const { data: results = [], isLoading } = useQuery<Product[]>({
     queryKey: ['products', 'search', searchTerm],
     queryFn: () => {
-      if (searchTerm.trim() && !recentSearches.includes(searchTerm.trim())) {
-        setRecentSearches((prev) => [searchTerm.trim(), ...prev.slice(0, 3)]);
+      if (searchTerm.trim().length > 1) {
+        saveRecentSearch(searchTerm.trim());
       }
       return fetchProducts({ search: searchTerm });
     },
@@ -32,6 +54,7 @@ export const SearchPage: React.FC = () => {
 
   const handleSelectRecent = (term: string) => {
     setSearchTerm(term);
+    saveRecentSearch(term);
   };
 
   const handleClear = () => {
@@ -46,32 +69,15 @@ export const SearchPage: React.FC = () => {
     }).format(amount);
   };
 
-  const trendingCollections = cms?.trendingCollections || [
-    {
-      name: 'Heritage Kurtas',
-      slug: 'heritage-kurtas',
-      itemCount: 14,
-      imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      name: 'Bandhgalas & Jackets',
-      slug: 'bandhgalas-jackets',
-      itemCount: 8,
-      imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      name: 'Royal Shawls & Stoles',
-      slug: 'royal-shawls-stoles',
-      itemCount: 12,
-      imageUrl: 'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      name: 'Atelier Bespoke',
-      slug: 'atelier-bespoke',
-      itemCount: 6,
-      imageUrl: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80',
-    },
-  ];
+  const trendingCollections = cms?.trendingCollections || [];
+  const quickQueryTags = cms?.quickQueryTags && cms.quickQueryTags.length > 0
+    ? cms.quickQueryTags
+    : [
+        { label: 'Silk Shirts', query: 'silk shirt' },
+        { label: 'Heritage Kurtas', query: 'kurta' },
+        { label: 'Bandhgalas', query: 'bandhgala' },
+        { label: 'Pashmina', query: 'pashmina' },
+      ];
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors">
@@ -193,24 +199,34 @@ export const SearchPage: React.FC = () => {
             {/* Left Column: Recent Searches & Suggestions (5 cols) */}
             <div className="md:col-span-5 flex flex-col gap-8">
               {/* Recent Searches */}
-              <section>
-                <h2 className="label-caps text-[12px] text-[var(--gold)] mb-4 tracking-[0.15em] uppercase font-bold">
-                  Recent Searches
-                </h2>
-                <ul className="flex flex-col gap-3">
-                  {recentSearches.map((term, index) => (
-                    <li key={index}>
-                      <button
-                        onClick={() => handleSelectRecent(term)}
-                        className="group flex items-center gap-3 body-md text-[14px] md:text-[15px] text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors text-left w-full cursor-pointer"
-                      >
-                        <History size={16} className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0" />
-                        <span>{term}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              {recentSearches.length > 0 && (
+                <section>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="label-caps text-[12px] text-[var(--gold)] tracking-[0.15em] uppercase font-bold">
+                      Recent Searches
+                    </h2>
+                    <button
+                      onClick={clearAllRecent}
+                      className="text-[11px] text-[var(--text-secondary)] hover:text-[var(--gold)] cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <ul className="flex flex-col gap-3">
+                    {recentSearches.map((term, index) => (
+                      <li key={index}>
+                        <button
+                          onClick={() => handleSelectRecent(term)}
+                          className="group flex items-center gap-3 body-md text-[14px] md:text-[15px] text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors text-left w-full cursor-pointer"
+                        >
+                          <History size={16} className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0" />
+                          <span>{term}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
 
               {/* Quick Suggestion Chips */}
               <section className="pt-4 border-t border-[var(--border-color)]">
@@ -218,18 +234,13 @@ export const SearchPage: React.FC = () => {
                   Quick Query Tags
                 </h2>
                 <div className="flex flex-wrap gap-2">
-                  {[
-                    { label: 'Black Silk Shirts', query: 'black shirt' },
-                    { label: 'Heritage Kurtas', query: 'kurta' },
-                    { label: 'Imperial Bandhgalas', query: 'bandhgala' },
-                    { label: 'Pashmina Shawls', query: 'shawl' },
-                  ].map((cat, i) => (
+                  {quickQueryTags.map((tag, i) => (
                     <button
                       key={i}
-                      onClick={() => setSearchTerm(cat.query)}
+                      onClick={() => setSearchTerm(tag.query)}
                       className="px-3.5 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[12px] label-caps text-[var(--text-primary)] hover:border-[var(--gold)] hover:text-[var(--gold)] transition-colors cursor-pointer"
                     >
-                      {cat.label}
+                      {tag.label}
                     </button>
                   ))}
                 </div>

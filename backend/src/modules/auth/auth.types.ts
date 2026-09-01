@@ -7,7 +7,7 @@ export interface AuthTokens {
 export interface AuthResponse {
   user: {
     id: string;
-    email: string;
+    email: string | null;
     name: string;
     phone: string | null;
     phone_verified: boolean;

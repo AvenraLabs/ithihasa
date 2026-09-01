@@ -5,7 +5,7 @@ import { AuthenticationError } from '../common/errors/index.js';
 
 export interface TokenPayload {
   userId: string;
-  email: string;
+  email: string | null;
   role: 'CUSTOMER' | 'ADMIN';
 }
 

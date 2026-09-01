@@ -35,7 +35,7 @@ export async function loginWithPassword(credentials: {
 
 export async function registerWithPassword(data: {
   name: string;
-  email: string;
+  email?: string | null;
   phone?: string | null;
   password: string;
 }): Promise<AuthResponse> {

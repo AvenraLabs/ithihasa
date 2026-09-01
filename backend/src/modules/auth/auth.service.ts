@@ -44,18 +44,26 @@ export class AuthService {
    */
   public async registerWithPassword(data: {
     name: string;
-    email: string;
+    email?: string | null;
     phone?: string | null;
     password: string;
   }): Promise<AuthResponse> {
-    const email = data.email.toLowerCase().trim();
-    const existing = await User.findOne({ where: { email } });
-    if (existing) {
-      throw new BusinessRuleError('An account with this email address already exists.');
+    const cleanPhone = data.phone ? data.phone.trim().replace(/\D/g, '') : null;
+    const cleanEmail = (data.email && data.email.trim()) ? data.email.toLowerCase().trim() : null;
+
+    if (!cleanEmail && !cleanPhone) {
+      throw new BusinessRuleError('Please provide a mobile number or email address to register.');
     }
 
-    if (data.phone) {
-      const existingPhone = await User.findOne({ where: { phone: data.phone.trim() } });
+    if (cleanEmail) {
+      const existingEmail = await User.findOne({ where: { email: cleanEmail } });
+      if (existingEmail) {
+        throw new BusinessRuleError('An account with this email address already exists. Please sign in instead.');
+      }
+    }
+
+    if (cleanPhone) {
+      const existingPhone = await User.findOne({ where: { phone: cleanPhone } });
       if (existingPhone) {
         throw new BusinessRuleError('An account with this mobile number already exists. Please sign in instead.');
       }
@@ -64,9 +72,9 @@ export class AuthService {
     const passwordHash = await hashValue(data.password);
 
     const user = await User.create({
-      email,
+      email: cleanEmail,
       name: data.name.trim(),
-      phone: data.phone?.trim() || null,
+      phone: cleanPhone,
       password_hash: passwordHash,
       role: 'CUSTOMER',
       status: 'ACTIVE',
@@ -99,14 +107,17 @@ export class AuthService {
     password: string;
   }): Promise<AuthResponse> {
     const id = data.identifier.trim();
+    const cleanPhone = id.replace(/\D/g, '');
     
-    // Look up by email or phone (prefer accounts with active password_hash)
+    // Look up by email or phone
+    const orConditions: any[] = [{ email: id.toLowerCase() }];
+    if (cleanPhone && cleanPhone.length === 10) {
+      orConditions.push({ phone: cleanPhone });
+    }
+
     let user = await User.findOne({
       where: {
-        [Op.or]: [
-          { email: id.toLowerCase() },
-          { phone: id },
-        ],
+        [Op.or]: orConditions,
         password_hash: { [Op.ne]: null as any },
       },
     });
@@ -114,10 +125,7 @@ export class AuthService {
     if (!user) {
       user = await User.findOne({
         where: {
-          [Op.or]: [
-            { email: id.toLowerCase() },
-            { phone: id },
-          ],
+          [Op.or]: orConditions,
         },
       });
     }
@@ -237,7 +245,7 @@ export class AuthService {
 
     await UserOtp.create({
       user_id: user.id,
-      phone: user.phone || user.email,
+      phone: user.phone || user.email || 'NO_PHONE',
       otp_hash: otpHash,
       purpose: 'PASSWORD_RESET',
       expires_at: expiresAt,

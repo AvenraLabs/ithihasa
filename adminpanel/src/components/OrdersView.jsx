@@ -19,10 +19,12 @@ import { fetchOrders } from '../api/orders.js';
 import { toast } from 'sonner';
 
 export function OrdersView({ onSelectOrder }) {
+  const today = new Date().toISOString().split('T')[0];
+  const firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
   const [orders, setOrders] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
-  const [startDate, setStartDate] = useState('2023-10-01');
-  const [endDate, setEndDate] = useState('2023-10-31');
+  const [startDate, setStartDate] = useState(firstDayOfMonth);
+  const [endDate, setEndDate] = useState(today);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -308,7 +310,7 @@ export function OrdersView({ onSelectOrder }) {
 
         {/* Pagination Footer */}
         <div className="p-4 border-t border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-secondary)]/20 text-[13px] text-[var(--text-secondary)]">
-          <span>Showing 1 to {filteredOrders.length} of {orders.length} orders</span>
+          <span>{filteredOrders.length > 0 ? `Showing 1 to ${filteredOrders.length} of ${orders.length} orders` : 'Showing 0 orders'}</span>
           <div className="flex items-center gap-2">
             <button
               disabled

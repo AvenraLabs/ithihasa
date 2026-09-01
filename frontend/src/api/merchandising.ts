@@ -9,6 +9,7 @@ export interface StorefrontConfig {
     ctaText: string;
     ctaLink: string;
   };
+  showHighlighted?: boolean;
   highlightedItems: {
     id: string;
     title: string;
@@ -22,6 +23,10 @@ export interface StorefrontConfig {
     slug: string;
     itemCount: number;
     imageUrl: string;
+  }[];
+  quickQueryTags?: {
+    label: string;
+    query: string;
   }[];
 }
 

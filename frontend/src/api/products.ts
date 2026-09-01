@@ -33,6 +33,14 @@ export interface Product {
     name: string;
     slug: string;
   };
+  metadata?: {
+    colorSwatches?: {
+      name: string;
+      hex: string;
+      images?: string[];
+    }[];
+    [key: string]: any;
+  } | null;
   images: ProductImage[];
   variants: ProductVariant[];
 }

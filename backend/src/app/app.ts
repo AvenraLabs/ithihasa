@@ -8,16 +8,35 @@ import { errorHandler, notFoundHandler } from '../middleware/error-handler.js';
 import { apiRouter } from './routes.js';
 import { sequelize } from '../config/database.js';
 
+import path from 'path';
+import fs from 'fs';
+
 export function createApp(): Express {
   const app = express();
+
+  // Ensure upload directories exist
+  const uploadDir = path.join(process.cwd(), 'uploads');
+  const productUploads = path.join(uploadDir, 'products');
+  const storefrontUploads = path.join(uploadDir, 'storefront');
+  const bannerUploads = path.join(uploadDir, 'banners');
+
+  [uploadDir, productUploads, storefrontUploads, bannerUploads].forEach((dir) => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  });
 
   // Basic Security & Headers
   app.use(helmetMiddleware);
   app.use(corsMiddleware);
 
+  // Static uploads directory serving
+  app.use('/uploads', express.static(uploadDir));
+  app.use('/api/v1/uploads', express.static(uploadDir));
+
   // Body Parsing (JSON & URL-Encoded)
-  app.use(express.json({ limit: '5mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+  app.use(express.json({ limit: '20mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
   // Request ID & Logging
   app.use(requestIdMiddleware);

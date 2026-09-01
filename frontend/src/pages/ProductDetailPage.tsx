@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchProductBySlug, fetchProducts, type Product } from '../api/products.js';
@@ -23,6 +23,8 @@ export const ProductDetailPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedSizeLabel, setSelectedSizeLabel] = useState<string>('Select Size');
   const [isSizeSheetOpen, setIsSizeSheetOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -41,6 +43,30 @@ export const ProductDetailPage: React.FC = () => {
     queryFn: () => fetchProductBySlug(slug!),
     enabled: Boolean(slug),
   });
+
+  // Extract color swatches and available colors
+  const colorSwatches = product?.metadata?.colorSwatches || [];
+  const variantColors = Array.from(
+    new Set((product?.variants || []).map((v) => v.color).filter(Boolean))
+  ) as string[];
+
+  const availableColors = colorSwatches.length > 0
+    ? colorSwatches
+    : variantColors.map((c) => ({
+        name: c,
+        hex: c.toLowerCase().includes('gold') ? '#C9A24B'
+           : c.toLowerCase().includes('noir') || c.toLowerCase().includes('black') ? '#0A0A0A'
+           : c.toLowerCase().includes('crimson') || c.toLowerCase().includes('red') ? '#7A1C22'
+           : c.toLowerCase().includes('ivory') || c.toLowerCase().includes('white') ? '#F4EFE6'
+           : c.toLowerCase().includes('emerald') || c.toLowerCase().includes('green') ? '#1B4D3E'
+           : c.toLowerCase().includes('sapphire') || c.toLowerCase().includes('blue') ? '#1A2A44'
+           : '#4A3E3D',
+        images: []
+      }));
+
+  const availableSizes = Array.from(
+    new Set((product?.variants || []).map((v) => v.size).filter(Boolean))
+  );
 
   // Fetch recommended products for "Complete the Look"
   const { data: recommendedProducts = [] } = useQuery<Product[]>({
@@ -121,22 +147,6 @@ export const ProductDetailPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (product && product.variants?.length > 0) {
-      const defaultVar = product.variants[0];
-      setSelectedVariantId(defaultVar.id);
-      setSelectedSizeLabel(defaultVar.size);
-    }
-  }, [product]);
-
-  const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   if (isLoading) {
     return (
       <div className="py-32 text-center text-[var(--text-secondary)]">
@@ -160,7 +170,7 @@ export const ProductDetailPage: React.FC = () => {
         </p>
         <button
           onClick={() => navigate('/shop')}
-          className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-8 py-3.5 label-caps uppercase tracking-widest"
+          className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-8 py-3.5 label-caps uppercase tracking-widest cursor-pointer"
         >
           Return to Collection
         </button>
@@ -169,17 +179,63 @@ export const ProductDetailPage: React.FC = () => {
   }
 
   const activeVariant = product.variants.find((v) => v.id === selectedVariantId) || product.variants[0];
-  const images = product.images.length > 0 ? product.images : [{ id: '1', url: 'https://via.placeholder.com/600', isPrimary: true, sortOrder: 0 }];
+
+  // Compute active images based on selected color
+  const activeColorSwatch = selectedColor ? availableColors.find((c) => c.name === selectedColor) : null;
+  const colorSpecificImages = activeColorSwatch?.images && activeColorSwatch.images.length > 0
+    ? activeColorSwatch.images.map((url, idx) => ({ id: `color_${idx}`, url, altText: selectedColor, isPrimary: idx === 0, sortOrder: idx }))
+    : (product.images || []).filter((img) => img.altText === selectedColor);
+
+  const images = colorSpecificImages.length > 0
+    ? colorSpecificImages
+    : (product.images && product.images.length > 0 ? product.images : [{ id: '1', url: '', altText: 'Heritage Silhouette', isPrimary: true, sortOrder: 0 }]);
+
+  const formatPrice = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
   const handleAddToCart = () => {
-    const variantIdToUse = selectedVariantId || product.variants[0]?.id;
-    if (variantIdToUse) {
-      addToCartMutation.mutate(variantIdToUse);
+    if (availableColors.length > 0 && !selectedColor) {
+      toast.error('Please select a color before adding to bag');
+      return;
     }
+    if (availableSizes.length > 0 && (!selectedSize || selectedSize === 'Select Size')) {
+      toast.error('Please select a size before adding to bag');
+      setIsSizeSheetOpen(true);
+      return;
+    }
+
+    const matchingVariant = (product?.variants || []).find(
+      (v) => (!selectedColor || v.color === selectedColor) && (!selectedSize || v.size === selectedSize)
+    ) || (product?.variants || []).find((v) => !selectedSize || v.size === selectedSize) || product?.variants?.[0];
+
+    if (matchingVariant) {
+      addToCartMutation.mutate(matchingVariant.id);
+    } else {
+      toast.error('This combination is currently out of stock');
+    }
+  };
+
+  const handleToggleWishlist = () => {
+    if (availableColors.length > 0 && !selectedColor) {
+      toast.error('Please select a color before adding to wishlist');
+      return;
+    }
+    if (availableSizes.length > 0 && (!selectedSize || selectedSize === 'Select Size')) {
+      toast.error('Please select a size before adding to wishlist');
+      setIsSizeSheetOpen(true);
+      return;
+    }
+    wishlistMutation.mutate();
   };
 
   const handleSelectSize = (variantId: string, sizeName: string) => {
     setSelectedVariantId(variantId);
+    setSelectedSize(sizeName);
     setSelectedSizeLabel(sizeName);
     setIsSizeSheetOpen(false);
   };
@@ -307,16 +363,80 @@ export const ProductDetailPage: React.FC = () => {
             </p>
           </div>
 
+          {/* Color Rounds / Swatches Selector */}
+          {availableColors.length > 0 && (
+            <div className="mb-6 border-b border-[var(--border-color)] pb-5">
+              <div className="flex justify-between items-center mb-3">
+                <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">
+                  Color: <span className="text-[var(--gold)] font-bold">{selectedColor || 'Please select a color'}</span>
+                </span>
+                {!selectedColor && (
+                  <span className="text-[10px] text-amber-500 font-semibold tracking-wider uppercase bg-amber-500/10 px-2 py-0.5 rounded">
+                    Select Color
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                {availableColors.map((color) => {
+                  const isSelected = selectedColor === color.name;
+                  return (
+                    <button
+                      key={color.name}
+                      type="button"
+                      onClick={() => {
+                        setSelectedColor(color.name);
+                        setActiveImageIndex(0);
+                        if (galleryRef.current) {
+                          galleryRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+                        }
+                      }}
+                      className={`group flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[var(--gold)] ring-2 ring-[var(--gold)]/40 bg-[var(--gold)]/10 text-[var(--text-primary)]'
+                          : 'border-[var(--border-color)] hover:border-[var(--gold)]/60 bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
+                      }`}
+                      title={color.name}
+                    >
+                      <span
+                        className="w-5 h-5 rounded-full border border-white/20 shadow-sm shrink-0 flex items-center justify-center transition-transform group-hover:scale-110"
+                        style={{ backgroundColor: color.hex }}
+                      >
+                        {isSelected && (
+                          <Check
+                            size={12}
+                            className={color.hex === '#F4EFE6' || color.hex === '#FFFFFF' ? 'text-black' : 'text-white'}
+                            strokeWidth={3}
+                          />
+                        )}
+                      </span>
+                      <span className={`text-[12px] font-medium ${isSelected ? 'text-[var(--gold)] font-semibold' : 'text-[var(--text-primary)]'}`}>
+                        {color.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Size Selector Trigger Button */}
           <button
             onClick={() => setIsSizeSheetOpen(true)}
             className="w-full border-b border-[var(--border-color)] py-4 flex justify-between items-center group mb-6 text-left"
           >
             <div className="flex flex-col items-start">
-              <span className="label-caps text-[11px] text-[var(--text-secondary)] mb-0.5 uppercase tracking-wider">
-                Size
-              </span>
-              <span className="title-sm text-[15px] text-[var(--text-primary)] font-medium">
+              <div className="flex items-center gap-2">
+                <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">
+                  Size
+                </span>
+                {(!selectedSize || selectedSize === 'Select Size') && (
+                  <span className="text-[10px] text-amber-500 font-semibold tracking-wider uppercase bg-amber-500/10 px-2 py-0.5 rounded">
+                    Select Size
+                  </span>
+                )}
+              </div>
+              <span className={`title-sm text-[15px] font-medium mt-0.5 ${selectedSize ? 'text-[var(--text-primary)]' : 'text-[var(--gold)]'}`}>
                 {selectedSizeLabel}
               </span>
             </div>
@@ -349,7 +469,7 @@ export const ProductDetailPage: React.FC = () => {
             </button>
 
             <button
-              onClick={() => wishlistMutation.mutate()}
+              onClick={handleToggleWishlist}
               disabled={wishlistMutation.isPending}
               aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
               className={`w-14 h-[50px] border flex items-center justify-center transition-colors cursor-pointer ${
@@ -545,7 +665,7 @@ export const ProductDetailPage: React.FC = () => {
         </button>
 
         <button
-          onClick={() => wishlistMutation.mutate()}
+          onClick={handleToggleWishlist}
           disabled={wishlistMutation.isPending}
           aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
           className={`w-12 h-12 flex items-center justify-center border transition-all active:scale-90 bg-[var(--bg-card)] ${
@@ -597,8 +717,8 @@ export const ProductDetailPage: React.FC = () => {
             {/* Size Options List */}
             <div className="px-6 py-4 overflow-y-auto space-y-2 flex-1">
               {product.variants && product.variants.length > 0 ? (
-                product.variants.map((variant) => {
-                  const isSelected = selectedVariantId === variant.id;
+                (selectedColor ? product.variants.filter((v) => !v.color || v.color === selectedColor) : product.variants).map((variant) => {
+                  const isSelected = selectedVariantId === variant.id || selectedSize === variant.size;
                   const inStock = variant.availableStock > 0;
 
                   return (
@@ -606,7 +726,7 @@ export const ProductDetailPage: React.FC = () => {
                       key={variant.id}
                       disabled={!inStock}
                       onClick={() => handleSelectSize(variant.id, variant.size)}
-                      className={`w-full flex justify-between items-center py-3.5 px-4 border transition-colors text-left ${
+                      className={`w-full flex justify-between items-center py-3.5 px-4 border transition-colors text-left cursor-pointer ${
                         isSelected
                           ? 'border-[var(--gold)] bg-[var(--bg-secondary)] text-[var(--gold)] font-bold'
                           : inStock

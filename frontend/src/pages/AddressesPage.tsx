@@ -23,7 +23,8 @@ export const AddressesPage: React.FC = () => {
     }
   }, [navigate]);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // View mode: 'list' for viewing saved addresses, 'form' for adding/editing inline in-page
+  const [viewMode, setViewMode] = useState<'list' | 'form'>('list');
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
 
   const [formData, setFormData] = useState<AddressInput>({
@@ -43,19 +44,15 @@ export const AddressesPage: React.FC = () => {
     queryFn: fetchAddresses,
   });
 
-  const showToast = (msg: string) => {
-    toast.success(msg);
-  };
-
   const createMutation = useMutation({
     mutationFn: createAddress,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
-      setIsModalOpen(false);
-      showToast('Address added successfully');
+      setViewMode('list');
+      toast.success('Address saved successfully');
     },
     onError: (err: any) => {
-      showToast(err.message || 'Failed to save address');
+      toast.error(err.message || 'Failed to save address');
     },
   });
 
@@ -64,12 +61,12 @@ export const AddressesPage: React.FC = () => {
       updateAddress(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
-      setIsModalOpen(false);
+      setViewMode('list');
       setEditingAddress(null);
-      showToast('Address updated successfully');
+      toast.success('Address updated successfully');
     },
     onError: (err: any) => {
-      showToast(err.message || 'Failed to update address');
+      toast.error(err.message || 'Failed to update address');
     },
   });
 
@@ -77,11 +74,14 @@ export const AddressesPage: React.FC = () => {
     mutationFn: deleteAddress,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
-      showToast('Address removed');
+      toast.success('Address removed');
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to remove address');
     },
   });
 
-  const openAddModal = () => {
+  const handleOpenAdd = () => {
     setEditingAddress(null);
     setFormData({
       name: '',
@@ -94,10 +94,10 @@ export const AddressesPage: React.FC = () => {
       country: 'India',
       isDefaultShipping: addresses.length === 0,
     });
-    setIsModalOpen(true);
+    setViewMode('form');
   };
 
-  const openEditModal = (addr: Address) => {
+  const handleOpenEdit = (addr: Address) => {
     setEditingAddress(addr);
     setFormData({
       name: addr.name,
@@ -110,7 +110,7 @@ export const AddressesPage: React.FC = () => {
       country: addr.country,
       isDefaultShipping: addr.isDefaultShipping,
     });
-    setIsModalOpen(true);
+    setViewMode('form');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -127,232 +127,263 @@ export const AddressesPage: React.FC = () => {
       {/* Top Header */}
       <header className="sticky top-0 z-40 bg-[var(--bg-primary)]/90 backdrop-blur-xl border-b border-[var(--border-color)] flex justify-between items-center px-5 md:px-20 h-16 transition-colors">
         <button
-          onClick={() => navigate(-1)}
-          className="p-2 -ml-2 text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors"
+          onClick={() => {
+            if (viewMode === 'form') {
+              setViewMode('list');
+            } else {
+              navigate('/account');
+            }
+          }}
+          className="p-2 -ml-2 text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors flex items-center gap-1.5 cursor-pointer"
           aria-label="Go Back"
         >
-          <ArrowLeft size={22} />
+          <ArrowLeft size={20} />
+          <span className="text-[11px] label-caps uppercase tracking-widest hidden sm:inline">
+            {viewMode === 'form' ? 'Back to Addresses' : 'Account'}
+          </span>
         </button>
 
         <h1
-          className="text-[20px] md:text-[24px] font-normal tracking-[0.15em] uppercase text-[var(--gold)]"
+          className="text-[18px] md:text-[22px] font-normal tracking-[0.15em] uppercase text-[var(--gold)]"
           style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
         >
-          Saved Addresses
+          {viewMode === 'form'
+            ? editingAddress
+              ? 'Edit Address'
+              : 'New Address'
+            : 'Saved Addresses'}
         </h1>
 
-        <button
-          onClick={openAddModal}
-          className="p-2 text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors"
-          aria-label="Add New Address"
-        >
-          <Plus size={22} />
-        </button>
+        <div className="w-8">
+          {viewMode === 'list' && (
+            <button
+              onClick={handleOpenAdd}
+              className="p-2 text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors cursor-pointer"
+              aria-label="Add New Address"
+            >
+              <Plus size={22} />
+            </button>
+          )}
+        </div>
       </header>
 
-      {/* Content Canvas */}
-      <main className="max-w-[800px] mx-auto px-5 md:px-8 py-8">
-        <div className="flex justify-between items-center mb-6">
+      {/* Main Container */}
+      <main className="max-w-[760px] mx-auto px-5 md:px-8 py-8 animate-in fade-in duration-300">
+        {viewMode === 'list' ? (
+          /* ================= LIST VIEW ================= */
           <div>
-            <p className="body-md text-[14px] text-[var(--text-secondary)]">
-              Manage your delivery locations for seamless atelier checkouts.
-            </p>
-          </div>
-          <button
-            onClick={openAddModal}
-            className="hidden sm:inline-flex items-center gap-2 border border-[var(--text-primary)] px-4 py-2 text-[11px] label-caps tracking-widest uppercase hover:bg-[var(--gold)] hover:border-[var(--gold)] hover:text-[#0A0A0A] transition-colors"
-          >
-            <Plus size={14} />
-            <span>Add Address</span>
-          </button>
-        </div>
-
-        {/* Addresses List */}
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-32 bg-[var(--bg-card)] border border-[var(--border-color)] animate-pulse rounded-lg"
-              />
-            ))}
-          </div>
-        ) : addresses.length === 0 ? (
-          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-10 text-center flex flex-col items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center text-[var(--text-secondary)]">
-              <MapPin size={24} />
-            </div>
-            <div>
-              <h2
-                className="text-[22px] font-normal text-[var(--text-primary)] mb-1"
-                style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <p className="body-md text-[14px] text-[var(--text-secondary)]">
+                  Manage your delivery locations for seamless atelier checkouts.
+                </p>
+              </div>
+              <button
+                onClick={handleOpenAdd}
+                className="hidden sm:inline-flex items-center gap-2 border border-[var(--text-primary)] px-4 py-2 text-[11px] label-caps tracking-widest uppercase hover:bg-[var(--gold)] hover:border-[var(--gold)] hover:text-[#0A0A0A] transition-colors cursor-pointer"
               >
-                No addresses saved yet
-              </h2>
-              <p className="body-sm text-[13px] text-[var(--text-secondary)]">
-                Add your shipping address for effortless purchases.
-              </p>
+                <Plus size={14} />
+                <span>Add Address</span>
+              </button>
             </div>
-            <button
-              onClick={openAddModal}
-              className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-6 py-3 label-caps text-[11px] uppercase tracking-[0.15em] hover:bg-[var(--gold)] hover:text-[#0A0A0A] transition-colors font-semibold"
-            >
-              Add First Address
-            </button>
+
+            {/* Addresses List */}
+            {isLoading ? (
+              <div className="space-y-4">
+                {[1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="h-32 bg-[var(--bg-card)] border border-[var(--border-color)] animate-pulse rounded-lg"
+                  />
+                ))}
+              </div>
+            ) : addresses.length === 0 ? (
+              <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-10 text-center flex flex-col items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center text-[var(--text-secondary)]">
+                  <MapPin size={24} />
+                </div>
+                <div>
+                  <h2
+                    className="text-[22px] font-normal text-[var(--text-primary)] mb-1"
+                    style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+                  >
+                    No addresses saved yet
+                  </h2>
+                  <p className="body-sm text-[13px] text-[var(--text-secondary)]">
+                    Add your shipping address for effortless purchases.
+                  </p>
+                </div>
+                <button
+                  onClick={handleOpenAdd}
+                  className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-6 py-3 label-caps text-[11px] uppercase tracking-[0.15em] hover:bg-[var(--gold)] hover:text-[#0A0A0A] transition-colors font-semibold cursor-pointer"
+                >
+                  Add First Address
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {addresses.map((addr) => (
+                  <div
+                    key={addr.id}
+                    className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-5 md:p-6 transition-all hover:border-[var(--gold)] flex flex-col sm:flex-row justify-between sm:items-start gap-4"
+                  >
+                    <div className="space-y-1.5 flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-[16px] font-semibold text-[var(--text-primary)] tracking-wide">
+                          {addr.name}
+                        </h3>
+                        {addr.isDefaultShipping && (
+                          <span className="label-caps text-[9px] uppercase tracking-widest bg-[var(--gold)]/15 text-[var(--gold)] px-2.5 py-0.5 rounded border border-[var(--gold)]/30 font-semibold">
+                            Default
+                          </span>
+                        )}
+                      </div>
+                      <p className="body-sm text-[13px] text-[var(--text-secondary)] leading-relaxed">
+                        {addr.line1}
+                        {addr.line2 ? `, ${addr.line2}` : ''}
+                        <br />
+                        {addr.city}, {addr.state} {addr.postalCode}
+                        <br />
+                        {addr.country}
+                      </p>
+                      <p className="body-sm text-[12px] text-[var(--text-secondary)]/80">
+                        Phone: {addr.phone}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-start pt-2 sm:pt-0">
+                      <button
+                        onClick={() => handleOpenEdit(addr)}
+                        className="p-2 text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors border border-[var(--border-color)] hover:border-[var(--gold)] rounded cursor-pointer"
+                        aria-label="Edit Address"
+                        title="Edit Address"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Are you sure you want to remove this address?')) {
+                            deleteMutation.mutate(addr.id);
+                          }
+                        }}
+                        className="p-2 text-[var(--text-secondary)] hover:text-rose-500 transition-colors border border-[var(--border-color)] hover:border-rose-500/50 rounded cursor-pointer"
+                        aria-label="Delete Address"
+                        title="Delete Address"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {addresses.map((addr) => (
-              <div
-                key={addr.id}
-                className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-5 md:p-6 transition-all hover:border-[var(--gold)] flex flex-col sm:flex-row justify-between sm:items-start gap-4"
+          /* ================= IN-PAGE FULL FORM VIEW ================= */
+          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-6 sm:p-10 shadow-sm animate-in slide-in-from-bottom-2 duration-300">
+            <div className="border-b border-[var(--border-color)] pb-5 mb-6">
+              <h2
+                className="text-[24px] sm:text-[28px] font-normal text-[var(--text-primary)] mb-1"
+                style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
               >
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-[16px] font-semibold text-[var(--text-primary)] tracking-wide">
-                      {addr.name}
-                    </h3>
-                    {addr.isDefaultShipping && (
-                      <span className="label-caps text-[9px] uppercase tracking-widest bg-[var(--gold)]/15 text-[var(--gold)] px-2.5 py-0.5 rounded border border-[var(--gold)]/30 font-semibold">
-                        Default
-                      </span>
-                    )}
-                  </div>
-                  <p className="body-sm text-[13px] text-[var(--text-secondary)] leading-relaxed">
-                    {addr.line1}
-                    {addr.line2 ? `, ${addr.line2}` : ''}
-                    <br />
-                    {addr.city}, {addr.state} {addr.postalCode}
-                    <br />
-                    {addr.country}
-                  </p>
-                  <p className="body-sm text-[12px] text-[var(--text-secondary)]/80">
-                    Phone: {addr.phone}
-                  </p>
+                {editingAddress ? 'Edit Atelier Address' : 'New Atelier Address'}
+              </h2>
+              <p className="text-[13px] text-[var(--text-secondary)]">
+                Provide your precise delivery details for safe, courier-tracked heritage consignments.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5 font-semibold">
+                    Full Recipient Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Aravind S"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
+                  />
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0 self-end sm:self-start pt-2 sm:pt-0">
-                  <button
-                    onClick={() => openEditModal(addr)}
-                    className="p-2 text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors border border-[var(--border-color)] hover:border-[var(--gold)] rounded"
-                    aria-label="Edit Address"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(addr.id)}
-                    className="p-2 text-[var(--text-secondary)] hover:text-[var(--error)] transition-colors border border-[var(--border-color)] hover:border-[var(--error)] rounded cursor-pointer"
-                    aria-label="Delete Address"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                <div>
+                  <label className="label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5 font-semibold">
+                    Mobile Contact Number *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="8680947556"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
+                  />
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
-
-      {/* Add / Edit Address Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl w-full max-w-lg p-6 md:p-8 max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95">
-            <h2
-              className="text-[24px] font-normal text-[var(--text-primary)] mb-5"
-              style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
-            >
-              {editingAddress ? 'Edit Address' : 'Add New Address'}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Eleanor Vance"
-                  className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
-                />
-              </div>
 
               <div>
-                <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
-                  Mobile Number *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="+91 98765 43210"
-                  className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
-                  Street Address *
+                <label className="label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5 font-semibold">
+                  Street Address & Door No. *
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.line1}
                   onChange={(e) => setFormData({ ...formData, line1: e.target.value })}
-                  placeholder="124 Atelier Avenue"
-                  className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                  placeholder="2/958, NH Main Road"
+                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                 />
               </div>
 
               <div>
-                <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
-                  Apartment, Suite, Unit (Optional)
+                <label className="label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5 font-semibold">
+                  Apartment, Suite, Landmark (Optional)
                 </label>
                 <input
                   type="text"
                   value={formData.line2 || ''}
                   onChange={(e) => setFormData({ ...formData, line2: e.target.value })}
-                  placeholder="Suite 4B"
-                  className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                  placeholder="Near Heritage Gate, Vijayamangalam"
+                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
-                    City *
+                  <label className="label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5 font-semibold">
+                    City / Town *
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    placeholder="Mumbai"
-                    className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                    placeholder="Erode"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
-                    State *
+                  <label className="label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5 font-semibold">
+                    State / Province *
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    placeholder="Maharashtra"
-                    className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                    placeholder="Tamil Nadu"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
+                  <label className="label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5 font-semibold">
                     PIN / Postal Code *
                   </label>
                   <input
@@ -360,60 +391,65 @@ export const AddressesPage: React.FC = () => {
                     required
                     value={formData.postalCode}
                     onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                    placeholder="400001"
-                    className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-1.5 text-[15px] focus:outline-none"
+                    placeholder="638056"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
+                  <label className="label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] block mb-1.5 font-semibold">
                     Country
                   </label>
                   <input
                     type="text"
                     disabled
                     value={formData.country || 'India'}
-                    className="w-full bg-transparent border-b border-[var(--border-color)] py-1.5 text-[15px] opacity-70 cursor-not-allowed"
+                    className="w-full bg-[var(--bg-secondary)]/50 border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-secondary)] rounded opacity-80 cursor-not-allowed"
                   />
                 </div>
               </div>
 
-              <div className="pt-2">
-                <label className="flex items-center gap-3 cursor-pointer">
+              <div className="pt-3">
+                <label className="flex items-center gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={formData.isDefaultShipping}
                     onChange={(e) =>
                       setFormData({ ...formData, isDefaultShipping: e.target.checked })
                     }
-                    className="w-4 h-4 accent-[var(--gold)]"
+                    className="w-4 h-4 accent-[var(--gold)] cursor-pointer"
                   />
-                  <span className="body-sm text-[13px] text-[var(--text-primary)]">
+                  <span className="body-sm text-[13px] text-[var(--text-primary)] font-medium">
                     Set as default shipping address
                   </span>
                 </label>
               </div>
 
-              <div className="flex justify-end gap-3 pt-6 border-t border-[var(--border-color)]">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2.5 label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                >
-                  Cancel
-                </button>
+              <div className="flex flex-col sm:flex-row items-center gap-3 pt-6 border-t border-[var(--border-color)]">
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-6 py-2.5 label-caps text-[11px] uppercase tracking-[0.15em] hover:bg-[var(--gold)] hover:text-[#0A0A0A] transition-colors font-semibold"
+                  className="w-full sm:w-auto flex-1 bg-[var(--gold)] text-[#0A0A0A] hover:bg-[var(--gold-bright)] py-3.5 px-8 label-caps text-[12px] uppercase tracking-widest font-bold transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer text-center"
                 >
-                  {createMutation.isPending || updateMutation.isPending ? 'Saving...' : 'Save Address'}
+                  {createMutation.isPending || updateMutation.isPending
+                    ? 'Saving Address...'
+                    : editingAddress
+                    ? 'Update Address'
+                    : 'Save Address to Atelier'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  className="w-full sm:w-auto px-6 py-3.5 border border-[var(--border-color)] hover:border-[var(--gold)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] label-caps text-[11px] uppercase tracking-wider transition-colors cursor-pointer text-center"
+                >
+                  Cancel & Return
                 </button>
               </div>
             </form>
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 };

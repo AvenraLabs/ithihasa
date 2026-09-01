@@ -249,10 +249,12 @@ let NOTIFICATIONS: any[] = [
 ];
 
 export class AdminService {
-  /**
-   * Analytics & Metric Dashboard
-   */
   public async getDashboardAnalytics() {
+    const now = new Date();
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+    const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
+    const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
     const totalOrders = await Order.count();
     const paidOrders = await Order.count({
       where: {
@@ -265,7 +267,7 @@ export class AdminService {
         status: { [Op.in]: ['PAID', 'PROCESSING', 'PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'] },
       },
     });
-    const totalRevenue = Number(totalRevenueResult || 0) || 124850;
+    const totalRevenue = Number(totalRevenueResult || 0);
 
     const pendingOrders = await Order.count({
       where: { status: { [Op.in]: ['PAID', 'PROCESSING'] } },
@@ -275,7 +277,49 @@ export class AdminService {
       where: { status: 'REQUESTED' },
     });
 
-    const totalCustomers = await User.count({ where: { role: 'CUSTOMER' } }) || 2481;
+    const totalCustomers = await User.count({ where: { role: 'CUSTOMER' } });
+
+    // MoM Comparisons
+    const currentMonthRevenue = Number(await Order.sum('total_amount', {
+      where: {
+        created_at: { [Op.gte]: startOfCurrentMonth },
+        status: { [Op.in]: ['PAID', 'PROCESSING', 'PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'] },
+      },
+    }) || 0);
+
+    const prevMonthRevenue = Number(await Order.sum('total_amount', {
+      where: {
+        created_at: { [Op.between]: [startOfPrevMonth, endOfPrevMonth] },
+        status: { [Op.in]: ['PAID', 'PROCESSING', 'PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'] },
+      },
+    }) || 0);
+
+    const currentMonthOrders = await Order.count({
+      where: { created_at: { [Op.gte]: startOfCurrentMonth } },
+    });
+    const prevMonthOrders = await Order.count({
+      where: { created_at: { [Op.between]: [startOfPrevMonth, endOfPrevMonth] } },
+    });
+
+    const currentMonthCustomers = await User.count({
+      where: { role: 'CUSTOMER', created_at: { [Op.gte]: startOfCurrentMonth } },
+    });
+    const prevMonthCustomers = await User.count({
+      where: { role: 'CUSTOMER', created_at: { [Op.between]: [startOfPrevMonth, endOfPrevMonth] } },
+    });
+
+    const calcGrowth = (curr: number, prev: number) => {
+      if (prev === 0) return curr > 0 ? '+100%' : '0.0%';
+      const rate = ((curr - prev) / prev) * 100;
+      return `${rate >= 0 ? '+' : ''}${rate.toFixed(1)}%`;
+    };
+
+    const revenueGrowth = calcGrowth(currentMonthRevenue, prevMonthRevenue);
+    const ordersGrowth = calcGrowth(currentMonthOrders, prevMonthOrders);
+    const patronsGrowth = calcGrowth(currentMonthCustomers, prevMonthCustomers);
+    const currentMonthAOV = currentMonthOrders > 0 ? currentMonthRevenue / currentMonthOrders : 0;
+    const prevMonthAOV = prevMonthOrders > 0 ? prevMonthRevenue / prevMonthOrders : 0;
+    const aovGrowth = calcGrowth(currentMonthAOV, prevMonthAOV);
 
     const lowStockVariants = await Inventory.findAll({
       where: {
@@ -300,36 +344,161 @@ export class AdminService {
       limit: 6,
     });
 
-    // 7-day revenue trend simulation/aggregation
-    const revenueCurve = [
-      { day: 'Mon', revenue: 14200 },
-      { day: 'Tue', revenue: 18500 },
-      { day: 'Wed', revenue: 16800 },
-      { day: 'Thu', revenue: 22400 },
-      { day: 'Fri', revenue: 26900 },
-      { day: 'Sat', revenue: 31200 },
-      { day: 'Sun', revenue: 28400 },
-    ];
+    // 7-day real revenue curve from orders
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const revenueCurve = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+      const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+
+      const dayRevenue = await Order.sum('total_amount', {
+        where: {
+          created_at: { [Op.between]: [startOfDay, endOfDay] },
+          status: { [Op.ne]: 'CANCELLED' },
+        },
+      });
+
+      revenueCurve.push({
+        day: days[d.getDay()],
+        date: d.toISOString().split('T')[0],
+        revenue: Number(dayRevenue || 0),
+      });
+    }
+
+    const averageOrderValue = paidOrders > 0 ? Number((totalRevenue / paidOrders).toFixed(2)) : 0;
+
+    // Real Category Performance
+    const categories = await Category.findAll({
+      include: [
+        {
+          model: Product,
+          as: 'products',
+          attributes: ['id'],
+          include: [{ model: ProductVariant, as: 'variants', attributes: ['id'] }],
+        },
+      ],
+      limit: 5,
+    });
+
+    const categoryPerformance = await Promise.all(
+      categories.map(async (cat: any) => {
+        const variantIds: string[] = [];
+        (cat.products || []).forEach((p: any) => {
+          (p.variants || []).forEach((v: any) => {
+            if (v.id) variantIds.push(v.id);
+          });
+        });
+
+        let catRevenue = 0;
+        if (variantIds.length > 0) {
+          const sum = await OrderItem.sum('total', {
+            where: { variant_id: { [Op.in]: variantIds } },
+          });
+          catRevenue = Number(sum || 0);
+        }
+
+        return {
+          id: cat.id,
+          name: cat.name,
+          revenue: catRevenue,
+        };
+      })
+    );
+
+    // Dynamic Activity Feed
+    const formatTimeAgo = (date: Date) => {
+      const diffMs = Date.now() - new Date(date).getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      const diffDays = Math.floor(diffHours / 24);
+      return `${diffDays}d ago`;
+    };
+
+    const activities: Array<{
+      id: string;
+      type: 'order' | 'patron' | 'inventory';
+      title: string;
+      description: string;
+      timestamp: Date;
+      timeAgo: string;
+      amount?: number;
+    }> = [];
+
+    recentOrders.forEach((o: any) => {
+      const patronName = o.user?.name || 'Patron';
+      activities.push({
+        id: `order_${o.id}`,
+        type: 'order',
+        title: `New Order #${o.order_number || o.id.slice(0, 8)}`,
+        description: `placed by ${patronName}.`,
+        timestamp: o.created_at,
+        timeAgo: formatTimeAgo(o.created_at),
+        amount: Number(o.total_amount || 0),
+      });
+    });
+
+    const recentPatrons = await User.findAll({
+      where: { role: 'CUSTOMER' },
+      order: [['created_at', 'DESC']],
+      limit: 4,
+    });
+    recentPatrons.forEach((p: any) => {
+      activities.push({
+        id: `patron_${p.id}`,
+        type: 'patron',
+        title: `New Patron: ${p.name}`,
+        description: 'registered an account.',
+        timestamp: p.created_at,
+        timeAgo: formatTimeAgo(p.created_at),
+      });
+    });
+
+    lowStockVariants.forEach((item: any) => {
+      activities.push({
+        id: `lowstock_${item.id}`,
+        type: 'inventory',
+        title: `Low Stock Alert: ${item.variant?.product?.name || 'Heritage Piece'}`,
+        description: `reached ${item.available} units threshold.`,
+        timestamp: item.updated_at || new Date(),
+        timeAgo: formatTimeAgo(item.updated_at || new Date()),
+      });
+    });
+
+    const recentActivity = activities
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 8);
 
     return {
       overview: {
-        totalOrders: totalOrders || 148,
-        paidOrders: paidOrders || 132,
+        totalOrders,
+        paidOrders,
         totalRevenue: Number(totalRevenue.toFixed(2)),
-        averageOrderValue: paidOrders > 0 ? Number((totalRevenue / paidOrders).toFixed(2)) : 845,
+        averageOrderValue,
         totalCustomers,
-        pendingOrders: pendingOrders || 5,
-        pendingReturns: pendingReturns || 2,
-        conversionRate: '3.8%',
+        pendingOrders,
+        pendingReturns,
+        conversionRate: totalOrders > 0 ? `${((paidOrders / totalOrders) * 100).toFixed(1)}%` : '0%',
+        revenueGrowth,
+        ordersGrowth,
+        patronsGrowth,
+        aovGrowth,
       },
       revenueCurve,
+      categoryPerformance: {
+        month: now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase(),
+        items: categoryPerformance,
+      },
+      recentActivity,
       lowStock: lowStockVariants.map((item: any) => ({
-        variantId: item.variant_id,
-        productName: item.variant?.product?.name,
-        sku: item.variant?.sku,
-        size: item.variant?.size,
+        id: item.id,
+        productName: item.variant?.product?.name || 'Heritage Piece',
+        variantSku: item.variant?.sku,
         available: item.available,
-        onHand: item.on_hand,
         threshold: item.low_stock_threshold,
       })),
       recentOrders,

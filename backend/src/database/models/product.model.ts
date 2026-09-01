@@ -7,7 +7,7 @@ export interface ProductAttributes {
   slug: string;
   description: string;
   short_description?: string | null;
-  category_id: string;
+  category_id?: string | null;
   base_price: number; // in INR
   compare_at_price?: number | null;
   currency: string;
@@ -20,7 +20,7 @@ export interface ProductAttributes {
 
 export type ProductCreationAttributes = Optional<
   ProductAttributes,
-  'id' | 'short_description' | 'compare_at_price' | 'currency' | 'status' | 'featured' | 'metadata'
+  'id' | 'category_id' | 'short_description' | 'compare_at_price' | 'currency' | 'status' | 'featured' | 'metadata'
 >;
 
 export class Product
@@ -32,7 +32,7 @@ export class Product
   declare public slug: string;
   declare public description: string;
   declare public short_description: string | null;
-  declare public category_id: string;
+  declare public category_id: string | null;
   declare public base_price: number;
   declare public compare_at_price: number | null;
   declare public currency: string;
@@ -70,7 +70,7 @@ Product.init(
     },
     category_id: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
     },
     base_price: {
       type: DataTypes.DECIMAL(10, 2),

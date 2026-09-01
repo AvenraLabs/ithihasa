@@ -52,11 +52,8 @@ export const RegisterPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const email = `${cleanPhone}_${Date.now()}@ithihasa.atelier`;
-      
       const response = await registerWithPassword({
-        name: fullName,
-        email,
+        name: fullName.trim(),
         phone: cleanPhone,
         password,
       });

@@ -1,8 +1,12 @@
-import { Address } from '../../database/index.js';
+import { Address, User } from '../../database/index.js';
 import { NotFoundError, AuthorizationError } from '../../common/errors/index.js';
 
 export class AddressService {
   public async getAddresses(userId: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    if (!isUuid) {
+      return [];
+    }
     return Address.findAll({
       where: { user_id: userId },
       order: [
@@ -21,21 +25,49 @@ export class AddressService {
   }
 
   public async createAddress(userId: string, data: any) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+    let targetUserId = userId;
+
+    if (isUuid) {
+      const userExists = await User.findByPk(userId);
+      if (!userExists) {
+        const newUser = await User.create({
+          id: userId,
+          name: data.name || 'Patron',
+          phone: data.phone || null,
+          role: 'CUSTOMER',
+          status: 'ACTIVE',
+        });
+        targetUserId = newUser.id;
+      }
+    } else {
+      let existing = data.phone ? await User.findOne({ where: { phone: data.phone } }) : null;
+      if (!existing) {
+        existing = await User.create({
+          name: data.name || 'Patron',
+          phone: data.phone || null,
+          role: 'CUSTOMER',
+          status: 'ACTIVE',
+        });
+      }
+      targetUserId = existing.id;
+    }
+
     if (data.isDefaultShipping) {
       await Address.update(
         { is_default_shipping: false },
-        { where: { user_id: userId } }
+        { where: { user_id: targetUserId } }
       );
     }
     if (data.isDefaultBilling) {
       await Address.update(
         { is_default_billing: false },
-        { where: { user_id: userId } }
+        { where: { user_id: targetUserId } }
       );
     }
 
     return Address.create({
-      user_id: userId,
+      user_id: targetUserId,
       name: data.name,
       phone: data.phone,
       line1: data.line1,

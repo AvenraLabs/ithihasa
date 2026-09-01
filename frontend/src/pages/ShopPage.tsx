@@ -14,6 +14,7 @@ import {
   Check,
   ShoppingBag,
   Ruler,
+  RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -30,19 +31,25 @@ export const ShopPage: React.FC = () => {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
-  // Filter state
+  // Draft filter state for drawer
   const [selectedCat, setSelectedCat] = useState<string>(currentCategory);
   const [selectedSort, setSelectedSort] = useState<string>(currentSort);
   const [selectedSize, setSelectedSize] = useState<string>(currentSize);
   const [selectedColor, setSelectedColor] = useState<string>(currentColor);
 
-  // Fetch categories
+  // Fetch categories dynamically from backend
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['categories'],
     queryFn: fetchCategories,
   });
 
-  // Fetch products with active filters
+  // Fetch all products (unfiltered) to dynamically extract sizes & colors present in the atelier
+  const { data: allCatalogProducts = [] } = useQuery<Product[]>({
+    queryKey: ['all-catalog-products-for-filters'],
+    queryFn: () => fetchProducts({ limit: 100 }),
+  });
+
+  // Fetch filtered & sorted products
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ['products', currentCategory, currentSort, currentSize, currentColor],
     queryFn: () =>
@@ -53,6 +60,61 @@ export const ShopPage: React.FC = () => {
         color: currentColor || undefined,
       }),
   });
+
+  // Extract dynamic sizes from actual backend product inventory
+  const dynamicSizes = Array.from(
+    new Set(
+      allCatalogProducts
+        .flatMap((p) => p.variants?.map((v) => v.size) || [])
+        .filter(Boolean)
+    )
+  );
+  const availableSizes = dynamicSizes.length > 0
+    ? dynamicSizes
+    : ['36', '38', '40', '42', '44', '46', 'Free Size'];
+
+  // Extract dynamic colors from actual backend product inventory
+  const colorMap = new Map<string, string>();
+  allCatalogProducts.forEach((p) => {
+    if (p.metadata?.colorSwatches && Array.isArray(p.metadata.colorSwatches)) {
+      p.metadata.colorSwatches.forEach((swatch: any) => {
+        if (swatch.name && !colorMap.has(swatch.name)) {
+          colorMap.set(swatch.name, swatch.hex || '#0A0A0A');
+        }
+      });
+    }
+    p.variants?.forEach((v) => {
+      if (v.color && !colorMap.has(v.color)) {
+        const hex = v.color.toLowerCase().includes('gold') ? '#C9A24B'
+          : v.color.toLowerCase().includes('noir') || v.color.toLowerCase().includes('black') ? '#0A0A0A'
+          : v.color.toLowerCase().includes('crimson') || v.color.toLowerCase().includes('red') ? '#7A1C22'
+          : v.color.toLowerCase().includes('ivory') || v.color.toLowerCase().includes('white') ? '#F4EFE6'
+          : v.color.toLowerCase().includes('emerald') || v.color.toLowerCase().includes('green') ? '#1B4D3E'
+          : v.color.toLowerCase().includes('sapphire') || v.color.toLowerCase().includes('blue') ? '#1A2A44'
+          : '#4A3E3D';
+        colorMap.set(v.color, hex);
+      }
+    });
+  });
+
+  const availableColors = colorMap.size > 0
+    ? Array.from(colorMap.entries()).map(([name, hex]) => ({ name, hex }))
+    : [
+        { name: 'Midnight Noir', hex: '#0A0A0A' },
+        { name: 'Royal Crimson', hex: '#7A1C22' },
+        { name: 'Antique Gold', hex: '#C9A24B' },
+        { name: 'Ivory Silk', hex: '#F4EFE6' },
+        { name: 'Emerald Heritage', hex: '#1B4D3E' },
+      ];
+
+  // Calculate active applied filter count
+  const activeFilters = [
+    currentCategory,
+    currentSize,
+    currentColor,
+    currentSort && currentSort !== 'newest' ? currentSort : null,
+  ].filter(Boolean);
+  const activeFilterCount = activeFilters.length;
 
   // Fetch wishlist for filled heart status
   const { data: wishlist = [] } = useQuery({
@@ -65,7 +127,7 @@ export const ShopPage: React.FC = () => {
       toggleWishlist(productId, undefined, product),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-      showToast(res.message || 'Saved to Wishlist');
+      toast.success(res.message || 'Saved to Wishlist');
     },
   });
 
@@ -73,13 +135,9 @@ export const ShopPage: React.FC = () => {
     mutationFn: ({ variantId }: { variantId: string }) => addToCart(variantId, 1),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
-      showToast('Added to Bag');
+      toast.success('Added to Bag');
     },
   });
-
-  const showToast = (msg: string) => {
-    toast.success(msg);
-  };
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -90,33 +148,34 @@ export const ShopPage: React.FC = () => {
   };
 
   const handleApplyFilters = () => {
-    const params = new URLSearchParams(searchParams);
-    if (selectedCat) {
-      params.set('category', selectedCat);
-    } else {
-      params.delete('category');
-    }
-    if (selectedSize) {
-      params.set('size', selectedSize);
-    } else {
-      params.delete('size');
-    }
-    if (selectedColor) {
-      params.set('color', selectedColor);
-    } else {
-      params.delete('color');
-    }
-    if (selectedSort) {
-      params.set('sort', selectedSort);
-    }
+    const params = new URLSearchParams();
+    if (selectedCat) params.set('category', selectedCat);
+    if (selectedSize) params.set('size', selectedSize);
+    if (selectedColor) params.set('color', selectedColor);
+    if (selectedSort && selectedSort !== 'newest') params.set('sort', selectedSort);
     setSearchParams(params);
     setIsFilterOpen(false);
+    toast.success('Filters applied');
+  };
+
+  const handleResetFilters = () => {
+    setSelectedCat('');
+    setSelectedSize('');
+    setSelectedColor('');
+    setSelectedSort('newest');
+    setSearchParams({});
+    setIsFilterOpen(false);
+    toast.success('All filters reset');
   };
 
   const handleSortSelect = (sortVal: string) => {
     setSelectedSort(sortVal);
     const params = new URLSearchParams(searchParams);
-    params.set('sort', sortVal);
+    if (sortVal === 'newest') {
+      params.delete('sort');
+    } else {
+      params.set('sort', sortVal);
+    }
     setSearchParams(params);
     setIsSortOpen(false);
   };
@@ -130,7 +189,7 @@ export const ShopPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors relative">
       <div className="pt-2 md:pt-6 px-4 sm:px-6 md:px-20 max-w-[1440px] mx-auto pb-24 md:pb-16">
-        {/* Category Header & Controls matching Stitch Shop Spec */}
+        {/* Category Header & Controls */}
         <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             {/* Breadcrumbs */}
@@ -165,6 +224,7 @@ export const ShopPage: React.FC = () => {
               <span>SIZE GUIDE</span>
             </button>
 
+            {/* FILTERS Button with Active Count Badge */}
             <button
               onClick={() => {
                 setSelectedCat(currentCategory);
@@ -173,24 +233,25 @@ export const ShopPage: React.FC = () => {
                 setSelectedSort(currentSort);
                 setIsFilterOpen(true);
               }}
-              className="flex items-center gap-2 label-caps text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors py-2 active:scale-95 text-[12px] cursor-pointer"
+              className="flex items-center gap-2 label-caps text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors py-2 active:scale-95 text-[12px] cursor-pointer relative"
             >
               <SlidersHorizontal size={16} className="text-[var(--gold)]" />
-              <span>
-                FILTERS{' '}
-                {[currentCategory, currentSize, currentColor].filter(Boolean).length > 0
-                  ? `(${[currentCategory, currentSize, currentColor].filter(Boolean).length})`
-                  : ''}
-              </span>
+              <span>FILTERS</span>
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-[var(--gold)] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center -ml-0.5 shadow-sm">
+                  {activeFilterCount}
+                </span>
+              )}
             </button>
 
+            {/* SORT BY Dropdown */}
             <div className="relative ml-auto md:ml-2">
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
                 className="flex items-center gap-2 label-caps text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors py-2 active:scale-95 text-[12px] cursor-pointer"
               >
                 <span>SORT BY</span>
-                <ChevronDown size={16} className={`transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={16} className={`transition-transform duration-200 ${isSortOpen ? 'rotate-180 text-[var(--gold)]' : ''}`} />
               </button>
 
               {isSortOpen && (
@@ -199,7 +260,7 @@ export const ShopPage: React.FC = () => {
                     className="fixed inset-0 z-30"
                     onClick={() => setIsSortOpen(false)}
                   />
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl z-40 py-2">
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl z-40 py-2 rounded">
                     {[
                       { label: 'Newest Arrivals', val: 'newest' },
                       { label: 'Featured First', val: 'featured' },
@@ -226,9 +287,70 @@ export const ShopPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Active Filter Chips */}
+        {activeFilterCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-6 pt-2 border-t border-[var(--border-color)]/60">
+            <span className="text-[11px] text-[var(--text-secondary)] uppercase tracking-wider label-caps">
+              Active Filters:
+            </span>
+            {currentCategory && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[12px] text-[var(--text-primary)]">
+                <span>Category: {getPageTitle()}</span>
+                <button
+                  onClick={() => {
+                    const p = new URLSearchParams(searchParams);
+                    p.delete('category');
+                    setSearchParams(p);
+                  }}
+                  className="hover:text-rose-500 cursor-pointer"
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+            {currentSize && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[12px] text-[var(--text-primary)]">
+                <span>Size: {currentSize}</span>
+                <button
+                  onClick={() => {
+                    const p = new URLSearchParams(searchParams);
+                    p.delete('size');
+                    setSearchParams(p);
+                  }}
+                  className="hover:text-rose-500 cursor-pointer"
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+            {currentColor && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[12px] text-[var(--text-primary)]">
+                <span>Color: {currentColor}</span>
+                <button
+                  onClick={() => {
+                    const p = new URLSearchParams(searchParams);
+                    p.delete('color');
+                    setSearchParams(p);
+                  }}
+                  className="hover:text-rose-500 cursor-pointer"
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            )}
+            <button
+              onClick={handleResetFilters}
+              className="text-[11px] text-[var(--gold)] hover:underline ml-2 label-caps cursor-pointer"
+            >
+              Clear All
+            </button>
+          </div>
+        )}
+
+        {/* Product Grid */}
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-12">
-            {[1, 2, 3, 4].map((i) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div key={i} className="space-y-3">
                 <div className="aspect-[3/4] bg-[var(--bg-secondary)] animate-pulse" />
                 <div className="h-4 bg-[var(--bg-secondary)] w-3/4 animate-pulse" />
@@ -248,13 +370,8 @@ export const ShopPage: React.FC = () => {
               No garments match the selected filters.
             </p>
             <button
-              onClick={() => {
-                setSearchParams({});
-                setSelectedCat('');
-                setSelectedSize('');
-                setSelectedColor('');
-              }}
-              className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-8 py-3.5 label-caps cursor-pointer"
+              onClick={handleResetFilters}
+              className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-8 py-3.5 label-caps cursor-pointer hover:bg-[var(--gold)] hover:text-black transition-colors"
             >
               Clear All Filters
             </button>
@@ -303,13 +420,13 @@ export const ShopPage: React.FC = () => {
                           },
                         });
                       }}
-                      className="absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-full bg-[var(--bg-primary)]/80 backdrop-blur-sm flex items-center justify-center text-[var(--text-primary)] hover:text-[var(--gold)] hover:scale-110 active:scale-95 transition-all shadow-sm cursor-pointer"
-                      aria-label={isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                      aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                      className="absolute top-2.5 right-2.5 z-20 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/80 backdrop-blur-sm rounded-full transition-all duration-300 text-white cursor-pointer active:scale-90"
                     >
                       <Heart
                         size={15}
-                        strokeWidth={1.75}
-                        className={isWishlisted ? 'fill-[var(--gold)] text-[var(--gold)]' : ''}
+                        strokeWidth={2}
+                        className={isWishlisted ? "text-[var(--gold)] fill-current" : "text-white"}
                       />
                     </button>
 
@@ -319,34 +436,33 @@ export const ShopPage: React.FC = () => {
                           e.preventDefault();
                           quickAddToCartMutation.mutate({ variantId: firstVariant.id });
                         }}
-                        className="absolute bottom-2.5 left-2.5 right-2.5 z-20 bg-[var(--btn-primary-bg)]/90 backdrop-blur-sm text-[var(--btn-primary-text)] hover:bg-[var(--gold)] hover:text-[#0A0A0A] label-caps py-2 text-[10px] tracking-widest uppercase transition-all duration-300 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
+                        aria-label="Quick add to bag"
+                        className="absolute bottom-2.5 right-2.5 z-20 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-[var(--gold)] hover:text-[#0A0A0A] backdrop-blur-sm rounded-full transition-all duration-300 text-white opacity-0 group-hover:opacity-100 cursor-pointer active:scale-90"
+                        title="Quick Add"
                       >
-                        <ShoppingBag size={12} />
-                        <span>QUICK ADD</span>
+                        <ShoppingBag size={14} strokeWidth={2} />
                       </button>
                     )}
                   </div>
 
-                  <div className="flex flex-col min-w-0">
-                    <Link to={`/products/${product.slug}`} className="group-hover:text-[var(--gold)] transition-colors">
-                      <h3
-                        className="text-[15px] sm:text-[17px] font-normal leading-snug text-[var(--text-primary)] truncate"
-                        style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
-                      >
-                        {product.name}
+                  <div className="flex flex-col flex-1 justify-between">
+                    <div>
+                      {product.category?.name && (
+                        <span className="label-caps text-[10px] tracking-widest text-[var(--gold)] block mb-1">
+                          {product.category.name}
+                        </span>
+                      )}
+                      <h3 className="body-md text-[14px] text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors leading-snug line-clamp-1">
+                        <Link to={`/products/${product.slug}`}>{product.name}</Link>
                       </h3>
-                    </Link>
+                    </div>
 
-                    <p className="body-sm text-[11px] sm:text-[12px] text-[var(--text-secondary)] mb-1">
-                      {product.category?.name || 'Handcrafted Heritage'}
-                    </p>
-
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="body-md text-[13px] sm:text-[14px] font-semibold text-[var(--text-primary)] tabular-nums">
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="body-sm text-[13px] tabular-nums font-semibold text-[var(--text-primary)]">
                         {formatPrice(product.basePrice)}
                       </span>
                       {product.compareAtPrice && product.compareAtPrice > product.basePrice && (
-                        <span className="text-[11px] sm:text-[12px] text-[var(--text-secondary)] line-through tabular-nums">
+                        <span className="body-sm text-[11px] tabular-nums text-[var(--text-secondary)] line-through">
                           {formatPrice(product.compareAtPrice)}
                         </span>
                       )}
@@ -359,6 +475,7 @@ export const ShopPage: React.FC = () => {
         )}
       </div>
 
+      {/* Filter Drawer */}
       {isFilterOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div
@@ -368,12 +485,19 @@ export const ShopPage: React.FC = () => {
 
           <div className="relative w-full max-w-md bg-[var(--bg-card)] border-l border-[var(--border-color)] h-full flex flex-col z-10 shadow-2xl animate-in slide-in-from-right duration-300">
             <div className="p-6 border-b border-[var(--border-color)] flex justify-between items-center">
-              <h2
-                className="text-[24px] font-normal uppercase text-[var(--text-primary)]"
-                style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
-              >
-                Filters
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2
+                  className="text-[24px] font-normal uppercase text-[var(--text-primary)]"
+                  style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+                >
+                  Filters
+                </h2>
+                {activeFilterCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-[var(--gold)] text-black text-[10px] font-bold">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </div>
               <button
                 onClick={() => setIsFilterOpen(false)}
                 className="p-1 text-[var(--text-primary)] hover:opacity-70 cursor-pointer"
@@ -384,6 +508,7 @@ export const ShopPage: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+              {/* Dynamic Category Filter */}
               <div>
                 <h3 className="label-caps text-[12px] font-bold text-[var(--gold)] mb-3 uppercase tracking-wider">
                   COLLECTION CATEGORY
@@ -433,6 +558,7 @@ export const ShopPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Dynamic Sizes Filter */}
               <div className="border-t border-[var(--border-color)] pt-5">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="label-caps text-[12px] font-bold text-[var(--gold)] uppercase tracking-wider">
@@ -448,58 +574,79 @@ export const ShopPage: React.FC = () => {
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {['', '38', '40', '42', '44', 'Free Size'].map((sz) => {
-                    const isSelected = (selectedSize || '') === sz;
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSize('')}
+                    className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border rounded transition-all cursor-pointer ${
+                      selectedSize === ''
+                        ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
+                    }`}
+                  >
+                    All Sizes
+                  </button>
+                  {availableSizes.map((sz) => {
+                    const isSelected = selectedSize === sz;
                     return (
                       <button
-                        key={sz || 'all'}
+                        key={sz}
                         type="button"
-                        onClick={() => setSelectedSize(isSelected && sz !== '' ? '' : sz)}
+                        onClick={() => setSelectedSize(isSelected ? '' : sz)}
                         className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border rounded transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
                             : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
                         }`}
                       >
-                        {sz || 'All Sizes'}
+                        {sz}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
+              {/* Dynamic Colors Filter */}
               <div className="border-t border-[var(--border-color)] pt-5">
                 <h3 className="label-caps text-[12px] font-bold text-[var(--gold)] mb-3 uppercase tracking-wider">
                   COLOR / SHADE
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {[
-                    { label: 'All', val: '' },
-                    { label: 'Noir Black', val: 'Noir' },
-                    { label: 'Warm Black', val: 'Warm' },
-                    { label: 'Crimson', val: 'Crimson' },
-                    { label: 'Antique Gold', val: 'Gold' },
-                    { label: 'Ivory / Silver', val: 'Ivory' },
-                  ].map((col) => {
-                    const isSelected = (selectedColor || '') === col.val;
+                  <button
+                    type="button"
+                    onClick={() => setSelectedColor('')}
+                    className={`px-3 py-1.5 text-[11px] font-semibold tracking-wider border rounded transition-all cursor-pointer ${
+                      selectedColor === ''
+                        ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
+                    }`}
+                  >
+                    All Colors
+                  </button>
+                  {availableColors.map((col) => {
+                    const isSelected = selectedColor === col.name;
                     return (
                       <button
-                        key={col.val || 'all'}
+                        key={col.name}
                         type="button"
-                        onClick={() => setSelectedColor(isSelected && col.val !== '' ? '' : col.val)}
-                        className={`px-3 py-1.5 text-[11px] font-semibold tracking-wider border rounded transition-all cursor-pointer ${
+                        onClick={() => setSelectedColor(isSelected ? '' : col.name)}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-[11px] font-medium tracking-wider border rounded-full transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-                            : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
+                            ? 'border-[var(--gold)] bg-[var(--gold)]/15 text-[var(--gold)] font-bold ring-1 ring-[var(--gold)]'
+                            : 'border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:border-[var(--gold)]'
                         }`}
                       >
-                        {col.label}
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
+                          style={{ backgroundColor: col.hex }}
+                        />
+                        <span>{col.name}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
+              {/* Sort Order Filter */}
               <div className="border-t border-[var(--border-color)] pt-5">
                 <h3 className="label-caps text-[12px] font-bold text-[var(--gold)] mb-3 uppercase tracking-wider">
                   SORT ORDER
@@ -534,12 +681,22 @@ export const ShopPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-6 border-t border-[var(--border-color)] pb-safe space-y-2">
+            {/* Bottom Action Bar (Apply / Save & Reset) */}
+            <div className="p-6 border-t border-[var(--border-color)] pb-safe space-y-2.5 bg-[var(--bg-card)]">
               <button
+                type="button"
                 onClick={handleApplyFilters}
-                className="w-full bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] hover:bg-[var(--gold)] hover:text-[#0A0A0A] label-caps py-4 tracking-widest transition-colors duration-300 uppercase shadow-lg cursor-pointer"
+                className="w-full bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] hover:bg-[var(--gold)] hover:text-[#0A0A0A] label-caps py-4 tracking-widest transition-colors duration-300 uppercase shadow-lg cursor-pointer font-bold text-[12px]"
               >
-                VIEW RESULTS ({products.length})
+                Apply Filters & Save
+              </button>
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="w-full border border-[var(--border-color)] hover:border-[var(--gold)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] label-caps py-3 tracking-wider transition-colors duration-200 uppercase cursor-pointer text-[11px] flex items-center justify-center gap-1.5"
+              >
+                <RotateCcw size={13} />
+                <span>Reset All Filters</span>
               </button>
             </div>
           </div>

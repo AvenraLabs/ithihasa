@@ -51,13 +51,19 @@ export class CategoryService {
     });
   }
 
-  public async updateCategory(id: string, data: any) {
-    const category = await Category.findByPk(id);
+  public async updateCategory(idOrSlug: string, data: any) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+    const category = isUuid
+      ? await Category.findByPk(idOrSlug)
+      : await Category.findOne({ where: { slug: idOrSlug } });
+
     if (!category) throw new NotFoundError('Category');
 
     if (data.slug && data.slug !== category.slug) {
       const existing = await Category.findOne({ where: { slug: data.slug } });
-      if (existing) throw new ConflictError(`Category with slug '${data.slug}' already exists`);
+      if (existing && existing.id !== category.id) {
+        throw new ConflictError(`Category with slug '${data.slug}' already exists`);
+      }
       category.slug = data.slug;
     }
 
@@ -72,9 +78,18 @@ export class CategoryService {
     return category;
   }
 
-  public async deleteCategory(id: string) {
-    const category = await Category.findByPk(id);
-    if (!category) throw new NotFoundError('Category');
+  public async deleteCategory(idOrSlug: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+    const category = isUuid
+      ? await Category.findByPk(idOrSlug)
+      : await Category.findOne({ where: { slug: idOrSlug } });
+
+    if (!category) {
+      return { success: true, message: 'Category not found or already deleted' };
+    }
+
+    // Nullify product references before destroying category to prevent FK constraint error
+    await Product.update({ category_id: null }, { where: { category_id: category.id } });
     await category.destroy();
     return { success: true, message: 'Category deleted' };
   }

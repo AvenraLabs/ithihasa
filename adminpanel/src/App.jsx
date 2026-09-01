@@ -129,10 +129,27 @@ export default function App() {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
+  const [counts, setCounts] = useState({ pendingOrders: 0, lowStock: false });
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const stats = await fetchDashboardAnalytics().catch(() => null);
+        if (stats) {
+          setCounts({
+            pendingOrders: stats.overview?.pendingOrders || 0,
+            lowStock: (stats.lowStock || []).length > 0,
+          });
+        }
+      } catch (e) {}
+    }
+    loadStats();
+  }, [location.pathname]);
+
   const navItems = [
     { id: 'dashboard', path: '/dashboard', alias: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'orders', path: '/orders', label: 'Orders', icon: ShoppingBag, count: 12 },
-    { id: 'inventory', path: '/inventory', label: 'Inventory', icon: Package, alert: true },
+    { id: 'orders', path: '/orders', label: 'Orders', icon: ShoppingBag, count: counts.pendingOrders > 0 ? counts.pendingOrders : null },
+    { id: 'inventory', path: '/inventory', label: 'Inventory', icon: Package, alert: counts.lowStock },
     { id: 'storefront', path: '/storefront', label: 'Storefront CMS', icon: Sparkles },
     { id: 'customers', path: '/customers', label: 'Customers', icon: Users },
     { id: 'marketing', path: '/marketing', label: 'Marketing', icon: Megaphone },

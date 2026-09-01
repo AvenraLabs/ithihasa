@@ -33,22 +33,7 @@ async function seed() {
       },
     });
 
-    // 2. Seed Customer User
-    const [demoCustomer] = await User.findOrCreate({
-      where: { email: 'customer@ithihasa.com' },
-      defaults: {
-        name: 'Aravind S.',
-        email: 'customer@ithihasa.com',
-        role: 'CUSTOMER',
-        status: 'ACTIVE',
-        phone: '9876500002',
-        password_hash: '$2a$10$wT8m9M7lB8lK7u7C6o9M4e7h7G8s8I8k8L8m8N8o8P8q8R8s8T8u8', // customer123
-        phone_verified: true,
-        avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
-      },
-    });
-
-    // 3. Seed Categories
+    // 2. Seed Categories (Base Taxonomy)
     const categoriesData = [
       {
         name: 'Heritage Kurtas',

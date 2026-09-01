@@ -8,6 +8,8 @@ import {
   Inventory,
   InventoryMovement,
   Review,
+  WishlistItem,
+  CartItem,
 } from '../../database/index.js';
 import { NotFoundError, ConflictError } from '../../common/errors/index.js';
 
@@ -285,11 +287,33 @@ export class ProductService {
     if (!product) {
       product = await Product.findOne({ where: { slug: id } });
     }
-    if (product) {
-      await product.destroy();
-      return { success: true, message: 'Product deleted successfully' };
+    if (!product) {
+      return { success: true, message: 'Product not found or already deleted' };
     }
-    return { success: true, message: 'Product removed' };
+
+    const t = await sequelize.transaction();
+    try {
+      const variants = await ProductVariant.findAll({ where: { product_id: product.id }, transaction: t });
+      const variantIds = variants.map((v) => v.id);
+
+      if (variantIds.length > 0) {
+        await CartItem.destroy({ where: { variant_id: { [Op.in]: variantIds } }, transaction: t });
+        await Inventory.destroy({ where: { variant_id: { [Op.in]: variantIds } }, transaction: t });
+        await InventoryMovement.destroy({ where: { variant_id: { [Op.in]: variantIds } }, transaction: t });
+        await ProductVariant.destroy({ where: { product_id: product.id }, transaction: t });
+      }
+
+      await ProductImage.destroy({ where: { product_id: product.id }, transaction: t });
+      await Review.destroy({ where: { product_id: product.id }, transaction: t });
+      await WishlistItem.destroy({ where: { product_id: product.id }, transaction: t });
+
+      await product.destroy({ transaction: t });
+      await t.commit();
+      return { success: true, message: 'Product deleted permanently' };
+    } catch (err) {
+      await t.rollback();
+      throw err;
+    }
   }
 }
 

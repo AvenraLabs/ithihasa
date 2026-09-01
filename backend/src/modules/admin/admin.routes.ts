@@ -70,7 +70,9 @@ adminRouter.get('/merchandising/storefront', merchandisingController.getStorefro
 adminRouter.put('/merchandising/storefront', merchandisingController.updateStorefront);
 
 // Media & Asset Ingestion
-adminRouter.post('/upload', adminController.uploadMedia);
+import { uploadRouter } from '../upload/upload.routes.js';
+adminRouter.use('/upload', uploadRouter);
 
 // Audit Trail
 adminRouter.get('/audit', adminController.getAuditLogs);
+

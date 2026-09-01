@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchProducts, type Product } from '../../api/products.js';
 import { fetchWishlist, toggleWishlist } from '../../api/wishlist.js';
 import { fetchStorefrontData } from '../../api/merchandising.js';
+import { resolveMediaUrl } from '../../api/client.js';
 import { Heart, ArrowRight } from 'lucide-react';
 
 export const FeaturedSilhouettes: React.FC = () => {
@@ -41,6 +42,11 @@ export const FeaturedSilhouettes: React.FC = () => {
     }).format(amount);
   };
 
+  // If disabled in Admin Storefront CMS, do not render this section on live app
+  if (cms && cms.showHighlighted === false) {
+    return null;
+  }
+
   // 2 Highlighted Items from CMS if available, else products from catalog
   const displayItems = cms?.highlightedItems && cms.highlightedItems.length > 0
     ? cms.highlightedItems
@@ -49,12 +55,12 @@ export const FeaturedSilhouettes: React.FC = () => {
         title: p.name,
         categoryTag: p.category?.name || 'Heritage Atelier',
         price: p.basePrice,
-        imageUrl: p.images[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+        imageUrl: p.images[0]?.url || '',
         slug: p.slug
       }));
 
   return (
-    <section className="px-5 md:px-20 max-w-[1440px] mx-auto">
+    <section className="px-5 md:px-20 max-w-[1440px] mx-auto py-12 md:py-16">
       {/* Section Header */}
       <div className="flex flex-col md:flex-row justify-between items-end mb-10">
         <div>
@@ -104,7 +110,7 @@ export const FeaturedSilhouettes: React.FC = () => {
                 <div className="relative aspect-[3/4] bg-[var(--bg-secondary)] overflow-hidden mb-4 border border-[var(--border-color)]">
                   <Link to={`/products/${item.slug || 'piece'}`} className="block w-full h-full">
                     <img
-                      src={item.imageUrl}
+                      src={resolveMediaUrl(item.imageUrl)}
                       alt={item.title}
                       className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
                       loading="lazy"
