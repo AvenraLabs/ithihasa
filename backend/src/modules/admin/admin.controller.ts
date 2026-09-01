@@ -5,6 +5,7 @@ import { categoryService } from '../categories/category.service.js';
 import { couponService } from '../coupons/coupon.service.js';
 import { auditService } from '../audit/audit.service.js';
 import { sendSuccess } from '../../common/utils/response.js';
+import { AppSetting } from '../../database/index.js';
 
 export class AdminController {
   // Dashboard Analytics
@@ -106,11 +107,17 @@ export class AdminController {
     }
   }
 
-  // Settings & Team
+  // Settings: Color & Size Master (stored in DB, readable by storefront)
   public async getSettings(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const settings = adminService.getSettings();
-      sendSuccess(res, settings, 200);
+      const [colorRow, sizeRow] = await Promise.all([
+        AppSetting.findByPk('color_master'),
+        AppSetting.findByPk('size_master'),
+      ]);
+      sendSuccess(res, {
+        colors: colorRow ? colorRow.value : [],
+        sizes: sizeRow ? sizeRow.value : [],
+      }, 200);
     } catch (error) {
       next(error);
     }
@@ -118,8 +125,25 @@ export class AdminController {
 
   public async updateSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const updated = adminService.updateSettings(req.body);
-      sendSuccess(res, updated, 200);
+      const { colors, sizes } = req.body;
+      const updates: Promise<any>[] = [];
+
+      if (colors !== undefined) {
+        updates.push(AppSetting.upsert({ key: 'color_master', value: colors }));
+      }
+      if (sizes !== undefined) {
+        updates.push(AppSetting.upsert({ key: 'size_master', value: sizes }));
+      }
+      await Promise.all(updates);
+
+      const [colorRow, sizeRow] = await Promise.all([
+        AppSetting.findByPk('color_master'),
+        AppSetting.findByPk('size_master'),
+      ]);
+      sendSuccess(res, {
+        colors: colorRow ? colorRow.value : [],
+        sizes: sizeRow ? sizeRow.value : [],
+      }, 200);
     } catch (error) {
       next(error);
     }
@@ -127,7 +151,7 @@ export class AdminController {
 
   public async getTeamMembers(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const members = adminService.getTeamMembers();
+      const members = await adminService.getTeamMembers();
       sendSuccess(res, members, 200);
     } catch (error) {
       next(error);
@@ -136,7 +160,7 @@ export class AdminController {
 
   public async inviteTeamMember(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const member = adminService.inviteTeamMember(req.body);
+      const member = await adminService.inviteTeamMember(req.body);
       sendSuccess(res, member, 201);
     } catch (error) {
       next(error);
@@ -145,7 +169,7 @@ export class AdminController {
 
   public async removeTeamMember(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const result = adminService.removeTeamMember(req.params.id);
+      const result = await adminService.removeTeamMember(req.params.id);
       sendSuccess(res, result, 200);
     } catch (error) {
       next(error);
@@ -218,16 +242,16 @@ export class AdminController {
   // Notifications
   public async getNotifications(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const notifications = adminService.getNotifications();
+      const notifications = await adminService.getNotifications();
       sendSuccess(res, notifications, 200);
     } catch (error) {
       next(error);
     }
   }
 
-  public async markNotificationsRead(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  public async markNotificationsRead(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const notifications = adminService.markNotificationsRead();
+      const notifications = await adminService.markNotificationsRead(req.body?.ids);
       sendSuccess(res, notifications, 200);
     } catch (error) {
       next(error);
@@ -375,6 +399,7 @@ export class AdminController {
       next(error);
     }
   }
+
 }
 
 export const adminController = new AdminController();

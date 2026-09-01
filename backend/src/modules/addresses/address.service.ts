@@ -75,9 +75,9 @@ export class AddressService {
       city: data.city,
       state: data.state,
       postal_code: data.postalCode,
-      country: 'India',
-      is_default_shipping: data.isDefaultShipping || false,
-      is_default_billing: data.isDefaultBilling || false,
+      country: data.country || 'India',
+      is_default_shipping: data.isDefaultShipping !== undefined ? data.isDefaultShipping : true,
+      is_default_billing: data.isDefaultBilling !== undefined ? data.isDefaultBilling : true,
     });
   }
 

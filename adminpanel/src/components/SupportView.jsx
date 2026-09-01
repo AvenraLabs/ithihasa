@@ -195,16 +195,16 @@ export function SupportView() {
         <div className="lg:col-span-4">
           <div
             onClick={() => navigate('/support/chat')}
-            className="bg-black text-[#F4EFE6] dark:bg-[#1f1d1b] p-5 sm:p-7 h-full flex flex-col justify-between relative overflow-hidden group cursor-pointer border border-[var(--border-color)] shadow-sm"
+            className="bg-[var(--bg-card)] text-[var(--text-primary)] p-5 sm:p-7 h-full flex flex-col justify-between relative overflow-hidden group cursor-pointer border border-[var(--border-color)] shadow-sm hover:border-[var(--gold)] transition-all"
           >
             <div>
               <div className="w-10 h-10 rounded-full bg-[var(--gold)]/20 text-[var(--gold)] flex items-center justify-center mb-3">
                 <MessageSquare size={20} />
               </div>
-              <h3 className="font-garamond text-[22px] sm:text-[24px] font-normal text-[#F4EFE6]">
+              <h3 className="font-garamond text-[22px] sm:text-[24px] font-normal text-[var(--text-primary)]">
                 Direct Chat
               </h3>
-              <p className="body-sm text-[13px] text-[var(--text-muted)] mt-1">
+              <p className="body-sm text-[13px] text-[var(--text-secondary)] mt-1">
                 2 active sessions requiring attention.
               </p>
             </div>

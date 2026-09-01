@@ -13,6 +13,7 @@ export interface AuthResponse {
     phone_verified: boolean;
     role: 'CUSTOMER' | 'ADMIN';
     avatar_url: string | null;
+    tier?: string;
   };
   tokens: AuthTokens;
 }

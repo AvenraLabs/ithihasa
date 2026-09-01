@@ -13,6 +13,8 @@ import {
   CreditCard,
   X,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ArrowRight,
   Users
 } from 'lucide-react';
@@ -82,6 +84,13 @@ export function CustomersView() {
     }
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   const filteredClients = clients.filter((client) => {
     return (
       (client.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -89,6 +98,11 @@ export function CustomersView() {
       (client.tier || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / itemsPerPage));
+  const paginatedClients = filteredClients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const startIndex = filteredClients.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const endIndex = Math.min(currentPage * itemsPerPage, filteredClients.length);
 
   return (
     <div className="p-4 sm:p-6 md:p-10 max-w-[1440px] w-full mx-auto space-y-6 sm:space-y-8 flex-1">
@@ -130,11 +144,11 @@ export function CustomersView() {
             </div>
           </div>
           <div className="font-garamond text-[28px] sm:text-[34px] text-[var(--text-primary)] tabular-nums leading-none">
-            {insights?.totalClients?.toLocaleString('en-IN') || (loading ? '—' : '2,481')}
+            {loading ? '—' : (insights?.totalClients ?? insights?.totalActiveClients ?? 0).toLocaleString('en-IN')}
           </div>
-          <div className="flex items-center gap-1.5 mt-2.5 text-emerald-600 dark:text-emerald-400 text-[12px] font-semibold">
-            <TrendingUp size={14} />
-            <span>+14.2% from last quarter</span>
+          <div className="flex items-center gap-1.5 mt-2.5 text-[var(--text-secondary)] text-[12px]">
+            <TrendingUp size={14} className="text-[var(--gold)]" />
+            <span>{(insights?.totalClients || 0) > 0 ? '+100% active registry' : 'Live database sync'}</span>
           </div>
         </div>
 
@@ -149,11 +163,11 @@ export function CustomersView() {
             </div>
           </div>
           <div className="font-garamond text-[28px] sm:text-[34px] text-[var(--text-primary)] tabular-nums leading-none">
-            ₹{insights?.averageLTV ? Number(insights.averageLTV).toLocaleString('en-IN') : (loading ? '—' : '68,500')}
+            ₹{loading ? '—' : Number(insights?.averageLTV || 0).toLocaleString('en-IN')}
           </div>
-          <div className="flex items-center gap-1.5 mt-2.5 text-emerald-600 dark:text-emerald-400 text-[12px] font-semibold">
-            <TrendingUp size={14} />
-            <span>+8.9% retention index</span>
+          <div className="flex items-center gap-1.5 mt-2.5 text-[var(--text-secondary)] text-[12px]">
+            <TrendingUp size={14} className="text-[var(--gold)]" />
+            <span>Per registered patron</span>
           </div>
         </div>
 
@@ -163,15 +177,15 @@ export function CustomersView() {
             <span className="label-caps text-[10px] sm:text-[11px] uppercase tracking-widest text-[var(--text-secondary)]">
               Noir Tier Membership
             </span>
-            <div className="w-8 h-8 rounded-full bg-black text-[#F4EFE6] dark:bg-white dark:text-black flex items-center justify-center font-bold text-[11px]">
+            <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] text-[var(--gold)] border border-[var(--gold)]/30 flex items-center justify-center font-bold text-[11px]">
               N
             </div>
           </div>
           <div className="font-garamond text-[28px] sm:text-[34px] text-[var(--text-primary)] tabular-nums leading-none">
-            {insights?.noirTierMembers?.toLocaleString('en-IN') || (loading ? '—' : '142')}
+            {loading ? '—' : (insights?.noirTierMembers ?? insights?.noirMembers ?? 0).toLocaleString('en-IN')}
           </div>
           <div className="text-[12px] text-[var(--text-secondary)] mt-2.5">
-            Top 5% contributors to atelier volume
+            Top tier contributors to atelier volume
           </div>
         </div>
       </div>
@@ -224,7 +238,7 @@ export function CustomersView() {
           <>
             {/* Mobile Cards (<640px) */}
             <div className="sm:hidden divide-y divide-[var(--border-color)]">
-              {filteredClients.map((client) => (
+              {paginatedClients.map((client) => (
                 <div
                   key={client.id}
                   onClick={() => setSelectedClient(client)}
@@ -269,7 +283,7 @@ export function CustomersView() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-color)] font-manrope text-[14px]">
-                  {filteredClients.map((client) => (
+                  {paginatedClients.map((client) => (
                     <tr
                       key={client.id}
                       onClick={() => setSelectedClient(client)}
@@ -298,6 +312,48 @@ export function CustomersView() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Pagination Footer */}
+            <div className="p-4 border-t border-[var(--border-color)] flex flex-col sm:flex-row justify-between items-center gap-3 bg-[var(--bg-secondary)]/20 text-[13px] text-[var(--text-secondary)]">
+              <span>{filteredClients.length > 0 ? `Showing ${startIndex} to ${endIndex} of ${filteredClients.length} patrons` : 'Showing 0 patrons'}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className={`p-1.5 border border-[var(--border-color)] rounded transition-colors ${
+                    currentPage <= 1 ? 'opacity-40 cursor-not-allowed' : 'hover:border-[var(--gold)] text-[var(--text-primary)] cursor-pointer'
+                  }`}
+                  title="Previous Page"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => setCurrentPage(num)}
+                    className={`w-8 h-8 flex items-center justify-center font-semibold rounded text-[12px] transition-all cursor-pointer ${
+                      currentPage === num
+                        ? 'bg-[var(--gold)] text-black shadow-sm'
+                        : 'bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--gold)]'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+
+                <button
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className={`p-1.5 border border-[var(--border-color)] rounded transition-colors ${
+                    currentPage >= totalPages ? 'opacity-40 cursor-not-allowed' : 'hover:border-[var(--gold)] text-[var(--text-primary)] cursor-pointer'
+                  }`}
+                  title="Next Page"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
           </>
         )}

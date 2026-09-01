@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { sendSuccess } from '../../common/utils/response.js';
 import { BusinessRuleError } from '../../common/errors/index.js';
+import { cleanupUploadedFile, cleanupMultipleUploadedFiles } from '../../common/utils/file-cleanup.js';
 
 const storage = multer.diskStorage({
   destination: (req, _file, cb) => {
@@ -48,6 +49,12 @@ uploadRouter.post('/', upload.single('file'), (req: Request, res: Response, next
     const safeFolder = ['products', 'storefront', 'banners', 'general'].includes(folder) ? folder : 'products';
     const fileUrl = `/uploads/${safeFolder}/${req.file.filename}`;
 
+    // If an old image is being replaced, clean it up from disk immediately
+    const previousUrl = (req.query.previousUrl as string) || (req.body.previousUrl as string);
+    if (previousUrl) {
+      cleanupUploadedFile(previousUrl);
+    }
+
     sendSuccess(
       res,
       {
@@ -82,6 +89,18 @@ uploadRouter.post('/multiple', upload.array('files', 10), (req: Request, res: Re
     }));
 
     sendSuccess(res, results, 201);
+  } catch (error) {
+    next(error);
+  }
+});
+
+uploadRouter.delete('/', (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    const url = (req.query.url as string) || (req.body.url as string);
+    if (url) {
+      cleanupUploadedFile(url);
+    }
+    sendSuccess(res, { success: true, message: 'File cleaned from server storage' }, 200);
   } catch (error) {
     next(error);
   }

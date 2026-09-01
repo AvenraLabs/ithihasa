@@ -24,6 +24,7 @@ import { ReturnItem } from './models/return-item.model.js';
 import { Refund } from './models/refund.model.js';
 import { Review } from './models/review.model.js';
 import { AuditLog } from './models/audit-log.model.js';
+import { AppSetting } from './models/app-setting.model.js';
 
 let associationsInitialized = false;
 
@@ -150,4 +151,5 @@ export {
   Refund,
   Review,
   AuditLog,
+  AppSetting,
 };

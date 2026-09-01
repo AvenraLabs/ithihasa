@@ -35,6 +35,7 @@ export const corsMiddleware = cors({
 export const helmetMiddleware = helmet({
   contentSecurityPolicy: env.NODE_ENV === 'production',
   crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 });
 
 export const globalRateLimiter = rateLimit({

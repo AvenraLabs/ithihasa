@@ -25,7 +25,11 @@ import {
   Palette,
   Ruler,
   Upload,
-  Loader2
+  Loader2,
+  RefreshCw,
+  SlidersHorizontal,
+  CheckCircle2,
+  Box
 } from 'lucide-react';
 import { fetchInventory, adjustInventoryStock, createProduct, deleteProduct } from '../api/inventory.js';
 import { fetchCategories, createCategory, deleteCategory } from '../api/categories.js';
@@ -79,6 +83,8 @@ export function InventoryView() {
   // Sub-views: 'list' | 'new_piece' | 'collections' | 'color_size_master' | 'piece_details'
   const [subView, setSubView] = useState('list');
   const [selectedPiece, setSelectedPiece] = useState(null);
+  const [pieceDetailsColorFilter, setPieceDetailsColorFilter] = useState('all');
+  const [customRestockQty, setCustomRestockQty] = useState({});
 
   const [viewMode, setViewMode] = useState('grid');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -100,15 +106,21 @@ export function InventoryView() {
     sku: `SKU-IH-${Math.floor(1000 + Math.random() * 9000)}`,
     material: '',
     price: '',
-    stock: '',
     collectionTag: '',
     sizes: ['38', '40', '42', 'Free Size'],
-    // Colors with array of 0 to 3 images
     colors: [
       { name: 'Midnight Noir', hex: '#0A0A0A', images: [] }
-    ]
+    ],
+    // Map of `${colorName}___${size}` -> stock number
+    variantStocks: {
+      'Midnight Noir___38': 5,
+      'Midnight Noir___40': 5,
+      'Midnight Noir___42': 5,
+      'Midnight Noir___Free Size': 5
+    }
   });
 
+  const [bulkStockVal, setBulkStockVal] = useState(10);
   const [isCollectionDropdownOpen, setIsCollectionDropdownOpen] = useState(false);
   const [uploadingColorIdx, setUploadingColorIdx] = useState(null);
 
@@ -147,23 +159,47 @@ export function InventoryView() {
 
       if (inventoryData && Array.isArray(inventoryData)) {
         const formatted = inventoryData.map((p) => {
-          const variant = p.variants?.[0] || {};
-          const stockVal = variant.inventory?.on_hand ?? 0;
+          const rawVariants = p.variants || [];
+          const variants = rawVariants.map((v) => {
+            const stockOnHand = v.inventory?.on_hand ?? 0;
+            return {
+              id: v.id,
+              sku: v.sku || `${p.sku || 'SKU'}-${(v.color || 'CLR').slice(0, 3).toUpperCase()}-${(v.size || 'SZ').replace(/\s+/g, '')}`,
+              size: v.size || 'Standard',
+              color: v.color || 'Standard',
+              price: Number(v.price || p.base_price || 0),
+              stock: stockOnHand,
+              available: v.inventory?.available ?? stockOnHand,
+              reserved: v.inventory?.reserved ?? 0,
+              status: stockOnHand <= 0 ? 'out_of_stock' : stockOnHand <= 2 ? 'low_stock' : 'in_stock'
+            };
+          });
+
+          const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
+
           return {
             id: p.id,
-            variantId: variant.id,
-            sku: p.sku || variant.sku || `SKU-IH-${p.id.slice(0, 4)}`,
+            sku: p.sku || variants[0]?.sku || `SKU-IH-${p.id.slice(0, 4)}`,
             title: p.name,
             material: p.fabric_composition || p.description || 'Heritage Textile',
             price: Number(p.base_price || 0),
-            stock: stockVal,
-            status: stockVal <= 2 ? 'low_stock' : 'in_stock',
+            stock: totalStock,
+            variants: variants,
+            status: totalStock <= 0 ? 'out_of_stock' : totalStock <= 2 ? 'low_stock' : 'in_stock',
             collectionTag: p.category?.name || 'Unassigned',
             image: p.images?.[0]?.url || '',
+            images: p.images || [],
             metadata: p.metadata
           };
         });
+
         setInventory(formatted);
+
+        // Synchronize selected piece if currently open
+        setSelectedPiece((prevSelected) => {
+          if (!prevSelected) return null;
+          return formatted.find((item) => item.id === prevSelected.id) || prevSelected;
+        });
       } else {
         setInventory([]);
       }
@@ -179,41 +215,73 @@ export function InventoryView() {
     loadData();
   }, [searchQuery]);
 
-  const handleStockAdjust = async (pieceId, delta) => {
+  // Adjust stock for an individual variant (or first variant fallback)
+  const handleVariantStockAdjust = async (productId, variantId, delta, customReason) => {
+    if (!delta || delta === 0) return;
+
+    // Optimistic UI update across inventory list
     setInventory((prev) =>
       prev.map((item) => {
-        if (item.id === pieceId) {
-          const newStock = Math.max(0, item.stock + delta);
+        if (item.id === productId) {
+          const updatedVariants = (item.variants || []).map((v) => {
+            if (v.id === variantId) {
+              const newStock = Math.max(0, v.stock + delta);
+              return {
+                ...v,
+                stock: newStock,
+                available: Math.max(0, (v.available || newStock) + delta),
+                status: newStock <= 0 ? 'out_of_stock' : newStock <= 2 ? 'low_stock' : 'in_stock'
+              };
+            }
+            return v;
+          });
+          const newTotalStock = updatedVariants.reduce((sum, v) => sum + v.stock, 0);
           return {
             ...item,
-            stock: newStock,
-            status: newStock <= 2 ? 'low_stock' : 'in_stock'
+            variants: updatedVariants,
+            stock: newTotalStock,
+            status: newTotalStock <= 0 ? 'out_of_stock' : newTotalStock <= 2 ? 'low_stock' : 'in_stock'
           };
         }
         return item;
       })
     );
 
-    if (selectedPiece && selectedPiece.id === pieceId) {
-      const newStock = Math.max(0, selectedPiece.stock + delta);
-      setSelectedPiece({
-        ...selectedPiece,
-        stock: newStock,
-        status: newStock <= 2 ? 'low_stock' : 'in_stock'
+    // Optimistic UI update on currently inspected piece
+    setSelectedPiece((prev) => {
+      if (!prev || prev.id !== productId) return prev;
+      const updatedVariants = (prev.variants || []).map((v) => {
+        if (v.id === variantId) {
+          const newStock = Math.max(0, v.stock + delta);
+          return {
+            ...v,
+            stock: newStock,
+            available: Math.max(0, (v.available || newStock) + delta),
+            status: newStock <= 0 ? 'out_of_stock' : newStock <= 2 ? 'low_stock' : 'in_stock'
+          };
+        }
+        return v;
       });
-    }
+      const newTotalStock = updatedVariants.reduce((sum, v) => sum + v.stock, 0);
+      return {
+        ...prev,
+        variants: updatedVariants,
+        stock: newTotalStock,
+        status: newTotalStock <= 0 ? 'out_of_stock' : newTotalStock <= 2 ? 'low_stock' : 'in_stock'
+      };
+    });
 
-    const piece = inventory.find((p) => p.id === pieceId);
-    if (piece?.variantId) {
-      try {
-        await adjustInventoryStock({
-          variantId: piece.variantId,
-          delta,
-          reason: 'MANUAL_ATELIER_STOCK_ADJUST'
-        });
-      } catch (err) {
-        console.warn('Backend stock adjust note:', err.message);
-      }
+    try {
+      await adjustInventoryStock({
+        variantId,
+        delta,
+        reason: customReason || (delta > 0 ? 'MANUAL_RESTOCK' : 'MANUAL_STOCK_ADJUSTMENT')
+      });
+      toast.success(`Inventory updated (${delta > 0 ? `+${delta}` : delta} units)`);
+    } catch (err) {
+      console.error('Stock adjust error:', err);
+      toast.error('Failed to update stock in database.');
+      loadData();
     }
   };
 
@@ -238,22 +306,22 @@ export function InventoryView() {
     if (!newCategoryName.trim()) return;
 
     const slug = newCategoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const payload = {
-      name: newCategoryName.trim(),
-      slug,
-      description: newCategoryDesc.trim() || 'Atelier curated luxury collection'
-    };
-
     try {
-      const created = await createCategory(payload);
-      setCategories((prev) => [...prev, created || payload]);
-      setNewCategoryName('');
-      setNewCategoryDesc('');
-      toast.success(`Collection "${payload.name}" added to master.`);
-      loadData();
+      const created = await createCategory({
+        name: newCategoryName.trim(),
+        slug,
+        description: newCategoryDesc.trim() || 'Atelier luxury collection',
+        sortOrder: categories.length + 1
+      });
+      if (created) {
+        setCategories((prev) => [...prev, created]);
+        toast.success(`Collection "${created.name}" created successfully.`);
+        setNewCategoryName('');
+        setNewCategoryDesc('');
+      }
     } catch (err) {
-      console.error('Category create error:', err);
-      toast.error(err.message || 'Failed to save collection');
+      console.error('Create category error:', err);
+      toast.error(err.message || 'Failed to create collection');
     }
   };
 
@@ -262,10 +330,9 @@ export function InventoryView() {
       await deleteCategory(catIdOrSlug);
       setCategories((prev) => prev.filter((c) => c.id !== catIdOrSlug && c.slug !== catIdOrSlug));
       toast.success(`Removed collection "${catName}"`);
-      loadData();
     } catch (err) {
-      console.error('Category delete error:', err);
-      toast.error(err.message || 'Failed to remove collection');
+      console.error('Delete category error:', err);
+      toast.error(err.message || 'Failed to delete collection');
     }
   };
 
@@ -368,17 +435,77 @@ export function InventoryView() {
         colors: newPiece.colors.filter((c) => c.name !== colorObj.name)
       });
     } else {
+      const nextStocks = { ...newPiece.variantStocks };
+      newPiece.sizes.forEach((sz) => {
+        const key = `${colorObj.name}___${sz}`;
+        if (nextStocks[key] === undefined) nextStocks[key] = 5;
+      });
       setNewPiece({
         ...newPiece,
-        colors: [...newPiece.colors, { name: colorObj.name, hex: colorObj.hex, images: [] }]
+        colors: [...newPiece.colors, { name: colorObj.name, hex: colorObj.hex, images: [] }],
+        variantStocks: nextStocks
       });
     }
   };
 
+  // Toggle Size Selection on Piece Form
+  const handleToggleSize = (sz) => {
+    const isSelected = newPiece.sizes.includes(sz);
+    if (isSelected && newPiece.sizes.length === 1) {
+      toast.error('At least one size must be selected');
+      return;
+    }
+    const nextSizes = isSelected ? newPiece.sizes.filter((s) => s !== sz) : [...newPiece.sizes, sz];
+    const nextStocks = { ...newPiece.variantStocks };
+    if (!isSelected) {
+      newPiece.colors.forEach((c) => {
+        const key = `${c.name}___${sz}`;
+        if (nextStocks[key] === undefined) nextStocks[key] = 5;
+      });
+    }
+    setNewPiece({ ...newPiece, sizes: nextSizes, variantStocks: nextStocks });
+  };
+
+  // Update specific variant stock in matrix
+  const handleMatrixStockChange = (colorName, sizeName, val) => {
+    const num = Math.max(0, parseInt(val, 10) || 0);
+    setNewPiece((prev) => ({
+      ...prev,
+      variantStocks: {
+        ...prev.variantStocks,
+        [`${colorName}___${sizeName}`]: num
+      }
+    }));
+  };
+
+  // Bulk apply stock to all variants in matrix
+  const handleBulkApplyStock = (val) => {
+    const num = Math.max(0, parseInt(val, 10) || 0);
+    const updated = {};
+    newPiece.colors.forEach((c) => {
+      newPiece.sizes.forEach((s) => {
+        updated[`${c.name}___${s}`] = num;
+      });
+    });
+    setNewPiece((prev) => ({ ...prev, variantStocks: updated }));
+    toast.success(`Set ${num} units for all ${newPiece.colors.length * newPiece.sizes.length} variants.`);
+  };
+
+  // Calculate total initial stock across all variant cells
+  const totalCalculatedInitialStock = newPiece.colors.reduce((total, c) => {
+    return (
+      total +
+      newPiece.sizes.reduce((sum, s) => {
+        const key = `${c.name}___${s}`;
+        return sum + (newPiece.variantStocks[key] ?? 5);
+      }, 0)
+    );
+  }, 0);
+
   const handleAddPiece = async (e) => {
     e.preventDefault();
-    if (!newPiece.title || !newPiece.price || !newPiece.stock) {
-      toast.error('Please enter title, price, and initial stock');
+    if (!newPiece.title || !newPiece.price) {
+      toast.error('Please enter piece title and base price');
       return;
     }
     if (newPiece.colors.length === 0) {
@@ -393,21 +520,19 @@ export function InventoryView() {
     try {
       const selectedCat = categories.find((c) => c.name === newPiece.collectionTag) || categories[0];
       const priceVal = parseFloat(newPiece.price);
-      const stockVal = parseInt(newPiece.stock, 10);
 
-      // Generate all (Color x Size) variants
+      // Generate all (Color x Size) variants with exact individual stock
       const variantsPayload = [];
-      const totalCombinations = newPiece.colors.length * newPiece.sizes.length;
-      const stockPerVariant = Math.max(1, Math.floor(stockVal / totalCombinations));
-
       newPiece.colors.forEach((color) => {
         newPiece.sizes.forEach((sz) => {
+          const key = `${color.name}___${sz}`;
+          const stockForVariant = Math.max(0, parseInt(newPiece.variantStocks[key], 10) || 0);
           variantsPayload.push({
             sku: `${newPiece.sku}-${color.name.slice(0, 3).toUpperCase()}-${sz.replace(/\s+/g, '')}`,
             size: sz,
             color: color.name,
             price: priceVal,
-            initialStock: stockPerVariant
+            initialStock: stockForVariant
           });
         });
       });
@@ -418,7 +543,7 @@ export function InventoryView() {
         color.images.forEach((imgUrl) => {
           imagesPayload.push({
             url: imgUrl,
-            altText: color.name,
+            altText: `${newPiece.title} - ${color.name}`,
             sortOrder: imagesPayload.length,
             isPrimary: imagesPayload.length === 0
           });
@@ -445,17 +570,22 @@ export function InventoryView() {
         metadata: metadataPayload
       });
 
-      toast.success(`Published "${newPiece.title}" with ${newPiece.colors.length} color swatches to atelier catalogue!`);
+      toast.success(`Published "${newPiece.title}" with ${variantsPayload.length} variants (${totalCalculatedInitialStock} total units) to vault!`);
       setSubView('list');
       setNewPiece({
         title: '',
         sku: `SKU-IH-${Math.floor(1000 + Math.random() * 9000)}`,
         material: '',
         price: '',
-        stock: '',
         collectionTag: categories[0]?.name || '',
         sizes: ['38', '40', '42', 'Free Size'],
-        colors: [{ name: 'Midnight Noir', hex: '#0A0A0A', images: [] }]
+        colors: [{ name: 'Midnight Noir', hex: '#0A0A0A', images: [] }],
+        variantStocks: {
+          'Midnight Noir___38': 5,
+          'Midnight Noir___40': 5,
+          'Midnight Noir___42': 5,
+          'Midnight Noir___Free Size': 5
+        }
       });
       loadData();
     } catch (err) {
@@ -466,15 +596,13 @@ export function InventoryView() {
 
   const allCount = inventory.length;
   const inStockCount = inventory.filter((item) => item.stock > 2).length;
-  const lowStockCount = inventory.filter((item) => item.stock > 0 && item.stock <= 2).length;
-  const draftsCount = inventory.filter((item) => item.status === 'draft' || item.stock === 0).length;
+  const lowStockCount = inventory.filter((item) => item.stock <= 2).length;
 
   const filteredInventory = inventory.filter((item) => {
     const matchesTab =
       activeFilter === 'all' ||
       (activeFilter === 'in_stock' && item.stock > 2) ||
-      (activeFilter === 'low_stock' && item.stock > 0 && item.stock <= 2) ||
-      (activeFilter === 'drafts' && (item.status === 'draft' || item.stock === 0));
+      (activeFilter === 'low_stock' && item.stock <= 2);
 
     const matchesSearch =
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -552,25 +680,23 @@ export function InventoryView() {
 
                   <button
                     onClick={() => handleDeleteColorMaster(color.name)}
-                    className="text-[var(--text-secondary)] hover:text-rose-500 p-1.5 cursor-pointer"
-                    title="Remove Color"
+                    className="p-1.5 text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 rounded transition-colors cursor-pointer"
+                    title="Remove color"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={15} />
                   </button>
                 </div>
               ))}
             </div>
 
             {/* Add Color Form */}
-            <form onSubmit={handleAddColorMaster} className="border-t border-[var(--border-color)] pt-4 space-y-3">
+            <form onSubmit={handleAddColorMaster} className="space-y-4 pt-4 border-t border-[var(--border-color)]">
               <span className="label-caps text-[10px] uppercase text-[var(--gold)] font-bold block">
                 ADD NEW COLOR TO MASTER
               </span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="text-[10px] uppercase text-[var(--text-secondary)] font-semibold block mb-1">
-                    Color Name *
-                  </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] text-[var(--text-secondary)] uppercase mb-1">Color Name</label>
                   <input
                     type="text"
                     required
@@ -580,11 +706,8 @@ export function InventoryView() {
                     className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] px-3 py-2 text-[13px] text-[var(--text-primary)] outline-none rounded"
                   />
                 </div>
-
                 <div>
-                  <label className="text-[10px] uppercase text-[var(--text-secondary)] font-semibold block mb-1">
-                    Hex Swatch
-                  </label>
+                  <label className="block text-[11px] text-[var(--text-secondary)] uppercase mb-1">Hex Color Code</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -594,9 +717,11 @@ export function InventoryView() {
                     />
                     <input
                       type="text"
+                      required
                       value={newColorHex}
                       onChange={(e) => setNewColorHex(e.target.value)}
-                      className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-2 py-2 text-[12px] font-mono uppercase text-[var(--text-primary)] outline-none rounded"
+                      placeholder="#1B4D3E"
+                      className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] px-3 py-2 text-[13px] font-mono text-[var(--text-primary)] outline-none rounded uppercase"
                     />
                   </div>
                 </div>
@@ -607,7 +732,7 @@ export function InventoryView() {
                 className="w-full bg-[var(--gold)] text-black font-semibold label-caps text-[11px] uppercase tracking-wider py-2.5 hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-1.5 rounded"
               >
                 <Plus size={14} />
-                <span>Save Color to Master</span>
+                <span>Add Color to Palette</span>
               </button>
             </form>
           </section>
@@ -623,23 +748,23 @@ export function InventoryView() {
                   Size Master ({masterSizes.length})
                 </h2>
                 <p className="text-[12px] text-[var(--text-secondary)]">
-                  Standardized size labels available when minting heritage silhouettes.
+                  Available size taxonomy selectable when authoring atelier silhouettes.
                 </p>
               </div>
             </div>
 
-            {/* Active Sizes Chips */}
+            {/* Active Sizes Badges */}
             <div className="flex flex-wrap gap-2.5 max-h-72 overflow-y-auto pr-1">
               {masterSizes.map((sz) => (
                 <div
                   key={sz}
-                  className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded text-[13px] font-semibold text-[var(--text-primary)]"
+                  className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded group"
                 >
-                  <span>{sz}</span>
+                  <span className="text-[13px] font-semibold text-[var(--text-primary)] font-mono">{sz}</span>
                   <button
                     onClick={() => handleDeleteSizeMaster(sz)}
-                    className="text-[var(--text-secondary)] hover:text-rose-500 cursor-pointer p-0.5"
-                    title="Remove Size"
+                    className="text-[var(--text-secondary)] hover:text-rose-500 opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    title={`Delete size ${sz}`}
                   >
                     <X size={13} />
                   </button>
@@ -648,7 +773,7 @@ export function InventoryView() {
             </div>
 
             {/* Add Size Form */}
-            <form onSubmit={handleAddSizeMaster} className="border-t border-[var(--border-color)] pt-4 space-y-3">
+            <form onSubmit={handleAddSizeMaster} className="space-y-4 pt-4 border-t border-[var(--border-color)]">
               <span className="label-caps text-[10px] uppercase text-[var(--gold)] font-bold block">
                 ADD NEW SIZE TO MASTER
               </span>
@@ -713,229 +838,177 @@ export function InventoryView() {
         </div>
 
         {/* Form Container */}
-        <form onSubmit={handleAddPiece} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Product Information (7 cols) */}
-          <div className="lg:col-span-7 bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 space-y-6">
-            <h2 className="label-caps text-[12px] font-bold text-[var(--gold)] tracking-widest uppercase border-b border-[var(--border-color)] pb-3">
-              1. Garment Identity & Pricing
-            </h2>
+        <form onSubmit={handleAddPiece} className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Column: Product Information (7 cols) */}
+            <div className="lg:col-span-7 bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 space-y-6">
+              <h2 className="label-caps text-[12px] font-bold text-[var(--gold)] tracking-widest uppercase border-b border-[var(--border-color)] pb-3">
+                1. Garment Identity & Pricing
+              </h2>
 
-            {/* Piece Title */}
-            <div>
-              <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold mb-1.5">
-                Piece Title *
-              </label>
-              <input
-                type="text"
-                required
-                value={newPiece.title}
-                onChange={(e) => setNewPiece({ ...newPiece, title: e.target.value })}
-                placeholder="e.g. Varanasi Handloom Silk Kurta"
-                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] px-4 py-3 text-[14px] text-[var(--text-primary)] outline-none rounded"
-              />
-            </div>
-
-            {/* Material & SKU */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Piece Title */}
               <div>
                 <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold mb-1.5">
-                  SKU Identifier Prefix
+                  Piece Title *
                 </label>
                 <input
                   type="text"
-                  value={newPiece.sku}
-                  onChange={(e) => setNewPiece({ ...newPiece, sku: e.target.value })}
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[13px] font-mono text-[var(--text-primary)] outline-none rounded"
-                />
-              </div>
-
-              <div>
-                <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold mb-1.5">
-                  Fabric / Material Composition
-                </label>
-                <input
-                  type="text"
-                  value={newPiece.material}
-                  onChange={(e) => setNewPiece({ ...newPiece, material: e.target.value })}
-                  placeholder="e.g. Pure Mulberry Silk with Antique Zari"
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[13px] text-[var(--text-primary)] outline-none rounded"
-                />
-              </div>
-            </div>
-
-            {/* Price (INR) & Initial Stock */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold mb-1.5">
-                  Base Price (INR ₹) *
-                </label>
-                <input
-                  type="number"
                   required
-                  min="1"
-                  value={newPiece.price}
-                  onChange={(e) => setNewPiece({ ...newPiece, price: e.target.value })}
-                  placeholder="24500"
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] px-4 py-3 text-[15px] font-bold text-[var(--text-primary)] outline-none rounded"
-                />
-              </div>
-
-              <div>
-                <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold mb-1.5">
-                  Total Initial Stock (All Variants) *
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  value={newPiece.stock}
-                  onChange={(e) => setNewPiece({ ...newPiece, stock: e.target.value })}
-                  placeholder="10"
+                  value={newPiece.title}
+                  onChange={(e) => setNewPiece({ ...newPiece, title: e.target.value })}
+                  placeholder="e.g. Varanasi Handloom Silk Kurta"
                   className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] px-4 py-3 text-[14px] text-[var(--text-primary)] outline-none rounded"
                 />
               </div>
-            </div>
 
-            {/* Collection / Category Selector */}
-            <div className="relative">
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold">
-                  Collection (Category) *
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setSubView('collections')}
-                  className="text-[11px] text-[var(--gold)] hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <Plus size={12} />
-                  <span>Manage Collections</span>
-                </button>
+              {/* Material & SKU */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold mb-1.5">
+                    SKU Identifier Prefix
+                  </label>
+                  <input
+                    type="text"
+                    value={newPiece.sku}
+                    onChange={(e) => setNewPiece({ ...newPiece, sku: e.target.value })}
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[13px] font-mono text-[var(--text-primary)] outline-none rounded"
+                  />
+                </div>
+
+                <div>
+                  <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold mb-1.5">
+                    Fabric / Material Composition
+                  </label>
+                  <input
+                    type="text"
+                    value={newPiece.material}
+                    onChange={(e) => setNewPiece({ ...newPiece, material: e.target.value })}
+                    placeholder="e.g. Pure Mulberry Silk with Antique Zari"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[13px] text-[var(--text-primary)] outline-none rounded"
+                  />
+                </div>
               </div>
 
-              {/* Custom Luxury Dropdown Trigger */}
-              <button
-                type="button"
-                onClick={() => setIsCollectionDropdownOpen(!isCollectionDropdownOpen)}
-                className={`w-full bg-[var(--bg-secondary)] border px-4 py-3 text-left flex items-center justify-between transition-all rounded cursor-pointer ${
-                  isCollectionDropdownOpen
-                    ? 'border-[var(--gold)] ring-1 ring-[var(--gold)]/40 shadow-lg'
-                    : 'border-[var(--border-color)] hover:border-[var(--gold)]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="text-[14px] font-medium text-[var(--text-primary)] truncate">
-                    {newPiece.collectionTag || 'Select Collection'}
-                  </span>
-                  {(() => {
-                    const activeCat = categories.find((c) => c.name === newPiece.collectionTag);
-                    return activeCat ? (
-                      <span className="label-caps text-[9px] text-[var(--gold)] bg-[var(--gold)]/10 px-2 py-0.5 rounded font-mono shrink-0">
-                        /{activeCat.slug}
-                      </span>
-                    ) : null;
-                  })()}
-                </div>
-                <ChevronDown
-                  size={16}
-                  className={`text-[var(--text-secondary)] transition-transform duration-300 shrink-0 ml-2 ${
-                    isCollectionDropdownOpen ? 'rotate-180 text-[var(--gold)]' : ''
-                  }`}
-                />
-              </button>
-
-              {/* Custom Dropdown Options Menu */}
-              {isCollectionDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-20"
-                    onClick={() => setIsCollectionDropdownOpen(false)}
+              {/* Base Price (INR) & Category */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold mb-1.5">
+                    Base Price (INR ₹) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={newPiece.price}
+                    onChange={(e) => setNewPiece({ ...newPiece, price: e.target.value })}
+                    placeholder="24500"
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] px-4 py-3 text-[15px] font-bold text-[var(--text-primary)] outline-none rounded"
                   />
-                  <div className="absolute top-full left-0 right-0 mt-1.5 z-30 bg-[var(--bg-card)] border border-[var(--border-color)] shadow-2xl rounded-lg overflow-hidden divide-y divide-[var(--border-color)]/60 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="max-h-60 overflow-y-auto">
-                      {categories.map((cat) => {
-                        const isSelected = newPiece.collectionTag === cat.name;
-                        return (
+                </div>
+
+                {/* Collection / Category Selector */}
+                <div className="relative">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold">
+                      Collection (Category) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setSubView('collections')}
+                      className="text-[11px] text-[var(--gold)] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus size={12} />
+                      <span>Manage</span>
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsCollectionDropdownOpen(!isCollectionDropdownOpen)}
+                    className={`w-full bg-[var(--bg-secondary)] border px-4 py-3 text-left flex items-center justify-between transition-all rounded cursor-pointer ${
+                      isCollectionDropdownOpen
+                        ? 'border-[var(--gold)] ring-1 ring-[var(--gold)]/40 shadow-lg'
+                        : 'border-[var(--border-color)] hover:border-[var(--gold)]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-[14px] font-medium text-[var(--text-primary)] truncate">
+                        {newPiece.collectionTag || 'Select Collection'}
+                      </span>
+                    </div>
+                    <ChevronDown
+                      size={16}
+                      className={`text-[var(--text-secondary)] transition-transform duration-300 shrink-0 ml-2 ${
+                        isCollectionDropdownOpen ? 'rotate-180 text-[var(--gold)]' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {isCollectionDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-20" onClick={() => setIsCollectionDropdownOpen(false)} />
+                      <div className="absolute top-full left-0 right-0 mt-1 z-30 bg-[var(--bg-card)] border border-[var(--gold)]/40 shadow-2xl max-h-60 overflow-y-auto">
+                        {categories.map((cat) => (
                           <button
-                            key={cat.id || cat.name}
+                            key={cat.id || cat.slug}
                             type="button"
                             onClick={() => {
                               setNewPiece({ ...newPiece, collectionTag: cat.name });
                               setIsCollectionDropdownOpen(false);
                             }}
-                            className={`w-full px-4 py-3 text-left flex items-center justify-between transition-colors cursor-pointer group ${
-                              isSelected
-                                ? 'bg-[var(--gold)]/15 text-[var(--gold)] font-bold'
-                                : 'hover:bg-[var(--bg-secondary)] text-[var(--text-primary)]'
-                            }`}
+                            className="w-full px-4 py-2.5 text-left flex items-center justify-between hover:bg-[var(--bg-secondary)] text-[13px] text-[var(--text-primary)]"
                           >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <span className={`text-[13.5px] truncate ${isSelected ? 'text-[var(--gold)]' : 'group-hover:text-[var(--gold)]'}`}>
-                                {cat.name}
-                              </span>
-                              <span className="text-[10px] text-[var(--text-secondary)] font-mono opacity-80">
-                                ({cat.slug})
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <Check size={16} className="text-[var(--gold)] shrink-0 ml-2" />
-                            )}
+                            <span>{cat.name}</span>
+                            <span className="text-[10px] text-[var(--gold)] font-mono">/{cat.slug}</span>
                           </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Size Selector from Master */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold">
-                  Available Sizes ({newPiece.sizes.length} selected) *
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setSubView('color_size_master')}
-                  className="text-[11px] text-[var(--gold)] hover:underline"
-                >
-                  Edit Size Master
-                </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {masterSizes.map((sz) => {
-                  const isSelected = newPiece.sizes.includes(sz);
-                  return (
-                    <button
-                      key={sz}
-                      type="button"
-                      onClick={() => {
-                        const current = newPiece.sizes;
-                        const next = isSelected
-                          ? current.filter((s) => s !== sz)
-                          : [...current, sz];
-                        setNewPiece({ ...newPiece, sizes: next });
-                      }}
-                      className={`px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-wider border rounded transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-[var(--gold)] text-black border-[var(--gold)] shadow-sm'
-                          : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
-                      }`}
-                    >
-                      {sz}
-                    </button>
-                  );
-                })}
+
+              {/* Size Selector from Master */}
+              <div className="pt-2 border-t border-[var(--border-color)]">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold">
+                    Available Sizes ({newPiece.sizes.length} selected) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setSubView('color_size_master')}
+                    className="text-[11px] text-[var(--gold)] hover:underline"
+                  >
+                    Edit Size Master
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {masterSizes.map((sz) => {
+                    const isSelected = newPiece.sizes.includes(sz);
+                    return (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => handleToggleSize(sz)}
+                        className={`px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-wider border rounded transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[var(--gold)] text-black border-[var(--gold)] shadow-sm'
+                            : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Column: Colors & Per-Color Images (0 to 3 images) (5 cols) */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 space-y-6">
+            {/* Right Column: Colors & Per-Color Images (5 cols) */}
+            <div className="lg:col-span-5 bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 space-y-6">
               <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-3">
                 <h2 className="label-caps text-[12px] font-bold text-[var(--gold)] tracking-widest uppercase">
-                  2. Color Variants & Photos (0-3 Per Color)
+                  2. Color Variants & Photos
                 </h2>
                 <button
                   type="button"
@@ -949,9 +1022,9 @@ export function InventoryView() {
               {/* Color Swatch Selector */}
               <div>
                 <label className="block text-[11px] uppercase text-[var(--text-secondary)] font-semibold mb-2">
-                  Select Colors for this Piece
+                  Select Colors for this Piece ({newPiece.colors.length} active)
                 </label>
-                <div className="flex flex-wrap gap-2.5">
+                <div className="flex flex-wrap gap-2">
                   {masterColors.map((color) => {
                     const isSelected = newPiece.colors.some((c) => c.name === color.name);
                     return (
@@ -966,7 +1039,7 @@ export function InventoryView() {
                         }`}
                       >
                         <span
-                          className="w-4 h-4 rounded-full border border-white/20 shrink-0"
+                          className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
                           style={{ backgroundColor: color.hex }}
                         />
                         <span className="text-[12px] font-medium">{color.name}</span>
@@ -979,37 +1052,23 @@ export function InventoryView() {
               {/* Per-Color Image Upload Panels */}
               <div className="space-y-4 pt-2">
                 {newPiece.colors.map((color, colorIdx) => (
-                  <div
-                    key={color.name}
-                    className="p-4 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg space-y-3"
-                  >
+                  <div key={color.name} className="border border-[var(--border-color)] bg-[var(--bg-secondary)]/30 p-4 rounded space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span
-                          className="w-4 h-4 rounded-full border border-white/20 shrink-0"
-                          style={{ backgroundColor: color.hex }}
-                        />
-                        <span className="text-[13px] font-semibold text-[var(--text-primary)]">
-                          {color.name}
-                        </span>
+                        <span className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: color.hex }} />
+                        <span className="text-[13px] font-semibold text-[var(--text-primary)]">{color.name}</span>
                       </div>
-                      <span className="text-[11px] text-[var(--text-secondary)]">
-                        {color.images.length}/3 Photos
-                      </span>
+                      <span className="text-[11px] text-[var(--text-secondary)] font-mono">{color.images.length}/3 Photos</span>
                     </div>
 
-                    {/* Image Thumbnails & Upload Button */}
-                    <div className="grid grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-3 gap-2">
                       {color.images.map((imgUrl, imgIdx) => (
-                        <div
-                          key={imgIdx}
-                          className="aspect-[3/4] rounded bg-black/40 border border-[var(--border-color)] relative overflow-hidden group"
-                        >
-                          <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                        <div key={imgIdx} className="relative aspect-[3/4] bg-[var(--bg-secondary)] border border-[var(--border-color)] group overflow-hidden">
+                          <img src={imgUrl} alt={`${color.name} view ${imgIdx + 1}`} className="w-full h-full object-cover" />
                           <button
                             type="button"
                             onClick={() => handleRemoveColorImage(colorIdx, imgIdx)}
-                            className="absolute top-1 right-1 w-5 h-5 bg-black/80 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-600 cursor-pointer"
+                            className="absolute top-1 right-1 p-1 bg-black/80 text-white hover:text-rose-400 rounded-full transition-colors opacity-90 hover:opacity-100 cursor-pointer"
                             title="Remove image"
                           >
                             <X size={12} />
@@ -1018,27 +1077,17 @@ export function InventoryView() {
                       ))}
 
                       {color.images.length < 3 && (
-                        <label className="aspect-[3/4] rounded border-2 border-dashed border-[var(--border-color)] hover:border-[var(--gold)] bg-[var(--bg-card)]/40 flex flex-col items-center justify-center gap-1 text-[var(--text-secondary)] hover:text-[var(--gold)] cursor-pointer transition-colors p-2 text-center">
-                          {uploadingColorIdx === colorIdx ? (
-                            <Loader2 size={18} className="animate-spin text-[var(--gold)]" />
-                          ) : (
-                            <>
-                              <Upload size={16} />
-                              <span className="text-[10px] font-semibold uppercase tracking-wider">
-                                Upload Photo
-                              </span>
-                            </>
-                          )}
+                        <label className="relative aspect-[3/4] border-2 border-dashed border-[var(--border-color)] hover:border-[var(--gold)] bg-[var(--bg-secondary)]/40 flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center p-2 transition-colors">
+                          <Upload size={16} className="text-[var(--text-secondary)]" />
+                          <span className="label-caps text-[9px] uppercase tracking-wider text-[var(--text-secondary)]">Upload</span>
                           <input
                             type="file"
                             accept="image/*"
-                            className="hidden"
-                            disabled={uploadingColorIdx === colorIdx}
                             onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                handleColorImageUpload(colorIdx, e.target.files[0]);
-                              }
+                              const file = e.target.files?.[0];
+                              if (file) handleColorImageUpload(colorIdx, file);
                             }}
+                            className="hidden"
                           />
                         </label>
                       )}
@@ -1047,22 +1096,139 @@ export function InventoryView() {
                 ))}
               </div>
             </div>
+          </div>
 
-            <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 space-y-3">
-              <button
-                type="submit"
-                className="w-full bg-[var(--gold)] text-[#0A0A0A] font-semibold label-caps text-[12px] tracking-widest uppercase py-4 shadow-xl hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer"
-              >
-                Publish & Mint Piece to Vault
-              </button>
+          {/* SECTION 3: Dynamic Variant Stock Matrix by Color & Size */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
+              <div>
+                <h2 className="label-caps text-[13px] font-bold text-[var(--gold)] tracking-widest uppercase">
+                  3. Color & Size Stock Matrix (Flexible Variant Quantities)
+                </h2>
+                <p className="text-[12px] text-[var(--text-secondary)] mt-0.5">
+                  Set independent initial stock units for each specific color and size combination.
+                </p>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setSubView('list')}
-                className="w-full border border-[var(--border-color)] hover:border-[var(--gold)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] label-caps text-[11px] tracking-widest uppercase py-3 transition-colors cursor-pointer"
-              >
-                Cancel & Return
-              </button>
+              {/* Quick Bulk Stock Fill Tool */}
+              <div className="flex items-center gap-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] p-1.5 rounded">
+                <span className="text-[11px] text-[var(--text-secondary)] label-caps uppercase pl-2">Batch Fill:</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={bulkStockVal}
+                  onChange={(e) => setBulkStockVal(e.target.value)}
+                  className="w-16 bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--gold)] px-2 py-1 text-[13px] font-bold text-center text-[var(--text-primary)] outline-none rounded"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleBulkApplyStock(bulkStockVal)}
+                  className="bg-[var(--gold)] hover:brightness-110 text-black font-semibold text-[11px] uppercase tracking-wider px-3 py-1.5 rounded transition-all cursor-pointer"
+                >
+                  Apply To All
+                </button>
+              </div>
+            </div>
+
+            {/* Matrix Table */}
+            <div className="overflow-x-auto border border-[var(--border-color)] bg-[var(--bg-secondary)]/10">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-[var(--bg-secondary)]/50 border-b border-[var(--border-color)] text-[11px] label-caps uppercase tracking-wider text-[var(--text-secondary)]">
+                    <th className="p-3.5 min-w-[160px]">Color Variant</th>
+                    {newPiece.sizes.map((sz) => (
+                      <th key={sz} className="p-3.5 text-center min-w-[90px]">
+                        Size {sz}
+                      </th>
+                    ))}
+                    <th className="p-3.5 text-right min-w-[100px]">Color Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-color)] text-[13px]">
+                  {newPiece.colors.map((color) => {
+                    const colorTotal = newPiece.sizes.reduce((sum, sz) => {
+                      const key = `${color.name}___${sz}`;
+                      return sum + (newPiece.variantStocks[key] ?? 5);
+                    }, 0);
+
+                    return (
+                      <tr key={color.name} className="hover:bg-[var(--bg-secondary)]/30 transition-colors">
+                        <td className="p-3.5 flex items-center gap-2.5 font-medium text-[var(--text-primary)]">
+                          <span className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0" style={{ backgroundColor: color.hex }} />
+                          <span>{color.name}</span>
+                        </td>
+
+                        {newPiece.sizes.map((sz) => {
+                          const key = `${color.name}___${sz}`;
+                          const stockCount = newPiece.variantStocks[key] ?? 5;
+
+                          return (
+                            <td key={sz} className="p-2.5 text-center">
+                              <input
+                                type="number"
+                                min="0"
+                                required
+                                value={stockCount}
+                                onChange={(e) => handleMatrixStockChange(color.name, sz, e.target.value)}
+                                className="w-20 mx-auto bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--gold)] p-2 text-center text-[14px] font-bold text-[var(--text-primary)] outline-none rounded transition-all shadow-inner"
+                              />
+                            </td>
+                          );
+                        })}
+
+                        <td className="p-3.5 text-right font-bold text-[var(--gold)] tabular-nums">
+                          {colorTotal} units
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-[var(--bg-secondary)]/70 border-t border-[var(--border-color)] text-[13px] font-bold">
+                    <td className="p-3.5 text-[var(--text-primary)]">Grand Total (All Variants)</td>
+                    {newPiece.sizes.map((sz) => {
+                      const sizeTotal = newPiece.colors.reduce((sum, color) => {
+                        const key = `${color.name}___${sz}`;
+                        return sum + (newPiece.variantStocks[key] ?? 5);
+                      }, 0);
+                      return (
+                        <td key={sz} className="p-3.5 text-center text-[var(--text-primary)] tabular-nums">
+                          {sizeTotal}
+                        </td>
+                      );
+                    })}
+                    <td className="p-3.5 text-right text-[15px] text-[var(--gold)] tabular-nums">
+                      {totalCalculatedInitialStock} units
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[var(--border-color)]">
+              <div className="flex items-center gap-2 text-[13px] text-[var(--text-secondary)]">
+                <Box size={16} className="text-[var(--gold)]" />
+                <span>Total Variants to Mint: <strong>{newPiece.colors.length * newPiece.sizes.length}</strong></span>
+                <span>•</span>
+                <span>Total Vault Units: <strong>{totalCalculatedInitialStock}</strong></span>
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setSubView('list')}
+                  className="w-full sm:w-auto border border-[var(--border-color)] hover:border-[var(--gold)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] label-caps text-[11px] tracking-widest uppercase px-6 py-3.5 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto bg-[var(--gold)] text-[#0A0A0A] font-semibold label-caps text-[11px] tracking-widest uppercase px-8 py-3.5 shadow-xl hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer"
+                >
+                  Publish & Mint Piece to Vault
+                </button>
+              </div>
             </div>
           </div>
         </form>
@@ -1097,20 +1263,6 @@ export function InventoryView() {
           </div>
         </div>
 
-        {/* Architectural Explanation Banner */}
-        <div className="p-5 bg-[var(--bg-card)] border border-[var(--gold)]/30 rounded-lg flex items-start gap-4 text-[13px]">
-          <div className="w-8 h-8 rounded-full bg-[var(--gold)]/10 text-[var(--gold)] flex items-center justify-center shrink-0 mt-0.5">
-            <Info size={18} />
-          </div>
-          <div className="space-y-1">
-            <h3 className="font-semibold text-[var(--text-primary)] text-[14px]">
-              What are Collections in Ithihasa?
-            </h3>
-            <p className="text-[var(--text-secondary)] leading-relaxed">
-              Collections represent the luxury category taxonomy of the boutique (e.g. <em>Heritage Sarees, Bandhgalas, Royal Shawls, Atelier Bespoke</em>). In the customer-facing Storefront application (`/shop`), products are grouped and filtered <strong>collection-wise</strong>.
-            </p>
-          </div>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Active Collections List (7 cols) */}
@@ -1202,13 +1354,20 @@ export function InventoryView() {
   }
 
   // ==========================================
-  // VIEW: DEDICATED PIECE SPECIFICATIONS PAGE
+  // VIEW: DEDICATED PIECE SPECIFICATIONS & COLOR/SIZE STOCK MATRIX PAGE
   // ==========================================
   if (subView === 'piece_details' && selectedPiece) {
+    const variants = selectedPiece.variants || [];
+    const colorGroups = Array.from(new Set(variants.map((v) => v.color || 'Standard')));
+
+    const filteredVariants = pieceDetailsColorFilter === 'all'
+      ? variants
+      : variants.filter((v) => v.color === pieceDetailsColorFilter);
+
     return (
       <div className="p-4 sm:p-6 md:p-10 max-w-[1440px] w-full mx-auto space-y-8 flex-1 min-w-0 font-manrope">
         {/* Navigation & Header */}
-        <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => {
@@ -1221,102 +1380,215 @@ export function InventoryView() {
               <ArrowLeft size={18} />
             </button>
             <div>
-              <span className="label-caps text-[10px] sm:text-[11px] text-[var(--gold)] tracking-widest uppercase">
-                PIECE SPECIFICATIONS
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="label-caps text-[10px] sm:text-[11px] text-[var(--gold)] tracking-widest uppercase">
+                  PIECE SPECIFICATIONS & VAULT MATRIX
+                </span>
+                <span className="label-caps text-[9.5px] px-2 py-0.5 bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/30">
+                  {selectedPiece.collectionTag}
+                </span>
+              </div>
               <h1 className="font-garamond text-[26px] sm:text-[34px] text-[var(--text-primary)] font-normal tracking-tight">
                 {selectedPiece.title}
               </h1>
             </div>
           </div>
 
-          <button
-            onClick={() => handleDeletePiece(selectedPiece.id)}
-            className="px-4 py-2.5 border border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 label-caps text-[11px] uppercase tracking-wider cursor-pointer flex items-center gap-1.5"
-          >
-            <Trash2 size={14} />
-            <span>Delete Piece</span>
-          </button>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => handleDeletePiece(selectedPiece.id)}
+              className="px-4 py-2.5 border border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 label-caps text-[11px] uppercase tracking-wider cursor-pointer flex items-center gap-1.5"
+            >
+              <Trash2 size={14} />
+              <span>Delete Piece</span>
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Piece Image Display (5 cols) */}
-          <div className="lg:col-span-5 bg-[var(--bg-card)] border border-[var(--border-color)] p-6 space-y-4">
-            <div className="aspect-[3/4] w-full bg-[var(--bg-secondary)] overflow-hidden border border-[var(--border-color)] relative">
-              {selectedPiece.image ? (
-                <img src={selectedPiece.image} alt={selectedPiece.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-[var(--text-secondary)] opacity-40">
-                  <Package size={48} />
-                </div>
-              )}
+        {/* Piece Overview Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-4 bg-[var(--bg-card)] border border-[var(--border-color)]">
+            <span className="text-[11px] label-caps uppercase text-[var(--text-secondary)] font-semibold block mb-1">Base Price</span>
+            <span className="text-[20px] font-bold text-[var(--text-primary)] tabular-nums">{formatINR(selectedPiece.price)}</span>
+          </div>
+
+          <div className="p-4 bg-[var(--bg-card)] border border-[var(--border-color)]">
+            <span className="text-[11px] label-caps uppercase text-[var(--text-secondary)] font-semibold block mb-1">Total Vault Stock</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[20px] font-bold text-[var(--text-primary)] tabular-nums">{selectedPiece.stock} units</span>
+              <span className={`text-[10px] label-caps px-2 py-0.5 uppercase font-semibold ${selectedPiece.stock <= 2 ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'}`}>
+                {selectedPiece.stock <= 2 ? 'Low Threshold' : 'In Stock'}
+              </span>
             </div>
           </div>
 
-          {/* Piece Parameters & Stock Adjustments (7 cols) */}
-          <div className="lg:col-span-7 bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 space-y-6">
-            <h2 className="label-caps text-[12px] font-bold text-[var(--gold)] tracking-widest uppercase border-b border-[var(--border-color)] pb-3">
-              Vault & Inventory Metrics
-            </h2>
+          <div className="p-4 bg-[var(--bg-card)] border border-[var(--border-color)]">
+            <span className="text-[11px] label-caps uppercase text-[var(--text-secondary)] font-semibold block mb-1">Color Palette</span>
+            <span className="text-[16px] font-semibold text-[var(--text-primary)]">{colorGroups.length} Colors</span>
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 border border-[var(--border-color)] bg-[var(--bg-secondary)]/30 text-[13.5px]">
-              <div>
-                <span className="text-[var(--text-secondary)] label-caps text-[10px] uppercase block mb-1">SKU</span>
-                <span className="font-mono font-medium text-[var(--text-primary)]">{selectedPiece.sku}</span>
-              </div>
-              <div>
-                <span className="text-[var(--text-secondary)] label-caps text-[10px] uppercase block mb-1">Price</span>
-                <span className="font-bold text-[var(--text-primary)] text-[16px]">{formatINR(selectedPiece.price)}</span>
-              </div>
-              <div>
-                <span className="text-[var(--text-secondary)] label-caps text-[10px] uppercase block mb-1">Status</span>
-                <span className={`font-semibold capitalize ${selectedPiece.stock <= 2 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                  {selectedPiece.status.replace('_', ' ')}
-                </span>
-              </div>
-              <div>
-                <span className="text-[var(--text-secondary)] label-caps text-[10px] uppercase block mb-1">Collection</span>
-                <span className="font-semibold text-[var(--gold)]">{selectedPiece.collectionTag}</span>
-              </div>
-            </div>
+          <div className="p-4 bg-[var(--bg-card)] border border-[var(--border-color)]">
+            <span className="text-[11px] label-caps uppercase text-[var(--text-secondary)] font-semibold block mb-1">Size Variants</span>
+            <span className="text-[16px] font-semibold text-[var(--text-primary)]">{variants.length} Total Variants</span>
+          </div>
+        </div>
 
-            {/* Realtime Stock Counter */}
-            <div className="p-5 border border-[var(--border-color)] bg-[var(--bg-secondary)]/40 flex items-center justify-between">
-              <div>
-                <span className="label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold block">
-                  On-Hand Stock In Vault
-                </span>
-                <span className="text-[24px] font-bold text-[var(--text-primary)] tabular-nums">
-                  {selectedPiece.stock} units
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleStockAdjust(selectedPiece.id, -1)}
-                  className="w-10 h-10 rounded border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-center text-[var(--text-primary)] hover:border-[var(--gold)] transition-colors cursor-pointer"
-                  title="Decrease Stock"
-                >
-                  <Minus size={16} />
-                </button>
-                <button
-                  onClick={() => handleStockAdjust(selectedPiece.id, 1)}
-                  className="w-10 h-10 rounded border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-center text-[var(--text-primary)] hover:border-[var(--gold)] transition-colors cursor-pointer"
-                  title="Increase Stock"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-            </div>
-
+        {/* Detailed Color & Size Matrix Table with Manual Restock */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
             <div>
-              <span className="label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold block mb-1">
-                Fabric Details
-              </span>
-              <p className="text-[14px] text-[var(--text-secondary)]">
-                {selectedPiece.material}
+              <h2 className="label-caps text-[13px] font-bold text-[var(--gold)] tracking-widest uppercase">
+                Color & Size-Wise Stock Breakdown & Manual Restock
+              </h2>
+              <p className="text-[12px] text-[var(--text-secondary)] mt-0.5">
+                Inspect stock per color and size, and manually restock any variant with 1-click updates.
               </p>
             </div>
+
+            {/* Filter by Color */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+              <button
+                onClick={() => setPieceDetailsColorFilter('all')}
+                className={`px-3 py-1 text-[11px] label-caps uppercase tracking-wider rounded transition-all cursor-pointer ${
+                  pieceDetailsColorFilter === 'all'
+                    ? 'bg-[var(--gold)] text-black font-bold'
+                    : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                All Colors ({variants.length})
+              </button>
+
+              {colorGroups.map((clr) => (
+                <button
+                  key={clr}
+                  onClick={() => setPieceDetailsColorFilter(clr)}
+                  className={`px-3 py-1 text-[11px] label-caps uppercase tracking-wider rounded transition-all cursor-pointer whitespace-nowrap ${
+                    pieceDetailsColorFilter === clr
+                      ? 'bg-[var(--gold)] text-black font-bold'
+                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {clr}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Variants Table */}
+          <div className="overflow-x-auto border border-[var(--border-color)] bg-[var(--bg-secondary)]/10">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-[var(--bg-secondary)]/60 border-b border-[var(--border-color)] text-[11px] label-caps uppercase tracking-wider text-[var(--text-secondary)]">
+                  <th className="p-3.5">Color</th>
+                  <th className="p-3.5">Size</th>
+                  <th className="p-3.5">Variant SKU</th>
+                  <th className="p-3.5 text-center">Status</th>
+                  <th className="p-3.5 text-center">On-Hand Stock</th>
+                  <th className="p-3.5 text-center">Quick Adjust</th>
+                  <th className="p-3.5 text-right">Manual Restock</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-color)] text-[13px]">
+                {filteredVariants.map((variant) => {
+                  const inputVal = customRestockQty[variant.id] ?? 10;
+
+                  return (
+                    <tr key={variant.id} className="hover:bg-[var(--bg-secondary)]/30 transition-colors">
+                      <td className="p-3.5 font-medium text-[var(--text-primary)]">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
+                            style={{
+                              backgroundColor:
+                                masterColors.find((c) => c.name === variant.color)?.hex || '#C9A24B'
+                            }}
+                          />
+                          <span>{variant.color}</span>
+                        </div>
+                      </td>
+
+                      <td className="p-3.5">
+                        <span className="label-caps text-[11px] font-bold px-2 py-0.5 bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] font-mono">
+                          {variant.size}
+                        </span>
+                      </td>
+
+                      <td className="p-3.5 font-mono text-[12px] text-[var(--text-secondary)]">
+                        {variant.sku}
+                      </td>
+
+                      <td className="p-3.5 text-center">
+                        <span
+                          className={`label-caps text-[9.5px] px-2 py-0.5 uppercase tracking-wider font-semibold border ${
+                            variant.stock <= 0
+                              ? 'bg-rose-950/80 text-rose-400 border-rose-800'
+                              : variant.stock <= 2
+                              ? 'bg-amber-950/80 text-amber-300 border-amber-800'
+                              : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
+                          }`}
+                        >
+                          {variant.stock <= 0 ? 'Out of Stock' : variant.stock <= 2 ? 'Low Threshold' : 'In Stock'}
+                        </span>
+                      </td>
+
+                      <td className="p-3.5 text-center font-bold text-[15px] text-[var(--text-primary)] tabular-nums">
+                        {variant.stock} units
+                      </td>
+
+                      <td className="p-3.5 text-center">
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleVariantStockAdjust(selectedPiece.id, variant.id, -1, 'MANUAL_DECREMENT')}
+                            className="w-7 h-7 rounded border border-[var(--border-color)] hover:border-[var(--gold)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+                            title="Decrease by 1"
+                          >
+                            <Minus size={13} />
+                          </button>
+                          <button
+                            onClick={() => handleVariantStockAdjust(selectedPiece.id, variant.id, 1, 'MANUAL_INCREMENT')}
+                            className="w-7 h-7 rounded border border-[var(--border-color)] hover:border-[var(--gold)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+                            title="Increase by 1"
+                          >
+                            <Plus size={13} />
+                          </button>
+                        </div>
+                      </td>
+
+                      <td className="p-3.5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <input
+                            type="number"
+                            min="1"
+                            value={inputVal}
+                            onChange={(e) =>
+                              setCustomRestockQty({
+                                ...customRestockQty,
+                                [variant.id]: parseInt(e.target.value, 10) || 1
+                              })
+                            }
+                            className="w-16 bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--gold)] px-2 py-1 text-[13px] text-center font-bold text-[var(--text-primary)] outline-none rounded"
+                          />
+                          <button
+                            onClick={() => {
+                              handleVariantStockAdjust(
+                                selectedPiece.id,
+                                variant.id,
+                                inputVal,
+                                `MANUAL_RESTOCK_${variant.color}_${variant.size}`
+                              );
+                            }}
+                            className="bg-[var(--gold)] hover:brightness-110 active:scale-95 text-black font-semibold text-[11px] uppercase tracking-wider px-3 py-1.5 rounded transition-all cursor-pointer flex items-center gap-1"
+                          >
+                            <Plus size={12} />
+                            <span>Restock</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -1337,9 +1609,7 @@ export function InventoryView() {
           <h1 className="font-garamond text-[28px] sm:text-[34px] md:text-[44px] text-[var(--text-primary)] font-normal tracking-tight leading-tight m-0">
             Inventory
           </h1>
-          <p className="body-md text-[13px] sm:text-[14px] md:text-[15px] text-[var(--text-secondary)] mt-1">
-            Curate royal silhouettes, track on-hand pieces, and manage collection master.
-          </p>
+
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
@@ -1437,17 +1707,6 @@ export function InventoryView() {
             <AlertTriangle size={13} />
             <span>Low Stock ({lowStockCount})</span>
           </button>
-
-          <button
-            onClick={() => setActiveFilter('drafts')}
-            className={`pb-2.5 sm:pb-3 transition-colors border-b-2 cursor-pointer ${
-              activeFilter === 'drafts'
-                ? 'text-[var(--text-primary)] border-[var(--gold)] font-bold'
-                : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)] font-medium'
-            }`}
-          >
-            Drafts ({draftsCount})
-          </button>
         </div>
 
         {/* View Grid/List Switcher */}
@@ -1487,99 +1746,87 @@ export function InventoryView() {
       ) : viewMode === 'grid' ? (
         /* Grid Mode */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {filteredInventory.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => {
-                setSelectedPiece(item);
-                setSubView('piece_details');
-              }}
-              className="group flex flex-col cursor-pointer border border-[var(--border-color)] bg-[var(--bg-card)] p-3 sm:p-3.5 hover:border-[var(--gold)] transition-all duration-300 shadow-sm"
-            >
-              {/* Image Container with 3/4 Ratio */}
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-[var(--bg-secondary)] mb-3">
-                {item.image ? (
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[var(--text-secondary)] opacity-30">
-                    <Package size={32} />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+          {filteredInventory.map((item) => {
+            const variants = item.variants || [];
+            const colorNames = Array.from(new Set(variants.map((v) => v.color)));
 
-                {/* Collection Tag */}
-                {item.collectionTag && (
-                  <span className="absolute top-2 left-2 label-caps text-[9px] bg-black/80 text-[var(--gold)] px-2 py-0.5 border border-white/10 uppercase tracking-widest">
-                    {item.collectionTag}
-                  </span>
-                )}
+            return (
+              <div
+                key={item.id}
+                onClick={() => {
+                  setSelectedPiece(item);
+                  setPieceDetailsColorFilter('all');
+                  setSubView('piece_details');
+                }}
+                className="group flex flex-col cursor-pointer border border-[var(--border-color)] bg-[var(--bg-card)] p-3 sm:p-3.5 hover:border-[var(--gold)] transition-all duration-300 shadow-sm"
+              >
+                {/* Image Container with 3/4 Ratio */}
+                <div className="relative aspect-[3/4] w-full overflow-hidden bg-[var(--bg-secondary)] mb-3">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[var(--text-secondary)] opacity-30">
+                      <Package size={32} />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
 
-                {/* Stock Status Badge */}
-                <span
-                  className={`absolute top-2 right-2 px-2 py-0.5 label-caps text-[9px] uppercase tracking-wider font-semibold border ${
-                    item.stock <= 2
-                      ? 'bg-rose-950/90 text-rose-300 border-rose-800'
-                      : 'bg-emerald-950/90 text-emerald-300 border-emerald-800'
-                  }`}
-                >
-                  {item.stock} left
-                </span>
-              </div>
-
-              {/* Card Meta */}
-              <div className="flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-[11px] font-mono text-[var(--text-secondary)]">{item.sku}</span>
-                    <span className="text-[14px] font-semibold text-[var(--text-primary)] tabular-nums">
-                      {formatINR(item.price)}
+                  {/* Collection Tag */}
+                  {item.collectionTag && (
+                    <span className="absolute top-2 left-2 label-caps text-[9px] bg-black/80 text-[var(--gold)] px-2 py-0.5 border border-white/10 uppercase tracking-widest">
+                      {item.collectionTag}
                     </span>
-                  </div>
-                  <h3 className="font-garamond text-[17px] sm:text-[18px] text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors leading-snug line-clamp-1">
-                    {item.title}
-                  </h3>
-                  <p className="text-[12px] text-[var(--text-secondary)] line-clamp-1 mt-0.5">{item.material}</p>
-                </div>
+                  )}
 
-                <div className="flex items-center justify-between pt-3 mt-3 border-t border-[var(--border-color)]">
-                  <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => handleStockAdjust(item.id, -1)}
-                      className="w-6 h-6 rounded border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--gold)] cursor-pointer"
-                      title="Decrease stock"
-                    >
-                      <Minus size={12} />
-                    </button>
-                    <span className="text-[12px] font-semibold text-[var(--text-primary)] min-w-[20px] text-center tabular-nums">
-                      {item.stock}
-                    </span>
-                    <button
-                      onClick={() => handleStockAdjust(item.id, 1)}
-                      className="w-6 h-6 rounded border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--gold)] cursor-pointer"
-                      title="Increase stock"
-                    >
-                      <Plus size={12} />
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeletePiece(item.id);
-                    }}
-                    className="text-[var(--text-secondary)] hover:text-rose-500 p-1 cursor-pointer transition-colors"
-                    title="Delete piece"
+                  {/* Stock Status Badge */}
+                  <span
+                    className={`absolute top-2 right-2 px-2 py-0.5 label-caps text-[9px] uppercase tracking-wider font-semibold border ${
+                      item.stock <= 0
+                        ? 'bg-rose-950/90 text-rose-300 border-rose-800'
+                        : item.stock <= 2
+                        ? 'bg-amber-950/90 text-amber-300 border-amber-800'
+                        : 'bg-emerald-950/90 text-emerald-300 border-emerald-800'
+                    }`}
                   >
-                    <Trash2 size={15} />
-                  </button>
+                    {item.stock} total units
+                  </span>
+                </div>
+
+                {/* Card Meta */}
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-[11px] font-mono text-[var(--text-secondary)]">{item.sku}</span>
+                      <span className="text-[14px] font-semibold text-[var(--text-primary)] tabular-nums">
+                        {formatINR(item.price)}
+                      </span>
+                    </div>
+                    <h3 className="font-garamond text-[17px] sm:text-[18px] text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors leading-snug line-clamp-1">
+                      {item.title}
+                    </h3>
+                    <p className="text-[12px] text-[var(--text-secondary)] line-clamp-1 mt-0.5">{item.material}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 mt-3 border-t border-[var(--border-color)]">
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-[var(--text-secondary)]">
+                      <span className="font-semibold text-[var(--text-primary)]">{colorNames.length} Colors</span>
+                      <span>•</span>
+                      <span>{variants.length} Variants</span>
+                    </div>
+
+                    <span className="text-[11px] label-caps text-[var(--gold)] group-hover:underline flex items-center gap-1">
+                      <span>Restock / Matrix</span>
+                      <ArrowRight size={12} />
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         /* List Mode */
@@ -1590,55 +1837,102 @@ export function InventoryView() {
                 <th className="p-3.5">Piece</th>
                 <th className="p-3.5">SKU</th>
                 <th className="p-3.5">Collection</th>
+                <th className="p-3.5">Colors & Variants</th>
                 <th className="p-3.5">Price</th>
-                <th className="p-3.5">Stock</th>
+                <th className="p-3.5">Total Units</th>
                 <th className="p-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)] text-[13px]">
-              {filteredInventory.map((item) => (
-                <tr
-                  key={item.id}
-                  onClick={() => {
-                    setSelectedPiece(item);
-                    setSubView('piece_details');
-                  }}
-                  className="hover:bg-[var(--bg-secondary)]/40 transition-colors cursor-pointer"
-                >
-                  <td className="p-3.5 flex items-center gap-3">
-                    <div className="w-10 h-12 bg-[var(--bg-secondary)] overflow-hidden shrink-0 border border-[var(--border-color)]">
-                      {item.image ? (
-                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[var(--text-secondary)] opacity-30">
-                          <Package size={16} />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <span className="font-semibold text-[var(--text-primary)] line-clamp-1">{item.title}</span>
-                      <span className="text-[11.5px] text-[var(--text-secondary)] line-clamp-1">{item.material}</span>
-                    </div>
-                  </td>
-                  <td className="p-3.5 font-mono text-[12px] text-[var(--text-secondary)]">{item.sku}</td>
-                  <td className="p-3.5 text-[var(--gold)] font-medium">{item.collectionTag}</td>
-                  <td className="p-3.5 font-semibold text-[var(--text-primary)] tabular-nums">{formatINR(item.price)}</td>
-                  <td className="p-3.5">
-                    <span className={item.stock <= 2 ? 'text-rose-500 font-semibold' : 'text-emerald-500 font-semibold'}>
-                      {item.stock} in stock
-                    </span>
-                  </td>
-                  <td className="p-3.5 text-right" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => handleDeletePiece(item.id)}
-                      className="p-1.5 text-[var(--text-secondary)] hover:text-rose-500 transition-colors cursor-pointer"
-                      title="Delete Piece"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {filteredInventory.map((item) => {
+                const variants = item.variants || [];
+                const colorNames = Array.from(new Set(variants.map((v) => v.color)));
+
+                return (
+                  <tr
+                    key={item.id}
+                    onClick={() => {
+                      setSelectedPiece(item);
+                      setPieceDetailsColorFilter('all');
+                      setSubView('piece_details');
+                    }}
+                    className="hover:bg-[var(--bg-secondary)]/40 transition-colors cursor-pointer"
+                  >
+                    <td className="p-3.5 flex items-center gap-3">
+                      <div className="w-10 h-12 bg-[var(--bg-secondary)] overflow-hidden shrink-0 border border-[var(--border-color)]">
+                        {item.image ? (
+                          <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[var(--text-secondary)] opacity-30">
+                            <Package size={16} />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-[14px] text-[var(--text-primary)] block hover:text-[var(--gold)]">
+                          {item.title}
+                        </span>
+                        <span className="text-[12px] text-[var(--text-secondary)] line-clamp-1">{item.material}</span>
+                      </div>
+                    </td>
+
+                    <td className="p-3.5 font-mono text-[12px] text-[var(--text-secondary)]">{item.sku}</td>
+                    <td className="p-3.5">
+                      <span className="label-caps text-[10px] bg-[var(--gold)]/10 text-[var(--gold)] px-2 py-0.5 rounded">
+                        {item.collectionTag}
+                      </span>
+                    </td>
+
+                    <td className="p-3.5 text-[12.5px] text-[var(--text-secondary)]">
+                      <span>{colorNames.length} Colors ({variants.length} Sizes)</span>
+                    </td>
+
+                    <td className="p-3.5 font-bold text-[var(--text-primary)] tabular-nums">{formatINR(item.price)}</td>
+
+                    <td className="p-3.5">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            item.stock <= 0
+                              ? 'bg-rose-500'
+                              : item.stock <= 2
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
+                          }`}
+                        />
+                        <span className="font-bold text-[var(--text-primary)] tabular-nums">{item.stock} units</span>
+                      </div>
+                    </td>
+
+                    <td className="p-3.5 text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPiece(item);
+                          setPieceDetailsColorFilter('all');
+                          setSubView('piece_details');
+                        }}
+                        className="p-1.5 text-[var(--gold)] hover:bg-[var(--gold)]/10 rounded transition-colors mr-2 cursor-pointer inline-flex items-center gap-1 label-caps text-[10px]"
+                        title="Manage Matrix"
+                      >
+                        <SlidersHorizontal size={14} />
+                        <span>Restock</span>
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePiece(item.id);
+                        }}
+                        className="p-1.5 text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 rounded transition-colors cursor-pointer inline-flex"
+                        title="Delete Piece"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

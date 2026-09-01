@@ -59,8 +59,9 @@
     --border-color: #e2d9ca;
     --border-subtle: #f0e7d8;
 
-    --btn-primary-bg: #0A0A0A;
-    --btn-primary-text: #F4EFE6;
+    --btn-primary-bg: #C9A24B;
+    --btn-primary-text: #0A0A0A;
+    --btn-primary-hover: #D8B35C;
   }
 
   .dark {

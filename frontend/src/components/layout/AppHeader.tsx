@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Heart, Search, ShoppingBag, ChevronLeft } from 'lucide-react';
 import { ProfileAvatar } from '../ui/ProfileAvatar.js';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCategories, type Category } from '../../api/categories.js';
 
 interface AppHeaderProps {
   cartItemCount?: number;
@@ -25,6 +27,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     setIsLoggedIn(Boolean(localStorage.getItem('ithihasa_access_token')));
   }, [location.pathname]);
 
+  const { data: navCategories = [] } = useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: fetchCategories,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const isPDP = location.pathname.startsWith('/products/');
 
   return (
@@ -44,9 +52,15 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
             <nav className="hidden lg:flex items-center space-x-6 text-[13px] font-semibold tracking-[0.15em] uppercase text-[var(--text-primary)]">
               <Link to="/shop" className="hover:text-[var(--gold)] transition-colors">Collection</Link>
-              <Link to="/shop?category=heritage-kurtas" className="hover:text-[var(--gold)] transition-colors">Kurtas</Link>
-              <Link to="/shop?category=bandhgalas-jackets" className="hover:text-[var(--gold)] transition-colors">Bandhgalas</Link>
-              <Link to="/shop?category=royal-shawls-stoles" className="hover:text-[var(--gold)] transition-colors">Shawls</Link>
+              {navCategories.slice(0, 4).map((cat) => (
+                <Link
+                  key={cat.id}
+                  to={`/shop?category=${cat.slug}`}
+                  className="hover:text-[var(--gold)] transition-colors"
+                >
+                  {cat.name}
+                </Link>
+              ))}
             </nav>
           </div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AppHeader } from './AppHeader.js';
 import { BottomNav } from './BottomNav.js';
+import { PWAInstallBanner } from './PWAInstallBanner.js';
 import {
   X,
   Compass,
@@ -13,11 +14,11 @@ import {
   MapPin,
   User,
   LogOut,
-  Smartphone,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCart } from '../../api/cart.js';
 import { fetchWishlist } from '../../api/wishlist.js';
+import { fetchCategories, type Category } from '../../api/categories.js';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -37,30 +38,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   useEffect(() => {
     setIsLoggedIn(Boolean(localStorage.getItem('ithihasa_access_token')));
   }, [location.pathname]);
-
-  // PWA Install prompt listener
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-      }
-    } else {
-      alert('To install Ithihasa on your device:\n\n• iOS (Safari): Tap Share ➔ "Add to Home Screen"\n• Android (Chrome): Tap browser menu (⋮) ➔ "Install App"');
-    }
-  };
 
   // Auto-close sidebar on any route or parameter change
   useEffect(() => {
@@ -84,6 +61,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const cartItemCount = cart?.items?.reduce((total: number, item: any) => total + item.quantity, 0) || 0;
   const wishlistItemCount = Array.isArray(wishlist) ? wishlist.length : 0;
 
+  // Dynamic categories for footer nav
+  const { data: sidebarCategories = [] } = useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: fetchCategories,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const handleSignOut = () => {
     localStorage.removeItem('ithihasa_access_token');
     localStorage.removeItem('ithihasa_user_profile');
@@ -94,6 +78,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col antialiased transition-colors duration-300 font-sans selection:bg-[var(--gold)] selection:text-[#0A0A0A]">
+      {/* Top PWA Install Banner */}
+      <PWAInstallBanner />
+
       {/* Top Header */}
       <AppHeader
         cartItemCount={cartItemCount}
@@ -168,11 +155,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                         <User size={15} />
                       </div>
                       <div>
-                        <span className="label-caps text-[11px] uppercase tracking-wider text-[var(--gold)] font-bold block">
+                        <span className="label-caps text-[11.5px] uppercase tracking-wider text-[var(--gold)] font-bold block">
                           Sign In / Register
-                        </span>
-                        <span className="body-sm text-[11px] text-[var(--text-secondary)]">
-                          Access orders & wishlist
                         </span>
                       </div>
                     </div>
@@ -229,22 +213,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     Customer Care
                   </span>
                 </Link>
-
-                {/* 4. Install App */}
-                <button
-                  type="button"
-                  onClick={handleInstallClick}
-                  className="group flex items-center space-x-4 py-2.5 text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors duration-300 ease-out text-left w-full cursor-pointer"
-                >
-                  <Smartphone
-                    size={19}
-                    strokeWidth={1.75}
-                    className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0"
-                  />
-                  <span className="label-caps tracking-widest uppercase text-[12px]">
-                    Install Mobile App
-                  </span>
-                </button>
 
                 {/* Sign Out (Only when authenticated) */}
                 {isLoggedIn && (
@@ -310,10 +278,16 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
               Collections
             </h4>
             <ul className="space-y-2 text-[14px] text-[var(--text-secondary)]">
-              <li><Link to="/shop?category=heritage-kurtas" className="hover:text-[var(--text-primary)]">Heritage Kurtas</Link></li>
-              <li><Link to="/shop?category=bandhgalas-jackets" className="hover:text-[var(--text-primary)]">Bandhgalas & Jackets</Link></li>
-              <li><Link to="/shop?category=dhoti-bottoms" className="hover:text-[var(--text-primary)]">Dhoti & Tailored Bottoms</Link></li>
-              <li><Link to="/shop?category=royal-shawls-stoles" className="hover:text-[var(--text-primary)]">Royal Shawls & Stoles</Link></li>
+              {sidebarCategories.map((cat) => (
+                <li key={cat.id}>
+                  <Link to={`/shop?category=${cat.slug}`} className="hover:text-[var(--text-primary)]">
+                    {cat.name}
+                  </Link>
+                </li>
+              ))}
+              {sidebarCategories.length === 0 && (
+                <li><Link to="/shop" className="hover:text-[var(--text-primary)]">View All</Link></li>
+              )}
             </ul>
           </div>
 

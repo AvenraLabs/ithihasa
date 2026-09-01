@@ -9,6 +9,7 @@
     "start": "node dist/app/server.js",
     "db:migrate": "tsx src/database/scripts/migrate.ts",
     "db:seed": "tsx src/database/scripts/seed.ts",
+    "db:seed:admin": "tsx src/database/scripts/seed-admin.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

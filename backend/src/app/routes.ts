@@ -41,3 +41,7 @@ apiRouter.use('/upload', uploadRouter);
 apiRouter.use('/admin', adminRouter);
 apiRouter.use('/admin/inventory', inventoryRouter);
 apiRouter.use('/admin/upload', uploadRouter);
+
+// Public settings endpoint — readable by storefront (no auth required)
+import { adminController } from '../modules/admin/admin.controller.js';
+apiRouter.get('/settings', adminController.getSettings.bind(adminController));

@@ -30,62 +30,15 @@ export function StorefrontCMSView() {
   const [heroCtaText, setHeroCtaText] = useState('EXPLORE COLLECTION');
   const [heroCtaLink, setHeroCtaLink] = useState('/shop');
 
-  // 2. Highlighted 2 Silhouettes
+  // 2. Highlighted Silhouettes
   const [showHighlighted, setShowHighlighted] = useState(true);
-  const [highlightedItems, setHighlightedItems] = useState([
-    {
-      id: 'h1',
-      title: 'Kanchipuram Heirloom Silk Saree',
-      categoryTag: 'Heritage Saree',
-      price: 34500,
-      imageUrl: '',
-      slug: 'kanchipuram-heirloom-silk-saree'
-    },
-    {
-      id: 'h2',
-      title: 'Imperial Velvet Bandhgala Jacket',
-      categoryTag: 'Bandhgalas & Jackets',
-      price: 48000,
-      imageUrl: '',
-      slug: 'imperial-velvet-bandhgala-jacket'
-    }
-  ]);
+  const [highlightedItems, setHighlightedItems] = useState([]);
 
   // 3. Trending Collections
-  const [trendingCollections, setTrendingCollections] = useState([
-    {
-      name: 'Heritage Kurtas',
-      slug: 'heritage-kurtas',
-      itemCount: 14,
-      imageUrl: ''
-    },
-    {
-      name: 'Bandhgalas & Jackets',
-      slug: 'bandhgalas-jackets',
-      itemCount: 8,
-      imageUrl: ''
-    },
-    {
-      name: 'Royal Shawls & Stoles',
-      slug: 'royal-shawls-stoles',
-      itemCount: 12,
-      imageUrl: ''
-    },
-    {
-      name: 'Atelier Bespoke',
-      slug: 'atelier-bespoke',
-      itemCount: 6,
-      imageUrl: ''
-    }
-  ]);
+  const [trendingCollections, setTrendingCollections] = useState([]);
 
   // 4. Quick Query Tags State
-  const [quickQueryTags, setQuickQueryTags] = useState([
-    { label: 'Silk Shirts', query: 'silk shirt' },
-    { label: 'Heritage Kurtas', query: 'kurta' },
-    { label: 'Bandhgalas', query: 'bandhgala' },
-    { label: 'Pashmina', query: 'pashmina' },
-  ]);
+  const [quickQueryTags, setQuickQueryTags] = useState([]);
 
   // Load from live backend
   useEffect(() => {
@@ -105,13 +58,13 @@ export function StorefrontCMSView() {
           if (data.showHighlighted !== undefined) {
             setShowHighlighted(data.showHighlighted);
           }
-          if (data.highlightedItems && Array.isArray(data.highlightedItems) && data.highlightedItems.length > 0) {
+          if (Array.isArray(data.highlightedItems)) {
             setHighlightedItems(data.highlightedItems);
           }
-          if (data.trendingCollections && Array.isArray(data.trendingCollections) && data.trendingCollections.length > 0) {
+          if (Array.isArray(data.trendingCollections)) {
             setTrendingCollections(data.trendingCollections);
           }
-          if (data.quickQueryTags && Array.isArray(data.quickQueryTags) && data.quickQueryTags.length > 0) {
+          if (Array.isArray(data.quickQueryTags)) {
             setQuickQueryTags(data.quickQueryTags);
           }
         }
@@ -148,6 +101,22 @@ export function StorefrontCMSView() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAddHighlighted = () => {
+    const newItem = {
+      id: `h-${Date.now()}`,
+      title: 'New Highlighted Silhouette',
+      categoryTag: 'Heritage Piece',
+      price: 25000,
+      imageUrl: '',
+      slug: 'new-piece'
+    };
+    setHighlightedItems([...highlightedItems, newItem]);
+  };
+
+  const handleRemoveHighlighted = (index) => {
+    setHighlightedItems(highlightedItems.filter((_, i) => i !== index));
   };
 
   const handleUpdateHighlighted = (index, field, value) => {
@@ -337,7 +306,7 @@ export function StorefrontCMSView() {
             </div>
           </section>
 
-          {/* SECTION 2: 2 HIGHLIGHTED ATELIER ITEMS */}
+          {/* SECTION 2: HIGHLIGHTED ATELIER ITEMS */}
           <section className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 rounded-lg shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-4">
               <div className="flex items-center gap-3">
@@ -349,120 +318,145 @@ export function StorefrontCMSView() {
                     className="text-[20px] sm:text-[24px] font-normal text-[var(--text-primary)]"
                     style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
                   >
-                    2. Two Highlighted Silhouettes Above "View All"
+                    2. Highlighted Silhouettes Above "View All"
                   </h2>
                   <p className="text-[12px] text-[var(--text-secondary)]">
-                    The twin signature pieces presented to patrons immediately beneath the hero banner.
+                    The signature pieces presented to patrons beneath the hero banner. When all items are deleted, this entire section is automatically hidden from the live boutique.
                   </p>
                 </div>
               </div>
 
-              {/* Checkbox Toggle */}
-              <label className="flex items-center gap-2.5 cursor-pointer bg-[var(--bg-secondary)] px-3.5 py-2 border border-[var(--border-color)] hover:border-[var(--gold)] transition-colors self-start sm:self-auto shrink-0">
-                <input
-                  type="checkbox"
-                  checked={showHighlighted}
-                  onChange={(e) => setShowHighlighted(e.target.checked)}
-                  className="w-4 h-4 accent-[var(--gold)] cursor-pointer"
-                />
-                <span className="label-caps text-[11px] uppercase tracking-wider text-[var(--text-primary)] font-semibold">
-                  {showHighlighted ? '✓ Section Enabled on Live App' : '✕ Hidden on Live App'}
-                </span>
-              </label>
+              {/* Add Button */}
+              <button
+                type="button"
+                onClick={handleAddHighlighted}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[var(--gold)] text-[#0A0A0A] font-semibold label-caps text-[11px] tracking-wider uppercase rounded hover:brightness-110 transition-all cursor-pointer self-start sm:self-auto shrink-0 shadow-sm"
+              >
+                <Plus size={14} />
+                <span>Add Silhouette</span>
+              </button>
             </div>
 
-            {!showHighlighted && (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-300 text-[12px] flex items-center gap-2">
-                <span>⚠️ This container is currently disabled and will not be displayed on the customer storefront. Check the box above to re-enable it.</span>
+            {highlightedItems.length === 0 ? (
+              <div className="p-8 text-center border-2 border-dashed border-[var(--border-color)] rounded-lg space-y-3 bg-[var(--bg-secondary)]/30">
+                <Compass size={28} className="mx-auto text-[var(--gold)] opacity-70" />
+                <p className="font-garamond text-[18px] text-[var(--text-primary)]">No Highlighted Silhouettes Active</p>
+                <p className="text-[12.5px] text-[var(--text-secondary)] max-w-md mx-auto">
+                  All pieces are deleted. This entire section (including heading, text, and empty margins) is automatically hidden on the customer storefront.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleAddHighlighted}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[var(--gold)] text-[#0A0A0A] font-semibold label-caps text-[11px] uppercase tracking-wider rounded cursor-pointer mt-2 shadow-sm hover:brightness-110 transition-all"
+                >
+                  <Plus size={14} />
+                  <span>Add First Silhouette</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {highlightedItems.map((item, idx) => (
+                  <div
+                    key={item.id || idx}
+                    className="bg-[var(--bg-secondary)] border border-[var(--border-color)] p-5 rounded-lg space-y-4 relative group shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="label-caps text-[11px] font-bold text-[var(--gold)] tracking-widest uppercase">
+                        Highlighted Piece #{idx + 1}
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[13px] font-semibold text-[var(--text-primary)] tabular-nums">
+                          ₹{Number(item.price || 0).toLocaleString('en-IN')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveHighlighted(idx)}
+                          className="p-1 text-[var(--text-secondary)] hover:text-rose-500 rounded transition-colors cursor-pointer"
+                          title="Remove silhouette"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4 items-center">
+                      <div className="w-20 h-24 bg-[var(--bg-card)] border border-[var(--border-color)] shrink-0 overflow-hidden rounded">
+                        {item.imageUrl ? (
+                          <img
+                            src={resolveMediaUrl(item.imageUrl)}
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)] text-[10px] text-center p-1">
+                            No image
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div>
+                          <label className="text-[10.5px] uppercase text-[var(--text-secondary)] font-semibold block">
+                            Piece Title
+                          </label>
+                          <input
+                            type="text"
+                            value={item.title}
+                            onChange={(e) => handleUpdateHighlighted(idx, 'title', e.target.value)}
+                            className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-3 py-1.5 text-[13px] text-[var(--text-primary)] outline-none rounded"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10.5px] uppercase text-[var(--text-secondary)] font-semibold block">
+                            Category Label
+                          </label>
+                          <input
+                            type="text"
+                            value={item.categoryTag}
+                            onChange={(e) => handleUpdateHighlighted(idx, 'categoryTag', e.target.value)}
+                            className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-3 py-1.5 text-[13px] text-[var(--text-primary)] outline-none rounded"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[10.5px] uppercase text-[var(--text-secondary)] font-semibold block">
+                          Price (₹ INR)
+                        </label>
+                        <input
+                          type="number"
+                          value={item.price}
+                          onChange={(e) => handleUpdateHighlighted(idx, 'price', Number(e.target.value))}
+                          className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-3 py-1.5 text-[13px] tabular-nums text-[var(--text-primary)] outline-none rounded"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10.5px] uppercase text-[var(--text-secondary)] font-semibold block">
+                          Target Product Slug
+                        </label>
+                        <input
+                          type="text"
+                          value={item.slug}
+                          onChange={(e) => handleUpdateHighlighted(idx, 'slug', e.target.value)}
+                          className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-3 py-1.5 text-[13px] text-[var(--text-primary)] outline-none rounded"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <ImageUploader
+                        value={item.imageUrl}
+                        onChange={(url) => handleUpdateHighlighted(idx, 'imageUrl', url)}
+                        folder="storefront"
+                        label={`PIECE #${idx + 1} PHOTOGRAPHY`}
+                        helperText="Upload image file"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {highlightedItems.map((item, idx) => (
-                <div
-                  key={item.id || idx}
-                  className="bg-[var(--bg-secondary)] border border-[var(--border-color)] p-5 rounded-lg space-y-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="label-caps text-[11px] font-bold text-[var(--gold)] tracking-widest uppercase">
-                      Highlighted Piece #{idx + 1}
-                    </span>
-                    <span className="text-[13px] font-semibold text-[var(--text-primary)] tabular-nums">
-                      ₹{Number(item.price || 0).toLocaleString('en-IN')}
-                    </span>
-                  </div>
-
-                  <div className="flex gap-4 items-center">
-                    <div className="w-20 h-24 bg-black border border-[var(--border-color)] shrink-0 overflow-hidden rounded">
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div>
-                        <label className="text-[10.5px] uppercase text-[var(--text-secondary)] font-semibold block">
-                          Piece Title
-                        </label>
-                        <input
-                          type="text"
-                          value={item.title}
-                          onChange={(e) => handleUpdateHighlighted(idx, 'title', e.target.value)}
-                          className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-3 py-1.5 text-[13px] text-[var(--text-primary)] outline-none rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10.5px] uppercase text-[var(--text-secondary)] font-semibold block">
-                          Category Label
-                        </label>
-                        <input
-                          type="text"
-                          value={item.categoryTag}
-                          onChange={(e) => handleUpdateHighlighted(idx, 'categoryTag', e.target.value)}
-                          className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-3 py-1.5 text-[13px] text-[var(--text-primary)] outline-none rounded"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10.5px] uppercase text-[var(--text-secondary)] font-semibold block">
-                        Price (₹ INR)
-                      </label>
-                      <input
-                        type="number"
-                        value={item.price}
-                        onChange={(e) => handleUpdateHighlighted(idx, 'price', Number(e.target.value))}
-                        className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-3 py-1.5 text-[13px] tabular-nums text-[var(--text-primary)] outline-none rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10.5px] uppercase text-[var(--text-secondary)] font-semibold block">
-                        Target Product Slug
-                      </label>
-                      <input
-                        type="text"
-                        value={item.slug}
-                        onChange={(e) => handleUpdateHighlighted(idx, 'slug', e.target.value)}
-                        className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-3 py-1.5 text-[13px] text-[var(--text-primary)] outline-none rounded"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <ImageUploader
-                      value={item.imageUrl}
-                      onChange={(url) => handleUpdateHighlighted(idx, 'imageUrl', url)}
-                      folder="storefront"
-                      label={`PIECE #${idx + 1} PHOTOGRAPHY`}
-                      helperText="Upload image file"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
           </section>
 
           {/* SECTION 3: TRENDING COLLECTIONS TAGS */}

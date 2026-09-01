@@ -64,6 +64,13 @@ export function OrdersView({ onSelectOrder }) {
     loadOrders();
   }, [statusFilter, searchQuery]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchQuery]);
+
   const filteredOrders = orders.filter((order) => {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     const matchesSearch =
@@ -72,6 +79,11 @@ export function OrdersView({ onSelectOrder }) {
       order.customerEmail.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / itemsPerPage));
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const startIndex = filteredOrders.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const endIndex = Math.min(currentPage * itemsPerPage, filteredOrders.length);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -171,12 +183,12 @@ export function OrdersView({ onSelectOrder }) {
 
       {/* Mobile Card List View (< 640px) */}
       <div className="block sm:hidden space-y-3">
-        {filteredOrders.length === 0 ? (
+        {paginatedOrders.length === 0 ? (
           <div className="p-8 text-center bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] text-[14px]">
             No orders found matching the selected filters.
           </div>
         ) : (
-          filteredOrders.map((order) => (
+          paginatedOrders.map((order) => (
             <div
               key={order.id}
               onClick={() => onSelectOrder?.(order)}
@@ -240,14 +252,14 @@ export function OrdersView({ onSelectOrder }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border-color)] font-manrope text-[14px]">
-            {filteredOrders.length === 0 ? (
+            {paginatedOrders.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-12 text-center text-[var(--text-secondary)]">
                   No orders found matching the selected filters.
                 </td>
               </tr>
             ) : (
-              filteredOrders.map((order) => (
+              paginatedOrders.map((order) => (
                 <tr
                   key={order.id}
                   className="hover:bg-[var(--bg-secondary)]/40 transition-colors group cursor-pointer"
@@ -309,21 +321,41 @@ export function OrdersView({ onSelectOrder }) {
         </table>
 
         {/* Pagination Footer */}
-        <div className="p-4 border-t border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-secondary)]/20 text-[13px] text-[var(--text-secondary)]">
-          <span>{filteredOrders.length > 0 ? `Showing 1 to ${filteredOrders.length} of ${orders.length} orders` : 'Showing 0 orders'}</span>
+        <div className="p-4 border-t border-[var(--border-color)] flex flex-col sm:flex-row justify-between items-center gap-3 bg-[var(--bg-secondary)]/20 text-[13px] text-[var(--text-secondary)]">
+          <span>{filteredOrders.length > 0 ? `Showing ${startIndex} to ${endIndex} of ${filteredOrders.length} orders` : 'Showing 0 orders'}</span>
           <div className="flex items-center gap-2">
             <button
-              disabled
-              className="p-1.5 border border-[var(--border-color)] rounded opacity-40 cursor-not-allowed"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className={`p-1.5 border border-[var(--border-color)] rounded transition-colors ${
+                currentPage <= 1 ? 'opacity-40 cursor-not-allowed' : 'hover:border-[var(--gold)] text-[var(--text-primary)] cursor-pointer'
+              }`}
+              title="Previous Page"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="px-2.5 py-1 bg-[var(--bg-card)] border border-[var(--border-color)] font-semibold text-[var(--text-primary)] rounded text-[12px]">
-              1
-            </span>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+              <button
+                key={num}
+                onClick={() => setCurrentPage(num)}
+                className={`w-8 h-8 flex items-center justify-center font-semibold rounded text-[12px] transition-all cursor-pointer ${
+                  currentPage === num
+                    ? 'bg-[var(--gold)] text-black shadow-sm'
+                    : 'bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--gold)]'
+                }`}
+              >
+                {num}
+              </button>
+            ))}
+
             <button
-              disabled
-              className="p-1.5 border border-[var(--border-color)] rounded opacity-40 cursor-not-allowed"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className={`p-1.5 border border-[var(--border-color)] rounded transition-colors ${
+                currentPage >= totalPages ? 'opacity-40 cursor-not-allowed' : 'hover:border-[var(--gold)] text-[var(--text-primary)] cursor-pointer'
+              }`}
+              title="Next Page"
             >
               <ChevronRight size={16} />
             </button>

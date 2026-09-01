@@ -4,7 +4,7 @@ import { NotFoundError } from '../../common/errors/index.js';
 export class UserService {
   public async getProfile(userId: string) {
     const user = await User.findByPk(userId, {
-      attributes: ['id', 'email', 'name', 'phone', 'phone_verified', 'role', 'avatar_url', 'created_at'],
+      attributes: ['id', 'email', 'name', 'phone', 'phone_verified', 'role', 'avatar_url', 'tier', 'created_at'],
       include: [
         {
           model: Address,

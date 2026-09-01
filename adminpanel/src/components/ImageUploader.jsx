@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Image as ImageIcon, Loader2, Check, X } from 'lucide-react';
-import { uploadImage } from '../api/upload.js';
+import { uploadImage, deleteImage } from '../api/upload.js';
 import { resolveMediaUrl } from '../api/client.js';
 import { toast } from 'sonner';
 
@@ -26,7 +26,7 @@ export function ImageUploader({
 
     try {
       setIsUploading(true);
-      const result = await uploadImage(file, folder);
+      const result = await uploadImage(file, folder, value);
       if (result && result.url) {
         onChange(result.url);
         toast.success('Image uploaded successfully to server.');
@@ -113,6 +113,9 @@ export function ImageUploader({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
+                if (value) {
+                  deleteImage(value);
+                }
                 onChange('');
               }}
               className="p-1 text-[var(--text-secondary)] hover:text-rose-500 rounded cursor-pointer"

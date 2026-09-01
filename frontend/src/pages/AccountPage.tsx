@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, Heart, MapPin, CreditCard, ChevronRight, LogOut } from 'lucide-react';
+import { Package, Heart, MapPin, ChevronRight, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeIcon } from '../components/ui/ThemeIcon.js';
 
@@ -25,12 +25,6 @@ const NAV_ITEMS = [
     label: 'Addresses',
     subtitle: 'Manage delivery locations',
     to: '/account/addresses',
-  },
-  {
-    icon: CreditCard,
-    label: 'Payments',
-    subtitle: 'Secure methods and wallets',
-    to: '/account/payments',
   },
 ];
 
@@ -100,7 +94,7 @@ export const AccountPage: React.FC = () => {
 
             {/* Email */}
             <p className="body-sm text-[13px] text-[var(--text-secondary)] mb-5">
-              {isLoggedIn ? profileData.email : 'Sign in to access your atelier profile & orders'}
+              {isLoggedIn ? profileData.email : 'Sign in to access your profile & orders'}
             </p>
 
             {/* Edit / Sign In Button */}
@@ -130,7 +124,7 @@ export const AccountPage: React.FC = () => {
               <p
                 className="text-[16px] font-semibold text-[var(--gold)] tracking-wide"
               >
-                {isLoggedIn ? 'Noir Tier' : 'Atelier Visitor'}
+                {isLoggedIn ? `${profileData.tier || 'Novice'}` : 'Visitor'}
               </p>
             </div>
             {/* Waves / Tier icon */}

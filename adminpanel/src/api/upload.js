@@ -9,7 +9,7 @@ const getBaseUrl = () => {
   return '/api/v1';
 };
 
-export async function uploadImage(file, folder = 'products') {
+export async function uploadImage(file, folder = 'products', previousUrl = '') {
   const formData = new FormData();
   formData.append('file', file);
 
@@ -19,7 +19,8 @@ export async function uploadImage(file, folder = 'products') {
   };
 
   const API_BASE_URL = getBaseUrl().replace(/\/+$/, '');
-  const url = `${API_BASE_URL}/admin/upload?folder=${encodeURIComponent(folder)}`;
+  const prevQuery = previousUrl ? `&previousUrl=${encodeURIComponent(previousUrl)}` : '';
+  const url = `${API_BASE_URL}/admin/upload?folder=${encodeURIComponent(folder)}${prevQuery}`;
 
   const res = await fetch(url, {
     method: 'POST',
@@ -81,4 +82,20 @@ export async function uploadMultipleImages(files, folder = 'products') {
   }
 
   return result.data !== undefined ? result.data : result;
+}
+
+export async function deleteImage(imageUrl) {
+  if (!imageUrl) return;
+  const token = localStorage.getItem('ithihasa_admin_token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+  const API_BASE_URL = getBaseUrl().replace(/\/+$/, '');
+  const url = `${API_BASE_URL}/admin/upload?url=${encodeURIComponent(imageUrl)}`;
+  try {
+    await fetch(url, { method: 'DELETE', headers });
+  } catch (e) {
+    console.warn('Delete image note:', e);
+  }
 }

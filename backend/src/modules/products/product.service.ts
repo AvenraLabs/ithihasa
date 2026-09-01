@@ -11,7 +11,12 @@ import {
   WishlistItem,
   CartItem,
 } from '../../database/index.js';
-import { NotFoundError, ConflictError } from '../../common/errors/index.js';
+import {
+  NotFoundError,
+  ConflictError,
+  BusinessRuleError,
+} from '../../common/errors/index.js';
+import { cleanupMultipleUploadedFiles } from '../../common/utils/file-cleanup.js';
 
 export class ProductService {
   public async getProducts(filters: any) {
@@ -293,6 +298,18 @@ export class ProductService {
 
     const t = await sequelize.transaction();
     try {
+      // Collect all image URLs for disk cleanup
+      const images = await ProductImage.findAll({ where: { product_id: product.id }, transaction: t });
+      const imageUrls: string[] = images.map((img) => img.url);
+
+      if (product.metadata && typeof product.metadata === 'object' && Array.isArray((product.metadata as any).colorSwatches)) {
+        (product.metadata as any).colorSwatches.forEach((swatch: any) => {
+          if (Array.isArray(swatch.images)) {
+            imageUrls.push(...swatch.images);
+          }
+        });
+      }
+
       const variants = await ProductVariant.findAll({ where: { product_id: product.id }, transaction: t });
       const variantIds = variants.map((v) => v.id);
 
@@ -309,7 +326,11 @@ export class ProductService {
 
       await product.destroy({ transaction: t });
       await t.commit();
-      return { success: true, message: 'Product deleted permanently' };
+
+      // Delete files from disk in uploads folder
+      cleanupMultipleUploadedFiles(imageUrls);
+
+      return { success: true, message: 'Product deleted permanently and uploaded images cleaned' };
     } catch (err) {
       await t.rollback();
       throw err;

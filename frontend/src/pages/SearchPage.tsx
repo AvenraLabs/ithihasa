@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProducts, type Product } from '../api/products.js';
 import { fetchStorefrontData } from '../api/merchandising.js';
-import { Search as SearchIcon, X, History, ArrowRight } from 'lucide-react';
+import { Search as SearchIcon, X, History, ArrowRight, Compass } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const SearchPage: React.FC = () => {
@@ -70,14 +70,7 @@ export const SearchPage: React.FC = () => {
   };
 
   const trendingCollections = cms?.trendingCollections || [];
-  const quickQueryTags = cms?.quickQueryTags && cms.quickQueryTags.length > 0
-    ? cms.quickQueryTags
-    : [
-        { label: 'Silk Shirts', query: 'silk shirt' },
-        { label: 'Heritage Kurtas', query: 'kurta' },
-        { label: 'Bandhgalas', query: 'bandhgala' },
-        { label: 'Pashmina', query: 'pashmina' },
-      ];
+  const quickQueryTags = cms?.quickQueryTags || [];
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors">
@@ -195,107 +188,134 @@ export const SearchPage: React.FC = () => {
           </div>
         ) : (
           /* Default Stitch Search Screen Content Grid (Recent Searches + Trending Bento) */
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 max-w-5xl mx-auto">
-            {/* Left Column: Recent Searches & Suggestions (5 cols) */}
-            <div className="md:col-span-5 flex flex-col gap-8">
-              {/* Recent Searches */}
-              {recentSearches.length > 0 && (
-                <section>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="label-caps text-[12px] text-[var(--gold)] tracking-[0.15em] uppercase font-bold">
-                      Recent Searches
-                    </h2>
-                    <button
-                      onClick={clearAllRecent}
-                      className="text-[11px] text-[var(--text-secondary)] hover:text-[var(--gold)] cursor-pointer"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                  <ul className="flex flex-col gap-3">
-                    {recentSearches.map((term, index) => (
-                      <li key={index}>
+          recentSearches.length === 0 && quickQueryTags.length === 0 && trendingCollections.length === 0 ? (
+            <div className="py-16 text-center max-w-lg mx-auto">
+              <Compass size={36} className="mx-auto text-[var(--gold)] mb-3.5 opacity-80" />
+              <h2
+                className="text-[26px] sm:text-[30px] font-normal mb-2 text-[var(--text-primary)]"
+                style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+              >
+                Explore the Boutique
+              </h2>
+              <p className="body-md text-[14px] text-[var(--text-secondary)] mb-6">
+                Type any keyword above to search through our heritage collection, or explore all bespoke creations.
+              </p>
+              <Link
+                to="/shop"
+                className="inline-block bg-[var(--btn-primary-bg,#C9A24B)] text-[var(--btn-primary-text,#0A0A0A)] font-semibold px-8 py-3.5 label-caps uppercase tracking-widest hover:brightness-110 transition-all cursor-pointer shadow-sm"
+              >
+                View Entire Collection
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 max-w-5xl mx-auto">
+              {/* Left Column: Recent Searches & Suggestions (5 cols) */}
+              {(recentSearches.length > 0 || quickQueryTags.length > 0) && (
+                <div className={`${trendingCollections.length > 0 ? 'md:col-span-5' : 'md:col-span-12 max-w-2xl mx-auto w-full'} flex flex-col gap-8`}>
+                  {/* Recent Searches */}
+                  {recentSearches.length > 0 && (
+                    <section>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="label-caps text-[12px] text-[var(--gold)] tracking-[0.15em] uppercase font-bold">
+                          Recent Searches
+                        </h2>
                         <button
-                          onClick={() => handleSelectRecent(term)}
-                          className="group flex items-center gap-3 body-md text-[14px] md:text-[15px] text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors text-left w-full cursor-pointer"
+                          onClick={clearAllRecent}
+                          className="text-[11px] text-[var(--text-secondary)] hover:text-[var(--gold)] cursor-pointer"
                         >
-                          <History size={16} className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0" />
-                          <span>{term}</span>
+                          Clear
                         </button>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+                      </div>
+                      <ul className="flex flex-col gap-3">
+                        {recentSearches.map((term, index) => (
+                          <li key={index}>
+                            <button
+                              onClick={() => handleSelectRecent(term)}
+                              className="group flex items-center gap-3 body-md text-[14px] md:text-[15px] text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors text-left w-full cursor-pointer"
+                            >
+                              <History size={16} className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0" />
+                              <span>{term}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
+
+                  {/* Quick Suggestion Chips */}
+                  {quickQueryTags.length > 0 && (
+                    <section className={recentSearches.length > 0 ? "pt-4 border-t border-[var(--border-color)]" : ""}>
+                      <h2 className="label-caps text-[12px] text-[var(--gold)] mb-4 tracking-[0.15em] uppercase font-bold">
+                        Quick Query Tags
+                      </h2>
+                      <div className="flex flex-wrap gap-2">
+                        {quickQueryTags.map((tag, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setSearchTerm(tag.query)}
+                            className="px-3.5 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[12px] label-caps text-[var(--text-primary)] hover:border-[var(--gold)] hover:text-[var(--gold)] transition-colors cursor-pointer"
+                          >
+                            {tag.label}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </div>
               )}
 
-              {/* Quick Suggestion Chips */}
-              <section className="pt-4 border-t border-[var(--border-color)]">
-                <h2 className="label-caps text-[12px] text-[var(--gold)] mb-4 tracking-[0.15em] uppercase font-bold">
-                  Quick Query Tags
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {quickQueryTags.map((tag, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setSearchTerm(tag.query)}
-                      className="px-3.5 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[12px] label-caps text-[var(--text-primary)] hover:border-[var(--gold)] hover:text-[var(--gold)] transition-colors cursor-pointer"
-                    >
-                      {tag.label}
-                    </button>
-                  ))}
-                </div>
-              </section>
-            </div>
+              {/* Right Column: Trending Collections Grid */}
+              {trendingCollections.length > 0 && (
+                <div className={`${(recentSearches.length > 0 || quickQueryTags.length > 0) ? 'md:col-span-7' : 'md:col-span-12'} flex flex-col gap-6`}>
+                  <section>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="label-caps text-[12px] text-[var(--gold)] tracking-[0.15em] uppercase font-bold">
+                        Trending Collections
+                      </h2>
+                      <Link
+                        to="/shop"
+                        className="label-caps text-[11px] text-[var(--text-secondary)] hover:text-[var(--gold)] underline transition-colors"
+                      >
+                        View All
+                      </Link>
+                    </div>
 
-            {/* Right Column: Trending Collections Grid */}
-            <div className="md:col-span-7 flex flex-col gap-6">
-              <section>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="label-caps text-[12px] text-[var(--gold)] tracking-[0.15em] uppercase font-bold">
-                    Trending Collections
-                  </h2>
-                  <Link
-                    to="/shop"
-                    className="label-caps text-[11px] text-[var(--text-secondary)] hover:text-[var(--gold)] underline transition-colors"
-                  >
-                    View All
-                  </Link>
+                    {/* Dynamic Collections Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                      {trendingCollections.map((col, idx) => (
+                        <Link
+                          key={col.slug || idx}
+                          to={`/shop?category=${col.slug}`}
+                          className="group relative block h-44 overflow-hidden bg-[var(--bg-secondary)] border border-[var(--border-color)] shadow-sm"
+                        >
+                          <img
+                            src={col.imageUrl}
+                            alt={col.name}
+                            className="w-full h-full object-cover brightness-75 group-hover:scale-105 transition-transform duration-700 ease-out"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                          <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white flex justify-between items-end">
+                            <div>
+                              <h3
+                                className="text-[18px] sm:text-[20px] font-normal leading-snug"
+                                style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+                              >
+                                {col.name}
+                              </h3>
+                              <span className="label-caps text-[10px] text-[var(--gold)] uppercase tracking-wider block mt-0.5">
+                                {col.itemCount} Masterpieces
+                              </span>
+                            </div>
+                            <ArrowRight size={16} className="text-[var(--gold)] group-hover:translate-x-1 transition-transform shrink-0" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
                 </div>
-
-                {/* Dynamic Collections Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                  {trendingCollections.map((col, idx) => (
-                    <Link
-                      key={col.slug || idx}
-                      to={`/shop?category=${col.slug}`}
-                      className="group relative block h-44 overflow-hidden bg-[var(--bg-secondary)] border border-[var(--border-color)] shadow-sm"
-                    >
-                      <img
-                        src={col.imageUrl}
-                        alt={col.name}
-                        className="w-full h-full object-cover brightness-75 group-hover:scale-105 transition-transform duration-700 ease-out"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                      <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white flex justify-between items-end">
-                        <div>
-                          <h3
-                            className="text-[18px] sm:text-[20px] font-normal leading-snug"
-                            style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
-                          >
-                            {col.name}
-                          </h3>
-                          <span className="label-caps text-[10px] text-[var(--gold)] uppercase tracking-wider block mt-0.5">
-                            {col.itemCount} Masterpieces
-                          </span>
-                        </div>
-                        <ArrowRight size={16} className="text-[var(--gold)] group-hover:translate-x-1 transition-transform shrink-0" />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </section>
+              )}
             </div>
-          </div>
+          )
         )}
       </main>
     </div>

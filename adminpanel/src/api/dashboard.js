@@ -4,29 +4,37 @@ export async function fetchDashboardAnalytics() {
   try {
     return await apiClient('/admin/dashboard');
   } catch (err) {
-    // Fallback luxury data if server is booting
+    console.warn('Dashboard analytics fetch note:', err);
     return {
       overview: {
-        totalOrders: 148,
-        paidOrders: 132,
-        totalRevenue: 124850,
-        averageOrderValue: 845,
-        totalCustomers: 2481,
-        pendingOrders: 5,
-        pendingReturns: 2,
-        conversionRate: '3.8%',
+        totalOrders: 0,
+        paidOrders: 0,
+        totalRevenue: 0,
+        averageOrderValue: 0,
+        totalCustomers: 0,
+        pendingOrders: 0,
+        pendingReturns: 0,
+        conversionRate: '0.0%',
+        revenueGrowth: '0.0%',
+        ordersGrowth: '0.0%',
+        patronsGrowth: '0.0%',
+        aovGrowth: '0.0%',
       },
       revenueCurve: [
-        { day: 'Mon', revenue: 14200 },
-        { day: 'Tue', revenue: 18500 },
-        { day: 'Wed', revenue: 16800 },
-        { day: 'Thu', revenue: 22400 },
-        { day: 'Fri', revenue: 26900 },
-        { day: 'Sat', revenue: 31200 },
-        { day: 'Sun', revenue: 28400 },
+        { day: 'Mon', revenue: 0 },
+        { day: 'Tue', revenue: 0 },
+        { day: 'Wed', revenue: 0 },
+        { day: 'Thu', revenue: 0 },
+        { day: 'Fri', revenue: 0 },
+        { day: 'Sat', revenue: 0 },
+        { day: 'Sun', revenue: 0 },
       ],
       lowStock: [],
       recentOrders: [],
+      categoryPerformance: {
+        month: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase(),
+        items: [],
+      },
     };
   }
 }

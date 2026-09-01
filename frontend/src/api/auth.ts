@@ -8,6 +8,7 @@ export interface UserSession {
   phone_verified?: boolean;
   role: 'CUSTOMER' | 'ADMIN';
   avatar_url?: string | null;
+  tier?: string;
 }
 
 export interface AuthResponse {

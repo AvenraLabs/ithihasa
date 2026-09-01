@@ -42,8 +42,8 @@ export const FeaturedSilhouettes: React.FC = () => {
     }).format(amount);
   };
 
-  // If disabled in Admin Storefront CMS, do not render this section on live app
-  if (cms && cms.showHighlighted === false) {
+  // If highlightedItems is empty array in CMS or no items exist, do not render this section on live app
+  if (cms?.highlightedItems && Array.isArray(cms.highlightedItems) && cms.highlightedItems.length === 0) {
     return null;
   }
 
@@ -58,6 +58,10 @@ export const FeaturedSilhouettes: React.FC = () => {
         imageUrl: p.images[0]?.url || '',
         slug: p.slug
       }));
+
+  if (!displayItems || displayItems.length === 0) {
+    return null;
+  }
 
   return (
     <section className="px-5 md:px-20 max-w-[1440px] mx-auto py-12 md:py-16">

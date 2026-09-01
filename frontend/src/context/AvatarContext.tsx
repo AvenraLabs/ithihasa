@@ -34,6 +34,7 @@ export interface UserProfileData {
   fullName: string;
   email: string;
   phone: string;
+  tier?: string;
 }
 
 interface AvatarContextType {
@@ -68,6 +69,7 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       fullName: 'Atelier Patron',
       email: 'patron@ithihasa.com',
       phone: '+91 98765 43210',
+      tier: 'Novice',
     };
   });
 
@@ -84,6 +86,7 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             fullName: user.name,
             email: user.email,
             phone: user.phone || '+91 98765 43210',
+            tier: user.tier || 'Novice',
           };
           setProfileDataState(updated);
           localStorage.setItem('ithihasa_user_profile', JSON.stringify(updated));

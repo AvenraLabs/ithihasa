@@ -49,42 +49,13 @@ export default function App() {
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-
-  const [notifications, setNotifications] = useState([
-    {
-      id: '1',
-      type: 'order',
-      title: 'High-Value Order Received',
-      time: 'Just now',
-      description: 'Lady Catherine Morland placed order #ITH-4925 ($4,850.00)',
-      read: false,
-      targetPath: '/orders'
-    },
-    {
-      id: '2',
-      type: 'alert',
-      title: 'Low Stock Alert',
-      time: '42m ago',
-      description: 'Gold Zari Raw Silk Kurta (Size: M) has reached 2 pieces threshold',
-      read: false,
-      targetPath: '/inventory'
-    },
-    {
-      id: '3',
-      type: 'user',
-      title: 'Bespoke Tailoring Request',
-      time: '2h ago',
-      description: 'New measurement note submitted on order #ITH-4920',
-      read: true,
-      targetPath: '/support/chat'
-    }
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     async function loadNotifications() {
       try {
         const data = await fetchNotifications().catch(() => null);
-        if (data && Array.isArray(data) && data.length > 0) {
+        if (data && Array.isArray(data)) {
           setNotifications(data);
         }
       } catch (err) {

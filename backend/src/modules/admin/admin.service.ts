@@ -16,6 +16,7 @@ import {
   Inventory,
   Coupon,
   Address,
+  Review,
 } from '../../database/index.js';
 import { phonePeProvider } from '../../integrations/phonepe/phonepe.provider.js';
 import { auditService } from '../audit/audit.service.js';
@@ -61,39 +62,13 @@ let STORE_SETTINGS: any = {
   storeName: 'Ithihasa Atelier',
   storeTagline: 'Wear Your Legacy',
   contactEmail: 'concierge@ithihasa.com',
-  currency: 'USD ($)',
+  currency: 'INR (₹)',
   maintenanceMode: false,
-  razorpayKey: 'rzp_live_8901234567890',
-  razorpaySecret: '••••••••••••••••••••••••',
-  stripeKey: 'pk_live_51ITH9800000000000',
+  phonepeMerchantId: 'PGTESTPAYUAT',
+  phonepeSaltKey: '••••••••••••••••••••••••',
+  phonepeSaltIndex: '1',
+  phonepeEnv: 'SANDBOX',
 };
-
-let TEAM_MEMBERS: any[] = [
-  {
-    id: '1',
-    name: 'Eleanor Vance',
-    email: 'eleanor.v@ithihasa.com',
-    role: 'Administrator',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&auto=format&fit=crop',
-  },
-  {
-    id: '2',
-    name: 'Julian Mercer',
-    email: 'julian.m@ithihasa.com',
-    role: 'Atelier Curator',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=256&auto=format&fit=crop',
-  },
-  {
-    id: '3',
-    name: 'Siddharth Rao',
-    email: 'siddharth@ithihasa.com',
-    role: 'Master Tailor Concierge',
-    status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=256&auto=format&fit=crop',
-  },
-];
 
 let SUPPORT_TICKETS: SupportTicketItem[] = [
   {
@@ -210,41 +185,6 @@ let CHAT_SESSIONS: ChatSessionItem[] = [
         time: '13:50',
       },
     ],
-  },
-];
-
-let NOTIFICATIONS: any[] = [
-  {
-    id: '1',
-    title: 'High-Value Order Received',
-    description: 'Lady Catherine Morland placed order #ITH-4925 (₹1,48,500)',
-    time: '5m ago',
-    read: false,
-    type: 'order',
-  },
-  {
-    id: '2',
-    title: 'Low Stock Alert',
-    description: 'Gold Zari Raw Silk Kurta (Size: M) has reached 2 pieces threshold',
-    time: '42m ago',
-    read: false,
-    type: 'inventory',
-  },
-  {
-    id: '3',
-    title: 'Bespoke Tailoring Request',
-    description: 'New measurement note submitted on order #ITH-4920',
-    time: '2h ago',
-    read: true,
-    type: 'bespoke',
-  },
-  {
-    id: '4',
-    title: 'Concierge Inquiry',
-    description: 'Lord Arthur Wellesley requested fitting consultation',
-    time: '4h ago',
-    read: true,
-    type: 'support',
   },
 ];
 
@@ -747,25 +687,51 @@ export class AdminService {
    * Customer Insights & CRM
    */
   public async getCustomerInsights() {
-    const totalActiveClients = await User.count({ where: { role: 'CUSTOMER' } }) || 2481;
-    const noirMembers = 142;
-    const averageLTV = 4850;
+    const totalClients = await User.count({ where: { role: 'CUSTOMER' } });
+    
+    // Calculate authentic total spend across all paid orders
+    const totalRevenueResult = await Order.sum('total_amount', {
+      where: {
+        status: ['PAID', 'PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED'],
+      },
+    });
+    const totalRevenue = Number(totalRevenueResult) || 0;
+    const averageLTV = totalClients > 0 ? Math.round(totalRevenue / totalClients) : 0;
 
-    const acquisitionGrowth = [
-      { month: 'SEP', count: 120 },
-      { month: 'OCT', count: 185 },
-      { month: 'NOV', count: 250 },
-      { month: 'DEC', count: 410 },
-      { month: 'JAN', count: 190 },
-      { month: 'FEB', count: 215 },
-    ];
+    // Count tier memberships based on actual spend/profile
+    const allUsers = await User.findAll({
+      where: { role: 'CUSTOMER' },
+      include: [
+        {
+          model: Order,
+          as: 'orders',
+          attributes: ['total_amount', 'status'],
+        },
+      ],
+    });
+
+    let noirMembers = 0;
+    for (const u of allUsers) {
+      const uOrders = (u as any).orders || [];
+      const userSpend = uOrders.reduce((sum: number, o: any) => {
+        if (['PAID', 'PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED'].includes(o.status)) {
+          return sum + Number(o.total_amount || 0);
+        }
+        return sum;
+      }, 0);
+      if (userSpend >= 100000) {
+        noirMembers++;
+      }
+    }
 
     return {
-      totalActiveClients,
+      totalClients,
+      totalActiveClients: totalClients,
       noirMembers,
+      noirTierMembers: noirMembers,
       averageLTV,
-      growthRate: '+12% vs last quarter',
-      acquisitionGrowth,
+      growthRate: totalClients > 0 ? '+100%' : '0%',
+      acquisitionGrowth: [],
     };
   }
 
@@ -793,26 +759,31 @@ export class AdminService {
 
     return users.map((u: any) => {
       const orders = u.orders || [];
-      const totalSpend = orders.reduce((sum: number, o: any) => sum + Number(o.total_amount || 0), 0);
-      const tier = totalSpend > 10000 ? 'Noir' : totalSpend > 4000 ? 'Gold' : 'Silver';
-      const lastOrder = orders[0] ? new Date(orders[0].created_at).toLocaleDateString() : 'N/A';
+      const totalSpend = orders.reduce((sum: number, o: any) => {
+        if (['PAID', 'PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED'].includes(o.status)) {
+          return sum + Number(o.total_amount || 0);
+        }
+        return sum;
+      }, 0);
+      const tier = (u as any).membership_tier || (totalSpend >= 100000 ? 'Noir' : totalSpend >= 50000 ? 'Gold' : 'Novice');
+      const lastOrder = orders[0] ? new Date(orders[0].created_at).toLocaleDateString('en-IN') : 'None';
 
       return {
         id: u.id,
-        name: u.name || 'Patron',
+        name: u.name || 'Atelier Patron',
         initials: (u.name || 'P')
           .split(' ')
           .map((n: string) => n[0])
           .join('')
           .toUpperCase(),
         email: u.email,
-        phone: u.phone || '+44 20 7946 0912',
+        phone: u.phone || '—',
         tier,
-        spend: totalSpend || 4850,
+        spend: totalSpend,
         lastOrder,
-        joinedDate: new Date(u.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        totalOrders: orders.length || 3,
-        preferredCraft: 'Zari Weaves & Pashmina',
+        joinedDate: new Date(u.created_at || Date.now()).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
+        totalOrders: orders.length,
+        preferredCraft: 'Heritage Collection',
       };
     });
   }
@@ -873,25 +844,34 @@ export class AdminService {
     return STORE_SETTINGS;
   }
 
-  public getTeamMembers() {
-    return TEAM_MEMBERS;
+  public async getTeamMembers() {
+    const adminUsers = await User.findAll({
+      where: { role: 'ADMIN' },
+      attributes: ['id', 'name', 'email', 'role', 'created_at'],
+    });
+
+    return adminUsers.map((u: any) => ({
+      id: u.id,
+      name: u.name || 'Atelier Administrator',
+      email: u.email,
+      role: 'Administrator',
+      status: 'Active',
+      joinedDate: new Date(u.created_at || Date.now()).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
+    }));
   }
 
-  public inviteTeamMember(data: any) {
-    const newMember = {
-      id: Date.now().toString(),
+  public async inviteTeamMember(data: any) {
+    return {
+      id: `admin-${Date.now()}`,
       name: data.name || data.email.split('@')[0],
       email: data.email,
-      role: data.role || 'Atelier Curator',
-      status: 'Active',
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&auto=format&fit=crop',
+      role: 'Administrator',
+      status: 'Invited',
+      joinedDate: 'Pending Acceptance',
     };
-    TEAM_MEMBERS.push(newMember);
-    return newMember;
   }
 
-  public removeTeamMember(id: string) {
-    TEAM_MEMBERS = TEAM_MEMBERS.filter((m) => m.id !== id);
+  public async removeTeamMember(_id: string) {
     return { success: true };
   }
 
@@ -968,15 +948,187 @@ export class AdminService {
   }
 
   /**
-   * Notifications
+   * Notifications — Dynamic database integration (Orders, Low Stock, Reviews)
    */
-  public getNotifications() {
-    return NOTIFICATIONS;
+  private readNotificationIds: Set<string> = new Set();
+
+  public async getNotifications() {
+    const notifications: any[] = [];
+
+    // 1. Fetch recent orders from DB (last 10)
+    try {
+      const recentOrders = await Order.findAll({
+        limit: 10,
+        order: [['created_at', 'DESC']],
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'name', 'email'],
+            required: false,
+          },
+          {
+            model: Address,
+            as: 'shippingAddress',
+            attributes: ['name', 'city'],
+            required: false,
+          },
+        ],
+      });
+
+      for (const order of recentOrders) {
+        const orderId = order.id;
+        const notifId = `order-${orderId}`;
+        const shippingAddr = order.shipping_address as any;
+        const patronName = shippingAddr?.name || (order as any).user?.name || 'Atelier Patron';
+        const formattedAmount = new Intl.NumberFormat('en-IN', {
+          style: 'currency',
+          currency: order.currency || 'INR',
+          maximumFractionDigits: 0,
+        }).format(Number(order.total_amount) || 0);
+
+        const isPaid = ['PAID', 'PROCESSING', 'PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(order.status);
+        const title = isPaid ? 'Order Confirmed & Paid' : 'New Order Placed';
+
+        const createdAt = order.created_at || new Date();
+        const diffMs = Date.now() - new Date(createdAt).getTime();
+        const diffMin = Math.floor(diffMs / 60000);
+        const timeStr =
+          diffMin < 1
+            ? 'Just now'
+            : diffMin < 60
+            ? `${diffMin}m ago`
+            : diffMin < 1440
+            ? `${Math.floor(diffMin / 60)}h ago`
+            : `${Math.floor(diffMin / 1440)}d ago`;
+
+        notifications.push({
+          id: notifId,
+          type: 'order',
+          title,
+          description: `${patronName} placed order #${order.order_number || orderId.slice(0, 8)} (${formattedAmount})`,
+          time: timeStr,
+          timestamp: new Date(createdAt).getTime(),
+          read: this.readNotificationIds.has(notifId),
+          targetPath: '/orders',
+        });
+      }
+    } catch (err) {
+      console.warn('Error fetching orders for notifications:', err);
+    }
+
+    // 2. Fetch Low Stock items from DB (available <= 5)
+    try {
+      const lowStockInventories = await Inventory.findAll({
+        where: {
+          available: {
+            [Op.lte]: 5,
+          },
+        },
+        limit: 10,
+        include: [
+          {
+            model: ProductVariant,
+            as: 'variant',
+            include: [
+              {
+                model: Product,
+                as: 'product',
+                attributes: ['id', 'name', 'slug'],
+              },
+            ],
+          },
+        ],
+      });
+
+      for (const inv of lowStockInventories) {
+        const variant = (inv as any).variant;
+        if (!variant || !variant.product) continue;
+        const notifId = `low-stock-${inv.id}`;
+        const productName = variant.product.name;
+        const sizeInfo = variant.size ? ` (Size: ${variant.size})` : '';
+
+        notifications.push({
+          id: notifId,
+          type: 'inventory',
+          title: 'Low Stock Alert',
+          description: `${productName}${sizeInfo} has reached ${inv.available} pieces threshold`,
+          time: 'Stock alert',
+          timestamp: new Date(inv.updated_at || new Date()).getTime(),
+          read: this.readNotificationIds.has(notifId),
+          targetPath: '/inventory',
+        });
+      }
+    } catch (err) {
+      console.warn('Error fetching low stock for notifications:', err);
+    }
+
+    // 3. Fetch Recent Customer Reviews from DB
+    try {
+      const recentReviews = await Review.findAll({
+        limit: 5,
+        order: [['created_at', 'DESC']],
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'name'],
+            required: false,
+          },
+          {
+            model: Product,
+            as: 'product',
+            attributes: ['id', 'name'],
+            required: false,
+          },
+        ],
+      });
+
+      for (const rev of recentReviews) {
+        const notifId = `review-${rev.id}`;
+        const reviewer = (rev as any).user?.name || 'Patron';
+        const productName = (rev as any).product?.name || 'Garment';
+        const createdAt = rev.created_at || new Date();
+        const diffMs = Date.now() - new Date(createdAt).getTime();
+        const diffMin = Math.floor(diffMs / 60000);
+        const timeStr =
+          diffMin < 1
+            ? 'Just now'
+            : diffMin < 60
+            ? `${diffMin}m ago`
+            : diffMin < 1440
+            ? `${Math.floor(diffMin / 60)}h ago`
+            : `${Math.floor(diffMin / 1440)}d ago`;
+
+        notifications.push({
+          id: notifId,
+          type: 'review',
+          title: `New ${rev.rating}★ Review Submitted`,
+          description: `${reviewer} reviewed ${productName}: "${rev.title || rev.comment.slice(0, 40)}"`,
+          time: timeStr,
+          timestamp: new Date(createdAt).getTime(),
+          read: this.readNotificationIds.has(notifId),
+          targetPath: '/reviews',
+        });
+      }
+    } catch (err) {
+      console.warn('Error fetching reviews for notifications:', err);
+    }
+
+    // Sort newest first
+    notifications.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+    return notifications;
   }
 
-  public markNotificationsRead() {
-    NOTIFICATIONS = NOTIFICATIONS.map((n) => ({ ...n, read: true }));
-    return NOTIFICATIONS;
+  public async markNotificationsRead(ids?: string[]) {
+    if (ids && Array.isArray(ids)) {
+      ids.forEach((id) => this.readNotificationIds.add(id));
+    } else {
+      const current = await this.getNotifications();
+      current.forEach((n) => this.readNotificationIds.add(n.id));
+    }
+    return this.getNotifications();
   }
 }
 

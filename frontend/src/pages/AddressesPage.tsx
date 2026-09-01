@@ -172,15 +172,10 @@ export const AddressesPage: React.FC = () => {
         {viewMode === 'list' ? (
           /* ================= LIST VIEW ================= */
           <div>
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <p className="body-md text-[14px] text-[var(--text-secondary)]">
-                  Manage your delivery locations for seamless atelier checkouts.
-                </p>
-              </div>
+            <div className="flex justify-end items-center mb-6">
               <button
                 onClick={handleOpenAdd}
-                className="hidden sm:inline-flex items-center gap-2 border border-[var(--text-primary)] px-4 py-2 text-[11px] label-caps tracking-widest uppercase hover:bg-[var(--gold)] hover:border-[var(--gold)] hover:text-[#0A0A0A] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 border border-[var(--text-primary)] px-4 py-2 text-[11px] label-caps tracking-widest uppercase hover:bg-[var(--gold)] hover:border-[var(--gold)] hover:text-[#0A0A0A] transition-colors cursor-pointer"
               >
                 <Plus size={14} />
                 <span>Add Address</span>
@@ -304,7 +299,7 @@ export const AddressesPage: React.FC = () => {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Aravind S"
+                    placeholder="e.g. Eleanor Vance"
                     className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                   />
                 </div>
@@ -318,7 +313,7 @@ export const AddressesPage: React.FC = () => {
                     required
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="8680947556"
+                    placeholder="e.g. 9876543210"
                     className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                   />
                 </div>
@@ -333,7 +328,7 @@ export const AddressesPage: React.FC = () => {
                   required
                   value={formData.line1}
                   onChange={(e) => setFormData({ ...formData, line1: e.target.value })}
-                  placeholder="2/958, NH Main Road"
+                  placeholder="e.g. 124 Heritage Boulevard"
                   className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                 />
               </div>
@@ -346,7 +341,7 @@ export const AddressesPage: React.FC = () => {
                   type="text"
                   value={formData.line2 || ''}
                   onChange={(e) => setFormData({ ...formData, line2: e.target.value })}
-                  placeholder="Near Heritage Gate, Vijayamangalam"
+                  placeholder="e.g. Suite 4B, 2nd Floor"
                   className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                 />
               </div>
@@ -361,7 +356,7 @@ export const AddressesPage: React.FC = () => {
                     required
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    placeholder="Erode"
+                    placeholder="e.g. Mumbai"
                     className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                   />
                 </div>
@@ -375,7 +370,7 @@ export const AddressesPage: React.FC = () => {
                     required
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    placeholder="Tamil Nadu"
+                    placeholder="e.g. Maharashtra"
                     className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                   />
                 </div>
@@ -391,7 +386,7 @@ export const AddressesPage: React.FC = () => {
                     required
                     value={formData.postalCode}
                     onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                    placeholder="638056"
+                    placeholder="e.g. 400001"
                     className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] px-4 py-3 text-[14px] text-[var(--text-primary)] focus:border-[var(--gold)] outline-none rounded transition-colors"
                   />
                 </div>
@@ -409,20 +404,13 @@ export const AddressesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-3">
-                <label className="flex items-center gap-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={formData.isDefaultShipping}
-                    onChange={(e) =>
-                      setFormData({ ...formData, isDefaultShipping: e.target.checked })
-                    }
-                    className="w-4 h-4 accent-[var(--gold)] cursor-pointer"
-                  />
-                  <span className="body-sm text-[13px] text-[var(--text-primary)] font-medium">
-                    Set as default shipping address
+              <div className="pt-2">
+                <div className="flex items-center gap-2 text-[12px] text-[var(--gold)]">
+                  <span className="w-2 h-2 rounded-full bg-[var(--gold)]"></span>
+                  <span className="font-medium tracking-wide">
+                    Default Address for Delivery & Billing Invoices
                   </span>
-                </label>
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-3 pt-6 border-t border-[var(--border-color)]">

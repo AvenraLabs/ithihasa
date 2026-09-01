@@ -5,6 +5,7 @@ import { fetchProductBySlug, fetchProducts, type Product } from '../api/products
 import { addToCart } from '../api/cart.js';
 import { fetchWishlist, toggleWishlist } from '../api/wishlist.js';
 import { fetchReviewsForProduct, submitReview, type Review } from '../api/reviews.js';
+import { SizeGuideModal } from '../components/ui/SizeGuideModal.js';
 import {
   ChevronDown,
   X,
@@ -14,6 +15,7 @@ import {
   Star,
   Heart,
   Share2,
+  Ruler,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -27,6 +29,7 @@ export const ProductDetailPage: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedSizeLabel, setSelectedSizeLabel] = useState<string>('Select Size');
   const [isSizeSheetOpen, setIsSizeSheetOpen] = useState(false);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [newRating, setNewRating] = useState(5);
   const [reviewTitle, setReviewTitle] = useState('');
@@ -420,15 +423,12 @@ export const ProductDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* Size Selector Trigger Button */}
-          <button
-            onClick={() => setIsSizeSheetOpen(true)}
-            className="w-full border-b border-[var(--border-color)] py-4 flex justify-between items-center group mb-6 text-left"
-          >
-            <div className="flex flex-col items-start">
+          {/* Size Selector & Size Guide */}
+          <div className="mb-6 border-b border-[var(--border-color)] pb-3">
+            <div className="flex justify-between items-center mb-1">
               <div className="flex items-center gap-2">
                 <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">
-                  Size
+                  Size: <span className="text-[var(--gold)] font-bold">{selectedSize ? selectedSizeLabel : 'Please select a size'}</span>
                 </span>
                 {(!selectedSize || selectedSize === 'Select Size') && (
                   <span className="text-[10px] text-amber-500 font-semibold tracking-wider uppercase bg-amber-500/10 px-2 py-0.5 rounded">
@@ -436,15 +436,30 @@ export const ProductDetailPage: React.FC = () => {
                   </span>
                 )}
               </div>
-              <span className={`title-sm text-[15px] font-medium mt-0.5 ${selectedSize ? 'text-[var(--text-primary)]' : 'text-[var(--gold)]'}`}>
+
+              <button
+                type="button"
+                onClick={() => setIsSizeGuideOpen(true)}
+                className="flex items-center gap-1.5 text-[11px] text-[var(--gold)] hover:underline uppercase tracking-wider label-caps cursor-pointer active:scale-95 py-1 px-2 rounded hover:bg-[var(--gold)]/10 transition-all"
+              >
+                <Ruler size={13} />
+                <span>Size Guide</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setIsSizeSheetOpen(true)}
+              className="w-full py-2 flex justify-between items-center group text-left cursor-pointer"
+            >
+              <span className={`title-sm text-[15px] font-medium ${selectedSize ? 'text-[var(--text-primary)] font-semibold' : 'text-[var(--text-secondary)]'}`}>
                 {selectedSizeLabel}
               </span>
-            </div>
-            <ChevronDown
-              size={18}
-              className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors"
-            />
-          </button>
+              <ChevronDown
+                size={18}
+                className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors"
+              />
+            </button>
+          </div>
 
           {/* Desktop Add to Bag & Wishlist Actions */}
           <div className="hidden md:flex items-center gap-3 mb-8">
@@ -761,10 +776,12 @@ export const ProductDetailPage: React.FC = () => {
 
               <div className="pt-4 text-center">
                 <button
-                  onClick={() => toast.info('Standard Heritage Fit: Designed for ease and dignified tailoring.')}
-                  className="label-caps text-[11px] text-[var(--gold)] underline uppercase tracking-wider hover:opacity-80 cursor-pointer"
+                  type="button"
+                  onClick={() => setIsSizeGuideOpen(true)}
+                  className="inline-flex items-center gap-1.5 label-caps text-[11px] text-[var(--gold)] uppercase tracking-wider hover:underline cursor-pointer"
                 >
-                  Size & Fitting Guide
+                  <Ruler size={13} />
+                  <span>Size & Fitting Guide</span>
                 </button>
               </div>
             </div>
@@ -888,6 +905,12 @@ export const ProductDetailPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Size Guide Modal */}
+      <SizeGuideModal
+        isOpen={isSizeGuideOpen}
+        onClose={() => setIsSizeGuideOpen(false)}
+      />
     </div>
   );
 };

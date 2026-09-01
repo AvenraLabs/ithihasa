@@ -215,20 +215,20 @@ export function MarketingView() {
         {/* Right Stack: Key KPI Cards (Col Span 4) */}
         <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
           {/* KPI 1: Total Editorial Reach */}
-          <div className="bg-black text-[#F4EFE6] dark:bg-[#1f1d1b] p-5 sm:p-6 border border-[var(--border-color)] relative overflow-hidden group shadow-sm flex flex-col justify-between">
+          <div className="bg-[var(--bg-card)] text-[var(--text-primary)] p-5 sm:p-6 border border-[var(--border-color)] relative overflow-hidden group shadow-sm flex flex-col justify-between">
             <div>
-              <span className="label-caps text-[11px] text-[var(--gold)] uppercase tracking-widest block mb-2">
+              <span className="label-caps text-[11px] text-[var(--gold)] uppercase tracking-widest block mb-2 font-semibold">
                 Total Reach
               </span>
-              <h3 className="font-garamond text-[32px] sm:text-[40px] text-[#F4EFE6] font-normal leading-none tabular-nums">
+              <h3 className="font-garamond text-[32px] sm:text-[40px] text-[var(--text-primary)] font-normal leading-none tabular-nums">
                 2.4M
               </h3>
-              <p className="text-[12.5px] text-[var(--text-muted)] mt-2">
+              <p className="text-[12.5px] text-[var(--text-secondary)] mt-2">
                 Across email, VIP concierges, and print lookbooks.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-[var(--border-color)]/30 flex items-center justify-between text-[12px] text-[var(--gold)]">
-              <span>Conversion Rate</span>
+            <div className="mt-4 pt-3 border-t border-[var(--border-color)] flex items-center justify-between text-[12px] text-[var(--gold)]">
+              <span className="text-[var(--text-secondary)]">Conversion Rate</span>
               <span className="font-semibold tabular-nums">4.8%</span>
             </div>
           </div>
@@ -236,11 +236,11 @@ export function MarketingView() {
           {/* KPI 2: Attributed Campaign Revenue */}
           <div className="bg-[var(--bg-card)] p-5 sm:p-6 border border-[var(--border-color)] shadow-sm flex flex-col justify-between">
             <div>
-              <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-widest block mb-2">
+              <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-widest block mb-2 font-semibold">
                 Attributed Revenue
               </span>
               <h3 className="font-garamond text-[32px] sm:text-[40px] text-[var(--text-primary)] font-normal leading-none tabular-nums">
-                $490.6K
+                ₹4,90,600
               </h3>
               <p className="text-[12.5px] text-emerald-600 dark:text-emerald-400 mt-2 font-medium flex items-center gap-1">
                 <TrendingUp size={14} /> +24% YoY growth
@@ -248,7 +248,7 @@ export function MarketingView() {
             </div>
             <div className="mt-4 pt-3 border-t border-[var(--border-color)] flex items-center justify-between text-[12px] text-[var(--text-secondary)]">
               <span>Avg Order Value</span>
-              <span className="font-semibold text-[var(--text-primary)] tabular-nums">$1,240</span>
+              <span className="font-semibold text-[var(--text-primary)] tabular-nums">₹12,400</span>
             </div>
           </div>
         </div>

@@ -12,17 +12,22 @@ export interface GoogleUserProfile {
 }
 
 export class GoogleAuthProvider {
-  private client: OAuth2Client;
+  // Lazily created — only instantiated when Google sign-in is actually used.
+  // This prevents network connections to Google cert servers at backend startup.
+  private _client: OAuth2Client | null = null;
 
-  constructor() {
-    this.client = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+  private get client(): OAuth2Client {
+    if (!this._client) {
+      this._client = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+    }
+    return this._client;
   }
 
   /**
    * Verifies Google ID Token sent from frontend Google Sign-In button / One Tap
    */
   public async verifyIdToken(idToken: string): Promise<GoogleUserProfile> {
-    // In local development with mock token, allow easy testing
+    // In local development with mock token, allow easy testing without hitting Google
     if (env.NODE_ENV !== 'production' && idToken.startsWith('mock_token_')) {
       const mockEmail = idToken.replace('mock_token_', '') || 'customer@ithihasa.com';
       return {

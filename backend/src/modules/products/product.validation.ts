@@ -13,7 +13,7 @@ export const listProductsQuerySchema = z.object({
   search: z.string().optional(),
   sort: z.enum(['price_asc', 'price_desc', 'newest', 'featured']).default('newest'),
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(200).default(20),
 });
 
 export const createProductVariantSchema = z.object({

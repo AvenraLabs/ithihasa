@@ -16,7 +16,6 @@ export function LoginView({ onLoginSuccess }) {
   const [username, setUsername] = useState('admin@ithihasa.com');
   const [password, setPassword] = useState('Admin@123456');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -45,9 +44,9 @@ export function LoginView({ onLoginSuccess }) {
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row bg-[var(--bg-card)] font-manrope">
       {/* Left Ambient Editorial Panel (50% on Desktop, Hidden/Header on Mobile) */}
-      <div className="md:w-1/2 min-h-[220px] md:min-h-screen bg-[#F7F2EA] dark:bg-[#161412] flex flex-col justify-between p-8 md:p-16 border-b md:border-b-0 md:border-r border-[var(--border-color)] relative overflow-hidden">
+      <div className="md:w-1/2 min-h-[220px] md:min-h-screen bg-[#12100E] text-[#F4EFE6] flex flex-col justify-between p-8 md:p-16 border-b md:border-b-0 md:border-r border-[#262220] relative overflow-hidden">
         {/* Subtle Ambient Watermark Pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(#C9A24B_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(#C9A24B_1px,transparent_1px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
 
         <div className="relative z-10">
           <span className="label-caps text-[10px] tracking-[0.25em] text-[var(--gold)] uppercase font-semibold">
@@ -56,17 +55,17 @@ export function LoginView({ onLoginSuccess }) {
         </div>
 
         <div className="relative z-10 my-auto py-8">
-          <h2 className="font-garamond text-[32px] sm:text-[42px] lg:text-[48px] text-[var(--text-primary)] font-normal leading-[1.15] tracking-tight max-w-md">
+          <h2 className="font-garamond text-[32px] sm:text-[42px] lg:text-[48px] text-[#F4EFE6] font-normal leading-[1.15] tracking-tight max-w-md">
             Preserving centuries of heritage craftsmanship.
           </h2>
-          <p className="body-md text-[13.5px] sm:text-[14.5px] text-[var(--text-secondary)] mt-4 max-w-sm leading-relaxed">
+          <p className="body-md text-[13.5px] sm:text-[14.5px] text-[#B8B0A2] mt-4 max-w-sm leading-relaxed">
             Authorized portal for Ithihasa artisans, curators, and atelier management.
           </p>
         </div>
 
-        <div className="relative z-10 flex items-center gap-2 text-[12px] text-[var(--text-secondary)]">
+        <div className="relative z-10 flex items-center gap-2 text-[12px] text-[#8A7133]">
           <ShieldCheck size={16} className="text-[var(--gold)]" />
-          <span>Ithihasa Haute Couture Private Limited • Est. 2024</span>
+          <span className="text-[#B8B0A2]">Ithihasa Haute Couture Private Limited • Est. 2024</span>
         </div>
       </div>
 
@@ -129,32 +128,11 @@ export function LoginView({ onLoginSuccess }) {
               </div>
             </div>
 
-            {/* Options Row (Remember me & Forgot Password) */}
-            <div className="flex items-center justify-between pt-1 text-[12.5px]">
-              <label className="flex items-center gap-2 cursor-pointer text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors select-none">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded-xs border-[var(--border-color)] text-black focus:ring-0 focus:ring-offset-0 cursor-pointer accent-[var(--gold)]"
-                />
-                <span>Remember me</span>
-              </label>
-
-              <button
-                type="button"
-                onClick={() => toast.info('Password reset instructions have been dispatched to administrator email.')}
-                className="text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors cursor-pointer"
-              >
-                Forgot Password?
-              </button>
-            </div>
-
-            {/* Sign In Primary Action Button matching Stitch */}
+            {/* Sign In Primary Action Button matching Gold Theme */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-black text-[#F4EFE6] dark:bg-[#FAF6F0] dark:text-black py-3.5 px-6 label-caps text-[11px] uppercase tracking-[0.2em] font-bold hover:opacity-90 active:scale-[0.99] transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer mt-8"
+              className="w-full bg-[var(--gold)] text-[#0A0A0A] py-3.5 px-6 label-caps text-[11px] uppercase tracking-[0.2em] font-bold hover:brightness-110 active:scale-[0.99] transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer mt-8"
             >
               {isLoading ? (
                 <span>Signing In...</span>

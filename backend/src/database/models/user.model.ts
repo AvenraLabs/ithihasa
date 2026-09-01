@@ -11,6 +11,7 @@ export interface UserAttributes {
   role: 'CUSTOMER' | 'ADMIN';
   avatar_url?: string | null;
   google_id?: string | null;
+  tier?: string;
   status: 'ACTIVE' | 'BLOCKED';
   created_at?: Date;
   updated_at?: Date;
@@ -18,7 +19,7 @@ export interface UserAttributes {
 
 export type UserCreationAttributes = Optional<
   UserAttributes,
-  'id' | 'email' | 'password_hash' | 'phone' | 'phone_verified' | 'role' | 'avatar_url' | 'google_id' | 'status'
+  'id' | 'email' | 'password_hash' | 'phone' | 'phone_verified' | 'role' | 'avatar_url' | 'google_id' | 'tier' | 'status'
 >;
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
@@ -31,6 +32,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   declare public role: 'CUSTOMER' | 'ADMIN';
   declare public avatar_url: string | null;
   declare public google_id: string | null;
+  declare public tier: string;
   declare public status: 'ACTIVE' | 'BLOCKED';
 
   declare public readonly created_at: Date;
@@ -77,6 +79,11 @@ User.init(
     google_id: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    tier: {
+      type: DataTypes.STRING,
+      defaultValue: 'Novice',
+      allowNull: false,
     },
     status: {
       type: DataTypes.ENUM('ACTIVE', 'BLOCKED'),

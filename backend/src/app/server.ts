@@ -1,12 +1,16 @@
 import { createApp } from './app.js';
 import { env } from '../config/env.js';
 import { testDatabaseConnection, sequelize } from '../config/database.js';
+import { setupModelAssociations } from '../database/index.js';
 import { logger } from '../common/logger/index.js';
 
 async function bootstrap() {
   try {
-    // 1. Verify PostgreSQL Database Connection
+    // 1. Verify PostgreSQL Database Connection & Sync Schema
     await testDatabaseConnection();
+    setupModelAssociations();
+    await sequelize.sync({ alter: true });
+    logger.info('📦 Database tables and schema synchronized.');
 
     // 2. Instantiate App
     const app = createApp();

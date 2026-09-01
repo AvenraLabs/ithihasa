@@ -46,7 +46,7 @@ export const ShopPage: React.FC = () => {
   // Fetch all products (unfiltered) to dynamically extract sizes & colors present in the atelier
   const { data: allCatalogProducts = [] } = useQuery<Product[]>({
     queryKey: ['all-catalog-products-for-filters'],
-    queryFn: () => fetchProducts({ limit: 100 }),
+    queryFn: () => fetchProducts({ limit: 50 }),
   });
 
   // Fetch filtered & sorted products
@@ -181,7 +181,7 @@ export const ShopPage: React.FC = () => {
   };
 
   const getPageTitle = () => {
-    if (!currentCategory) return 'New Arrivals';
+    if (!currentCategory) return 'The Collection';
     const match = categories.find((c) => c.slug === currentCategory);
     return match ? match.name : currentCategory.replace(/-/g, ' ');
   };
@@ -216,14 +216,6 @@ export const ShopPage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 sm:gap-4 border-t md:border-t-0 border-[var(--border-color)] pt-3 md:pt-0">
-            <button
-              onClick={() => setIsSizeGuideOpen(true)}
-              className="flex items-center gap-1.5 label-caps text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors py-2 active:scale-95 text-[11px] sm:text-[12px] cursor-pointer"
-            >
-              <Ruler size={15} className="text-[var(--gold)]" />
-              <span>SIZE GUIDE</span>
-            </button>
-
             {/* FILTERS Button with Active Count Badge */}
             <button
               onClick={() => {
