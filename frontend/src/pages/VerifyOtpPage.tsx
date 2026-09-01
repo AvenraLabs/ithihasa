@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { verifyPhoneOtp, sendOtpToPhone } from '../api/auth.js';
 
 const OTP_LENGTH = 4;
 
@@ -8,10 +9,12 @@ export const VerifyOtpPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const flow = (location.state as { flow?: string })?.flow || 'register';
+  const phone = (location.state as { phone?: string })?.phone || '+91 9876543210';
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [isLoading, setIsLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isError, setIsError] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -58,14 +61,16 @@ export const VerifyOtpPage: React.FC = () => {
     inputRefs.current[focusIndex]?.focus();
   };
 
-  const handleVerify = (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = otp.join('');
     if (code.length < OTP_LENGTH) return;
 
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    setIsError(false);
+
+    try {
+      await verifyPhoneOtp(phone, code);
       setToastMessage('Verified successfully');
       setTimeout(() => {
         setToastMessage(null);
@@ -75,14 +80,29 @@ export const VerifyOtpPage: React.FC = () => {
           navigate('/account');
         }
       }, 1000);
-    }, 800);
+    } catch (err: any) {
+      setIsError(true);
+      const msg = err.message || 'Invalid or expired OTP. Please try again.';
+      setToastMessage(msg);
+      setTimeout(() => setToastMessage(null), 3000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (resendCooldown > 0) return;
-    setResendCooldown(30);
-    setToastMessage('Code resent to your mobile');
-    setTimeout(() => setToastMessage(null), 2000);
+    try {
+      await sendOtpToPhone(phone);
+      setResendCooldown(30);
+      setIsError(false);
+      setToastMessage('New code sent to your phone');
+      setTimeout(() => setToastMessage(null), 2000);
+    } catch (err: any) {
+      setIsError(true);
+      setToastMessage(err.message || 'Failed to send code');
+      setTimeout(() => setToastMessage(null), 3000);
+    }
   };
 
   const isComplete = otp.every((d) => d !== '');
@@ -92,9 +112,13 @@ export const VerifyOtpPage: React.FC = () => {
       {/* Toast */}
       {toastMessage && (
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[70] bg-[var(--bg-card)] border border-[var(--border-color)] px-6 py-3.5 shadow-2xl flex items-center gap-3 whitespace-nowrap max-w-[90vw]">
-          <CheckCircle2 size={18} className="text-[var(--gold)] shrink-0" />
+          {isError ? (
+            <AlertCircle size={18} className="text-red-500 shrink-0" />
+          ) : (
+            <CheckCircle2 size={18} className="text-[var(--gold)] shrink-0" />
+          )}
           <span
-            className="text-[17px] tracking-wide text-[var(--gold)] font-medium"
+            className={`text-[17px] tracking-wide font-medium ${isError ? 'text-red-400' : 'text-[var(--gold)]'}`}
             style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
           >
             {toastMessage}

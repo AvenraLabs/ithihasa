@@ -71,7 +71,7 @@ export const CartPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors">
-      <div className="flex-grow px-5 md:px-20 py-8 md:py-12 max-w-[1440px] mx-auto w-full pb-24 md:pb-16">
+      <div className="flex-grow px-4 sm:px-6 md:px-20 py-6 md:py-12 max-w-[1440px] mx-auto w-full pb-36 sm:pb-28 md:pb-16">
         <h1
           className="text-[32px] md:text-[44px] mb-8 md:mb-12 text-center md:text-left font-normal uppercase tracking-wide text-[var(--text-primary)]"
           style={{ fontFamily: "'EB Garamond', Georgia, serif" }}

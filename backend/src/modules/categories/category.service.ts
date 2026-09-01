@@ -71,6 +71,13 @@ export class CategoryService {
     await category.save();
     return category;
   }
+
+  public async deleteCategory(id: string) {
+    const category = await Category.findByPk(id);
+    if (!category) throw new NotFoundError('Category');
+    await category.destroy();
+    return { success: true, message: 'Category deleted' };
+  }
 }
 
 export const categoryService = new CategoryService();

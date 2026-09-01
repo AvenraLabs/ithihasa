@@ -48,10 +48,12 @@ export const CheckoutPage: React.FC = () => {
   const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
 
   // Payment State
+  const [paymentMode, setPaymentMode] = useState<'card' | 'upi'>('card');
   const [cardNumber, setCardNumber] = useState('');
   const [cardName, setCardName] = useState('Eleanor Vance');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
+  const [upiId, setUpiId] = useState('');
 
   // Processing & Toast State
   const [isProcessing, setIsProcessing] = useState(false);
@@ -61,23 +63,20 @@ export const CheckoutPage: React.FC = () => {
 
   const subtotal = cartItems
     ? cart?.summary?.subtotal || 0
-    : 1135;
+    : 34500;
 
   const discountAmount = appliedCoupon ? appliedCoupon.discount : (cart?.summary?.discountAmount || 0);
-  const shippingCost = shippingMethod === 'express' ? 25 : 0;
-  const taxRate = 0.08;
-  const taxes = Math.round(Math.max(0, subtotal - discountAmount) * taxRate * 100) / 100;
+  const shippingCost = shippingMethod === 'express' ? 1500 : 0;
+  const taxRate = 0.05;
+  const taxes = Math.round(Math.max(0, subtotal - discountAmount) * taxRate);
   const totalAmount = Math.max(0, subtotal - discountAmount) + shippingCost + taxes;
 
   const formatPrice = (amount: number) => {
-    if (cartItems) {
-      return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        maximumFractionDigits: 0,
-      }).format(amount);
-    }
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -426,80 +425,141 @@ export const CheckoutPage: React.FC = () => {
 
           {/* Step 3: Payment */}
           <section className="flex flex-col gap-6 border-t border-[var(--border-color)] pt-8">
-            <div className="flex items-center gap-3">
-              <span className="label-caps text-[11px] bg-[var(--bg-secondary)] px-2.5 py-1 text-[var(--gold)] font-bold border border-[var(--border-color)]">
-                03
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="label-caps text-[11px] bg-[var(--bg-secondary)] px-2.5 py-1 text-[var(--gold)] font-bold border border-[var(--border-color)]">
+                  03
+                </span>
+                <h2 className="label-caps tracking-widest text-[13px] uppercase text-[var(--text-primary)] font-semibold">
+                  Payment Method
+                </h2>
+              </div>
+              <span className="label-caps text-[10px] text-[var(--gold)] tracking-wider uppercase border border-[var(--gold)]/30 px-2 py-0.5">
+                PhonePe Gateway Ready
               </span>
-              <h2 className="label-caps tracking-widest text-[13px] uppercase text-[var(--text-primary)] font-semibold">
-                Payment
-              </h2>
             </div>
 
-            <div className="flex flex-col gap-6">
-              {/* Card Number */}
-              <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                  Card Number
-                </label>
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    value={cardNumber}
-                    onChange={handleCardNumberChange}
-                    placeholder="0000 0000 0000 0000"
-                    required
-                    className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40 pr-8"
-                  />
-                  <CreditCard size={18} className="absolute right-0 text-[var(--text-secondary)]" />
-                </div>
-              </div>
+            {/* Payment Method Switcher Tabs */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setPaymentMode('card')}
+                className={`flex items-center justify-center gap-2 p-3.5 border text-[12px] label-caps tracking-wider uppercase transition-all cursor-pointer ${
+                  paymentMode === 'card'
+                    ? 'border-[var(--gold)] bg-[var(--bg-secondary)] text-[var(--gold)] font-bold shadow-sm'
+                    : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--text-secondary)]'
+                }`}
+              >
+                <CreditCard size={16} />
+                <span>Credit / Debit Card</span>
+              </button>
 
-              {/* Name on Card */}
-              <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                  Name on Card
-                </label>
-                <input
-                  type="text"
-                  value={cardName}
-                  onChange={(e) => setCardName(e.target.value)}
-                  placeholder="Jane Doe"
-                  required
-                  className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
-                />
-              </div>
+              <button
+                type="button"
+                onClick={() => setPaymentMode('upi')}
+                className={`flex items-center justify-center gap-2 p-3.5 border text-[12px] label-caps tracking-wider uppercase transition-all cursor-pointer ${
+                  paymentMode === 'upi'
+                    ? 'border-[var(--gold)] bg-[var(--bg-secondary)] text-[var(--gold)] font-bold shadow-sm'
+                    : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--text-secondary)]'
+                }`}
+              >
+                <span className="font-bold text-[13px]">UPI</span>
+                <span>Instant QR / VPA</span>
+              </button>
+            </div>
 
-              {/* Expiry & CVV */}
-              <div className="grid grid-cols-2 gap-6">
+            {/* Card Form */}
+            {paymentMode === 'card' && (
+              <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+                {/* Card Number */}
                 <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
                   <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                    Expiration (MM/YY)
+                    Card Number
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      value={cardNumber}
+                      onChange={handleCardNumberChange}
+                      placeholder="0000 0000 0000 0000"
+                      required={paymentMode === 'card'}
+                      className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40 pr-8"
+                    />
+                    <CreditCard size={18} className="absolute right-0 text-[var(--text-secondary)]" />
+                  </div>
+                </div>
+
+                {/* Name on Card */}
+                <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
+                  <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
+                    Name on Card
                   </label>
                   <input
                     type="text"
-                    value={expiry}
-                    onChange={handleExpiryChange}
-                    placeholder="12/25"
-                    required
+                    value={cardName}
+                    onChange={(e) => setCardName(e.target.value)}
+                    placeholder="Eleanor Vance"
+                    required={paymentMode === 'card'}
                     className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
                   />
                 </div>
 
-                <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                  <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                    Security Code
-                  </label>
-                  <input
-                    type="password"
-                    value={cvv}
-                    onChange={handleCvvChange}
-                    placeholder="123"
-                    required
-                    className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
-                  />
+                {/* Expiry & CVV */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
+                    <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
+                      Expiration (MM/YY)
+                    </label>
+                    <input
+                      type="text"
+                      value={expiry}
+                      onChange={handleExpiryChange}
+                      placeholder="12/26"
+                      required={paymentMode === 'card'}
+                      className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
+                    />
+                  </div>
+
+                  <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
+                    <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
+                      Security Code
+                    </label>
+                    <input
+                      type="password"
+                      value={cvv}
+                      onChange={handleCvvChange}
+                      placeholder="123"
+                      required={paymentMode === 'card'}
+                      className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* UPI Form */}
+            {paymentMode === 'upi' && (
+              <div className="flex flex-col gap-5 animate-in fade-in duration-300 bg-[var(--bg-secondary)]/40 border border-[var(--border-color)] p-5 rounded">
+                <div>
+                  <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1.5 block font-semibold">
+                    UPI Virtual Payment Address (VPA)
+                  </label>
+                  <input
+                    type="text"
+                    value={upiId}
+                    onChange={(e) => setUpiId(e.target.value)}
+                    placeholder="username@okhdfcbank / mobile@upi"
+                    required={paymentMode === 'upi'}
+                    className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[14px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40 rounded"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 text-[12px] text-[var(--text-secondary)] pt-1">
+                  <span className="w-2 h-2 rounded-full bg-[var(--success)]" />
+                  <span>Supports PhonePe, Google Pay, Paytm, BHIM, and all major Indian UPI apps.</span>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Trust Guarantee Note */}
@@ -573,8 +633,8 @@ export const CheckoutPage: React.FC = () => {
                   <div className="flex gap-4">
                     <div className="w-20 h-24 bg-[var(--bg-secondary)] shrink-0 overflow-hidden border border-[var(--border-color)]">
                       <img
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3MRp5doyhRfCf9j-d_HzfeQ08zBbdXtwZF6gcPc1p4YVB4EW1VY2CVYk4Wmc9O4kHQckw23JMaErJqABLpnd39PTIgFI2-YASAPIAiX6apTq0NJF92beEUETglp2pqLsVWEwTlgciS5ZYEf3zken7rPA0luxiI-AFErxCFxu7FCTo2micRLIAp4XBWjCiRNsnVBC-h8OMswCBodZ-QC889TvsrBJroW9QWavdMx5f2ZQSHG8zriSAFg"
-                        alt="Silk Heritage Scarf"
+                        src="https://images.unsplash.com/photo-1601924994987-69e26d50dc26?auto=format&fit=crop&w=400&q=80"
+                        alt="Kashmiri Antique Pashmina Stole"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -584,16 +644,16 @@ export const CheckoutPage: React.FC = () => {
                           className="text-[17px] text-[var(--text-primary)] font-normal truncate"
                           style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
                         >
-                          Silk Heritage Scarf
+                          Kashmiri Antique Pashmina Stole
                         </h4>
                         <p className="body-sm text-[12px] text-[var(--text-secondary)]">
-                          Indigo / One Size
+                          Standard (2m x 1m) • Muted Gold & Ink
                         </p>
                       </div>
                       <div className="flex justify-between items-center text-[13px]">
                         <span className="text-[var(--text-secondary)]">Qty 1</span>
                         <span className="font-semibold text-[var(--text-primary)] tabular-nums">
-                          $245.00
+                          ₹14,500
                         </span>
                       </div>
                     </div>
@@ -602,8 +662,8 @@ export const CheckoutPage: React.FC = () => {
                   <div className="flex gap-4">
                     <div className="w-20 h-24 bg-[var(--bg-secondary)] shrink-0 overflow-hidden border border-[var(--border-color)]">
                       <img
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuD70zZR6SruPl5T5lbBdCiQrSjKS7PpgYyzjJzAc26LeFN3qVFEABoGSWXiXRtwHc7kClGRQXDS6lnK-H4syVRWsqdjD2C86Xwr5tC4LBw3nWUqxlVRZN_OLBhokgBD--_52bTL9THMMIKuizGn9IB3atK31Ie1QF3CqC7n5GuN3U6V45BRiacrNNxK1zKmCmC9DfB2zhcaYo-pP1vEqSF1LJHW8eyBtFUalPlw0mkITCeRHHY_hNTT6A"
-                        alt="Structured Leather Tote"
+                        src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=400&q=80"
+                        alt="Royal Velvet Bandhgala"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -613,16 +673,16 @@ export const CheckoutPage: React.FC = () => {
                           className="text-[17px] text-[var(--text-primary)] font-normal truncate"
                           style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
                         >
-                          Structured Leather Tote
+                          Royal Velvet Bandhgala
                         </h4>
                         <p className="body-sm text-[12px] text-[var(--text-secondary)]">
-                          Espresso
+                          Midnight Noir / Size 42
                         </p>
                       </div>
                       <div className="flex justify-between items-center text-[13px]">
                         <span className="text-[var(--text-secondary)]">Qty 1</span>
                         <span className="font-semibold text-[var(--text-primary)] tabular-nums">
-                          $890.00
+                          ₹48,000
                         </span>
                       </div>
                     </div>

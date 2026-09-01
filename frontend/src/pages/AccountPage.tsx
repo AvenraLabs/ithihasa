@@ -39,8 +39,19 @@ export const AccountPage: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
+  const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
+    return Boolean(localStorage.getItem('ithihasa_access_token'));
+  });
+
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem('ithihasa_access_token');
+    localStorage.removeItem('ithihasa_user_profile');
+    setIsLoggedIn(false);
+    navigate('/login');
   };
 
   return (
@@ -52,19 +63,19 @@ export const AccountPage: React.FC = () => {
 
           {/* Profile Card */}
           <div className="bg-[var(--bg-card)] rounded-xl p-6 flex flex-col items-center text-center relative overflow-hidden border border-[var(--border-color)]">
-            {/* Theme Toggle — adapts to light/dark themes dynamically */}
+            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
               aria-label="Toggle Theme"
               title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
-              className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--gold)] active:scale-90 transition-all p-1"
+              className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--gold)] active:scale-90 transition-all p-1 cursor-pointer"
             >
               <ThemeIcon size={20} />
             </button>
 
             {/* Avatar */}
             <Link
-              to="/account/edit"
+              to={isLoggedIn ? "/account/edit" : "/login"}
               className="shrink-0 block rounded-full overflow-hidden mb-4"
               style={{
                 borderRadius: '50%',
@@ -84,21 +95,30 @@ export const AccountPage: React.FC = () => {
               className="text-[22px] md:text-[24px] font-medium text-[var(--text-primary)] mb-0.5"
               style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
             >
-              {profileData.fullName}
+              {isLoggedIn ? profileData.fullName : 'Guest Patron'}
             </h1>
 
             {/* Email */}
             <p className="body-sm text-[13px] text-[var(--text-secondary)] mb-5">
-              {profileData.email}
+              {isLoggedIn ? profileData.email : 'Sign in to access your atelier profile & orders'}
             </p>
 
-            {/* Edit Profile Button */}
-            <Link
-              to="/account/edit"
-              className="w-full border border-[var(--text-primary)] py-2.5 px-4 text-center label-caps text-[11px] tracking-widest text-[var(--text-primary)] uppercase hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-colors duration-300 rounded"
-            >
-              Edit Profile
-            </Link>
+            {/* Edit / Sign In Button */}
+            {isLoggedIn ? (
+              <Link
+                to="/account/edit"
+                className="w-full border border-[var(--text-primary)] py-2.5 px-4 text-center label-caps text-[11px] tracking-widest text-[var(--text-primary)] uppercase hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-colors duration-300 rounded"
+              >
+                Edit Profile
+              </Link>
+            ) : (
+              <Link
+                to="/login?redirect=/account"
+                className="w-full bg-[var(--gold)] text-black font-semibold py-2.5 px-4 text-center label-caps text-[11px] tracking-widest uppercase hover:brightness-110 transition-all rounded shadow-md"
+              >
+                Sign In to Patron Account
+              </Link>
+            )}
           </div>
 
           {/* Member Tier Card */}
@@ -110,7 +130,7 @@ export const AccountPage: React.FC = () => {
               <p
                 className="text-[16px] font-semibold text-[var(--gold)] tracking-wide"
               >
-                Noir Tier
+                {isLoggedIn ? 'Noir Tier' : 'Atelier Visitor'}
               </p>
             </div>
             {/* Waves / Tier icon */}
@@ -157,7 +177,7 @@ export const AccountPage: React.FC = () => {
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.to}
-              to={item.to}
+              to={isLoggedIn || item.to === '/wishlist' ? item.to : `/login?redirect=${item.to}`}
               className="group flex items-center justify-between p-5 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg hover:border-[var(--gold)] transition-colors duration-300"
             >
               <div className="flex items-center gap-4">
@@ -183,18 +203,18 @@ export const AccountPage: React.FC = () => {
             </Link>
           ))}
 
-          {/* Sign Out */}
-          <div className="mt-6 pt-5 border-t border-[var(--border-color)] flex justify-start">
-            <button
-              onClick={() => {
-                navigate('/login');
-              }}
-              className="label-caps text-[12px] tracking-widest text-[var(--text-secondary)] hover:text-[var(--error)] transition-colors flex items-center gap-2 uppercase"
-            >
-              <LogOut size={16} strokeWidth={1.75} />
-              Sign Out
-            </button>
-          </div>
+          {/* Sign Out Action (ONLY when logged in) */}
+          {isLoggedIn && (
+            <div className="mt-6 pt-5 border-t border-[var(--border-color)] flex justify-start">
+              <button
+                onClick={handleSignOut}
+                className="label-caps text-[12px] tracking-widest text-[var(--text-secondary)] hover:text-[var(--error)] transition-colors flex items-center gap-2 uppercase cursor-pointer"
+              >
+                <LogOut size={16} strokeWidth={1.75} />
+                Sign Out
+              </button>
+            </div>
+          )}
         </section>
       </main>
     </div>

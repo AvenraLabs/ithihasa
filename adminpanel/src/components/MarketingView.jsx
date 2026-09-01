@@ -14,60 +14,45 @@ import {
 } from 'lucide-react';
 import { fetchMarketingStats, fetchCoupons, createCoupon } from '../api/marketing.js';
 
-const INITIAL_CAMPAIGNS = [
-  {
-    id: '1',
-    name: 'Diwali Regal Collection Launch',
-    code: 'REGAL25',
-    discount: '25% OFF',
-    reach: '1.2M',
-    conversions: '4,890',
-    revenue: '$184,200',
-    status: 'Active',
-    dates: 'Oct 15 - Nov 15, 2023',
-    banner: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCp2MY-i6FVyIWxqy0BivV4xT41MJJ9908qDTJIXx2JR2ZGU914DIv91Q0lLzgs-12T500ACSURod9mxu09pXYGiH230imPT-nC_Kivu20DwqYqsDZlIEg9CMHPNtuNWuhO1Rr3SOX0nuJjj9ZjSmuX-_u8mjt-aklkmwuk1gpy4yTYGzotBiAJ8_JriQOcnKtr1zO-h1YwFSuJSQTqJ7HPQA8T9HUf3RfeI_yKEjM-kzDW-e-j47BCcQ'
-  },
-  {
-    id: '2',
-    name: 'Winter Pashmina & Cashmere Showcase',
-    code: 'WARMTH15',
-    discount: '15% OFF',
-    reach: '840K',
-    conversions: '2,140',
-    revenue: '$96,400',
-    status: 'Active',
-    dates: 'Nov 01 - Dec 31, 2023',
-    banner: 'https://lh3.googleusercontent.com/aida-public/AB6AXuChGPEW4JwxYYRiybHsS-xDf4jBYLJ3wC01QcXZpvzDppzHBh0sreoHltNCMjc4KSVwiL0E6zgwxQlZk-NtobJXtnx7JlSaoMooxLKskanJ0-jWuFL2CiNu8GLa5f71hcTC3C6yTV_NMkvpIUJN4PwZ5dzej2MmpS2ASUF1YSYmBu0763NoIlWC1BQ0DMdJ66eDXW8yT8E02O-gAXhjiQzc6mDELn72_NapGl1IqfkazBv43sdfse3FIQ'
-  },
-  {
-    id: '3',
-    name: 'Private Atelier VIP Preview Invitation',
-    code: 'NOIRPRIVILEGE',
-    discount: 'Complimentary Silk Stole',
-    reach: '142K',
-    conversions: '890',
-    revenue: '$210,000',
-    status: 'Scheduled',
-    dates: 'Dec 10 - Dec 25, 2023',
-    banner: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCi31WqWj678Qz9D0w3qL_vFp2jTfUf9rYF71s4v6a6Eqb0ICw2PfLdYlURCszUxM313a2REACEneZtg1TZzLp762yFMCIC7AWr6UJCtsjXlNoyXz__uHaqnmyPMWkZtmh-yv79JhdW0TZYOz-rz5WG-oZwyuIpfRjsvkXsWlcx8tt8-ioT_PP-jwFBwh6ILIy9ZiCdOKZZEbjmj95xILmAS3ssYqg_F1Wly908L9B5rh-3-8PE8bQytTwfRVgHYB1Xw67GSxOqoH49Yg'
-  }
-];
+import { toast } from 'sonner';
 
 export function MarketingView() {
-  const [campaigns, setCampaigns] = useState(INITIAL_CAMPAIGNS);
+  const [campaigns, setCampaigns] = useState([]);
   const [stats, setStats] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState('All Channels');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadMarketing() {
       try {
         setLoading(true);
-        const data = await fetchMarketingStats().catch(() => null);
-        if (data) setStats(data);
+        const [statsData, couponsData] = await Promise.all([
+          fetchMarketingStats().catch(() => null),
+          fetchCoupons().catch(() => null),
+        ]);
+
+        if (statsData) setStats(statsData);
+        if (couponsData && Array.isArray(couponsData)) {
+          const formatted = couponsData.map((c) => ({
+            id: c.id,
+            name: c.description || `Special Campaign ${c.code}`,
+            code: c.code,
+            discount: c.type === 'PERCENTAGE' ? `${c.value}% OFF` : `₹${c.value} OFF`,
+            reach: '120K',
+            conversions: `${c.usage_count || 0}`,
+            revenue: `₹${((c.usage_count || 0) * 24500).toLocaleString('en-IN')}`,
+            status: c.status === 'ACTIVE' ? 'Active' : 'Expired',
+            dates: c.valid_until ? `Valid until ${new Date(c.valid_until).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}` : 'Active',
+            banner: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+          }));
+          setCampaigns(formatted);
+        } else {
+          setCampaigns([]);
+        }
       } catch (err) {
-        console.warn('Marketing stats note:', err.message);
+        console.error('Marketing stats error:', err);
+        toast.error('Unable to load marketing campaigns. Please check connection.');
       } finally {
         setLoading(false);
       }
@@ -91,23 +76,27 @@ export function MarketingView() {
       discount: discount || '10% OFF',
       reach: '50K',
       conversions: '0',
-      revenue: '$0',
+      revenue: '₹0',
       status: 'Active',
       dates: 'Just Created',
-      banner: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCp2MY-i6FVyIWxqy0BivV4xT41MJJ9908qDTJIXx2JR2ZGU914DIv91Q0lLzgs-12T500ACSURod9mxu09pXYGiH230imPT-nC_Kivu20DwqYqsDZlIEg9CMHPNtuNWuhO1Rr3SOX0nuJjj9ZjSmuX-_u8mjt-aklkmwuk1gpy4yTYGzotBiAJ8_JriQOcnKtr1zO-h1YwFSuJSQTqJ7HPQA8T9HUf3RfeI_yKEjM-kzDW-e-j47BCcQ'
+      banner: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'
     };
 
     setCampaigns([newCamp, ...campaigns]);
     try {
       await createCoupon({
         code: code.toUpperCase(),
-        discount_type: 'PERCENTAGE',
-        discount_value: 15,
+        description: name,
+        type: 'PERCENTAGE',
+        value: parseInt(discount, 10) || 10,
         min_order_value: 1000,
         valid_from: new Date(),
         valid_until: new Date(Date.now() + 30 * 86400000),
-      }).catch(() => null);
-    } catch {}
+      });
+      toast.success(`Created campaign promo code ${code.toUpperCase()}`);
+    } catch (err) {
+      console.warn('Coupon creation note:', err.message);
+    }
 
     setName('');
     setCode('');

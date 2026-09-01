@@ -34,7 +34,7 @@ export const AtelierPage: React.FC = () => {
             <img
               alt="The Art of the Weave"
               className="w-full h-full object-cover grayscale-[15%] hover:grayscale-0 transition-all duration-700 ease-in-out"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3DSAT-cRFCBXGCmSJdykHPsJTlOjYfA7q6BNk132bGp64eJ2iqtwCTuoyNFKlQMVD2dilkewOkHydj7r2AtugSp47sYzqBv-vTp9PCmI8cgiRi4lbjEC3DQeNpGVVPu2MTKW0RiDYTWR6BWc1lr0OGJquK-huajg7w5maPjNE1ksPP7aABz7-68o7pKmQC1_f9G8F_ZEmjXD6wTuesdKZsvhO_NQrAArkoKXFeefgjbeDBBz-8KVhkQ"
+              src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1600&q=85"
               loading="eager"
             />
           </div>
@@ -79,7 +79,7 @@ export const AtelierPage: React.FC = () => {
               <img
                 alt="Master Artisans at work"
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzH61Elm4aq2E3GntOGntpLhHB8Gex2r_qzabt_8pUDraDBYQzmxM-M_RqAZqCVSR2ZftTpYnUGeWqNC71q_jXpBc72l2HVa3Y3-eq00z6ExHSs0Gj0Zf3MNxv2wwDUunZ-3fF4Lwhss938k7GXxAsKbYUC7u89Xzur_T0PjbJxmtSqrTZrv2v_pqhoCTDkFxGMSNbykpSdthHLXmrdmkfkaYM9xaiJNLxVxO18lR-yKTcaiHvWhJyjA"
+                src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80"
                 loading="lazy"
               />
             </div>
@@ -102,7 +102,7 @@ export const AtelierPage: React.FC = () => {
               <img
                 alt="Sourcing Silks"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1j2TOix2U37txjviP76IOsmZFysi0H5CTJ42f2QQIkDnz6sBNpmg9BW6rhUye9DiXgTg_AU7xTsuiTzhKDclIzwYFc2iev3fS7pp7qPg-qtB7lxnagOr2rlFK1NpdARSau6rooDC9WQ4iU1o9MOpjG3P7qrrrZ70Ggyl4PxUMvLs5asSqAXhkm2rPLsXbzYQDSUTqcGnwPJ-GJt5stTK4nCXiSJit68mwls-7ATzd8WRrPpowg7pimw"
+                src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-6 md:p-8">
@@ -123,7 +123,7 @@ export const AtelierPage: React.FC = () => {
               <img
                 alt="The Handloom"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoRSHUE5xyO1XcsWEcbqQZ-8osfHJeYVP04Loirs9yeqbXT0q8losZPgxd6D9ePcKiiuDQa99LcAZobEKhiYGOyJIsVY07Ijphh_kZH0Em7jaCIqH__eX3x5cFS8ZeAt2rxcZuZP007ytPw0CsEYaRP0uSozhau0Z0WlpVVwcBBwkXuHNafyHNNEscHPTr4LbruCsxuitOpHn0brMmCE-WgKJclhiEwFp5IyE0am37K8PhwUfTQWlg5g"
+                src="https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80"
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex flex-col justify-end p-6 md:p-8">
@@ -141,7 +141,7 @@ export const AtelierPage: React.FC = () => {
               <img
                 alt="Finishing Touches"
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC222nhZznFsJUK_yeLw4YEaojloZpBpdZEZnT1Y6NgCsVaLwRofY2fsBcErvi7ELvOLBwkTBIOi6QQycho-xchhmx9l2-ed2NJ39MX4B3RbNBNGMuz_GFRvlb6cTA7KbXqsGG94VZWJD5MPFZMlFfu3m1qbyxQy2U367sU0Wf38R5J4ZMwIMywxHwE00y-qmIeFBpgAYuDXKDW6r39S-lFW2dpH_sU3hDtRkPWZVEZVVUsqdA93_nzyQ"
+                src="https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=800&q=80"
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent flex flex-col justify-end p-6 md:p-8">

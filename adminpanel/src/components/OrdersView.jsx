@@ -14,88 +14,19 @@ import {
   Calendar,
   Filter
 } from 'lucide-react';
-
-export const INITIAL_ORDERS = [
-  {
-    id: '1',
-    orderNumber: '#ITH-4920',
-    customerName: 'Eleanor Vance',
-    customerEmail: 'eleanor.v@example.com',
-    avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDe93d9Pz_XVMVcF1UQnXnVr48RRchMVpwxzMriZkRNEtttupoGULEz4vsxMGTsLW66UT6GEd5Q4mNYDgwq1r_4vIxRE-e2RR_yNCMl19o0FPTHHT0mLLX0nwKScWwXhd8KqpcPVbPLAUm8p4Pf6378shfVgqEiRDVO8G01SwWSDVFk9rqOPiPe_DWu6gs-QLHX_Lo2IZ2uhFU9zvhN6unayDIYd7rbHo1tud1OhcArI1kbuwiaNbm3LQ',
-    date: 'Oct 24, 2023',
-    status: 'processing',
-    total: 1240.00,
-    itemsCount: 2,
-    items: [
-      { name: 'Royal Ivory Hand-Woven Silk Kurta', variant: 'Size L / Ivory', quantity: 1, price: 790.00 },
-      { name: 'Zari Bordered Pashmina Stole', variant: 'One Size / Gold Thread', quantity: 1, price: 450.00 },
-    ],
-    shippingAddress: '44 Heritage Court, Mayfair, London, W1J 8AJ',
-    paymentMethod: 'Credit Card (•••• 8901)',
-  },
-  {
-    id: '2',
-    orderNumber: '#ITH-4919',
-    customerName: 'Marcus James',
-    customerEmail: 'marcus.j@example.com',
-    initials: 'MJ',
-    date: 'Oct 23, 2023',
-    status: 'shipped',
-    total: 850.00,
-    itemsCount: 1,
-    items: [
-      { name: 'Imperial Velvet Bandhgala Jacket', variant: 'Size 42 / Midnight Noir', quantity: 1, price: 850.00 },
-    ],
-    shippingAddress: '742 Evergreen Terrace, New York, NY 10001',
-    paymentMethod: 'Apple Pay',
-  },
-  {
-    id: '3',
-    orderNumber: '#ITH-4918',
-    customerName: 'Sophia Rossi',
-    customerEmail: 'sophia.rossi@example.com',
-    avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBoDg2wffgKhY_FA7VHkWvUdtWkWsnjdKLu7fHCONK_oCZ9Y7SYUIeLnbPgM99Iacxbe9-dWyL7a6oFl3vK1inYPdAiJP_evLhbqvl9UOQ7UUnx2lbn2DWCprdJAnw-YTpKHfvLLZE_s72lf7FcK_CJQw9Lo8Igtn8PKy6-_5rWitY_9kvkhkSVuliFaXpQEfHCdxtzWyYP-0-qHU67JIQ8VBBgx2Gkr1sh4es30g9wqaNxJDBR-xEEbA',
-    date: 'Oct 21, 2023',
-    status: 'delivered',
-    total: 3100.00,
-    itemsCount: 3,
-    items: [
-      { name: 'Heritage Gold Brocade Sherwani', variant: 'Size 40 / Antique Gold', quantity: 1, price: 1850.00 },
-      { name: 'Pure Pashmina Regal Shawl', variant: 'One Size / Charcoal Noir', quantity: 1, price: 950.00 },
-      { name: 'Handcrafted Brass Cufflinks', variant: 'Gold Plated', quantity: 1, price: 300.00 },
-    ],
-    shippingAddress: 'Via Monte Napoleone 8, Milan, 20121, Italy',
-    paymentMethod: 'Credit Card (•••• 4412)',
-  },
-  {
-    id: '4',
-    orderNumber: '#ITH-4917',
-    customerName: 'Arthur Lin',
-    customerEmail: 'arthur.lin@example.com',
-    initials: 'AL',
-    date: 'Oct 20, 2023',
-    status: 'cancelled',
-    total: 420.00,
-    itemsCount: 1,
-    items: [
-      { name: 'Raw Mulberry Silk Scarf', variant: 'One Size / Indigo', quantity: 1, price: 420.00 },
-    ],
-    shippingAddress: '12 Marina Boulevard, Singapore 018982',
-    paymentMethod: 'Credit Card (•••• 1098)',
-  },
-];
-
 import { fetchOrders } from '../api/orders.js';
 
+import { toast } from 'sonner';
+
 export function OrdersView({ onSelectOrder }) {
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
+  const [orders, setOrders] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
   const [startDate, setStartDate] = useState('2023-10-01');
   const [endDate, setEndDate] = useState('2023-10-31');
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function loadOrders() {
       try {
         setLoading(true);
@@ -103,7 +34,7 @@ export function OrdersView({ onSelectOrder }) {
           status: statusFilter !== 'all' ? statusFilter.toUpperCase() : undefined,
           search: searchQuery || undefined,
         });
-        if (data && Array.isArray(data) && data.length > 0) {
+        if (data && Array.isArray(data)) {
           const formatted = data.map((o) => ({
             id: o.id,
             orderNumber: o.order_number || `#ITH-${o.id.slice(0, 4)}`,
@@ -118,9 +49,12 @@ export function OrdersView({ onSelectOrder }) {
             paymentMethod: o.payment_method || 'Online Payment',
           }));
           setOrders(formatted);
+        } else {
+          setOrders([]);
         }
       } catch (err) {
-        console.warn('Orders live sync note:', err.message);
+        console.error('Orders live sync error:', err);
+        toast.error('Unable to fetch atelier orders. Please check network connection.');
       } finally {
         setLoading(false);
       }
@@ -278,7 +212,7 @@ export function OrdersView({ onSelectOrder }) {
 
                 <div className="text-right">
                   <span className="font-semibold text-[15px] text-[var(--text-primary)] tabular-nums block">
-                    ${order.total.toFixed(2)}
+                    ₹{order.total.toLocaleString('en-IN')}
                   </span>
                   <span className="text-[11px] text-[var(--gold)] font-medium flex items-center gap-0.5 justify-end">
                     View <ArrowRight size={12} />
@@ -352,7 +286,7 @@ export function OrdersView({ onSelectOrder }) {
                     {getStatusBadge(order.status)}
                   </td>
                   <td className="py-4 px-5 text-right font-semibold text-[var(--text-primary)] tabular-nums">
-                    ${order.total.toFixed(2)}
+                    ₹{order.total.toLocaleString('en-IN')}
                   </td>
                   <td className="py-4 px-5 text-right">
                     <button

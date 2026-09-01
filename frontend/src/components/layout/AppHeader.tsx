@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Heart, Search, ShoppingBag, User, ChevronLeft } from 'lucide-react';
+import { Menu, Heart, Search, ShoppingBag, ChevronLeft } from 'lucide-react';
+import { ProfileAvatar } from '../ui/ProfileAvatar.js';
 
 interface AppHeaderProps {
   cartItemCount?: number;
@@ -16,6 +17,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    return Boolean(localStorage.getItem('ithihasa_access_token'));
+  });
+
+  useEffect(() => {
+    setIsLoggedIn(Boolean(localStorage.getItem('ithihasa_access_token')));
+  }, [location.pathname]);
+
   const isPDP = location.pathname.startsWith('/products/');
 
   return (
@@ -28,7 +37,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             <button
               onClick={onOpenMenu}
               aria-label="Open Navigation Menu"
-              className="text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors p-2"
+              className="text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors p-2 cursor-pointer"
             >
               <Menu size={22} strokeWidth={1.75} />
             </button>
@@ -56,7 +65,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             <button
               onClick={() => navigate('/search')}
               aria-label="Search Collection"
-              className="text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors p-2"
+              className="text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors p-2 cursor-pointer"
             >
               <Search size={20} strokeWidth={1.75} />
             </button>
@@ -92,13 +101,26 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               )}
             </Link>
 
-            <Link
-              to="/account"
-              aria-label="My Account"
-              className="text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors p-2"
-            >
-              <User size={20} strokeWidth={1.75} />
-            </Link>
+            {/* Patron Account / Sign In */}
+            {isLoggedIn ? (
+              <Link
+                to="/account"
+                aria-label="My Account"
+                className="flex items-center justify-center p-0.5 rounded-full hover:scale-105 transition-transform"
+              >
+                <ProfileAvatar
+                  size={32}
+                  className="border border-[var(--gold)]/40 hover:border-[var(--gold)] transition-all shadow-sm"
+                />
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="text-[13px] font-semibold tracking-[0.15em] uppercase text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors py-1 px-1"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -109,7 +131,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             onClick={() => navigate(-1)}
             aria-label="Go Back"
-            className="text-[var(--text-primary)] active:scale-95 transition-transform p-2 -ml-2 hover:text-[var(--gold)]"
+            className="text-[var(--text-primary)] active:scale-95 transition-transform p-2 -ml-2 hover:text-[var(--gold)] cursor-pointer"
           >
             <ChevronLeft size={22} strokeWidth={1.5} />
           </button>
@@ -117,7 +139,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <button
             onClick={onOpenMenu}
             aria-label="Menu"
-            className="text-[var(--text-primary)] active:scale-95 transition-transform p-2 -ml-2 hover:text-[var(--gold)]"
+            className="text-[var(--text-primary)] active:scale-95 transition-transform p-2 -ml-2 hover:text-[var(--gold)] cursor-pointer"
           >
             <Menu size={22} strokeWidth={1.75} />
           </button>
@@ -133,8 +155,28 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </span>
         </Link>
 
-        {/* Right Actions: Wishlist */}
-        <div className="flex items-center space-x-2 -mr-2">
+        {/* Right Actions: Account / Sign In & Wishlist */}
+        <div className="flex items-center space-x-2.5 -mr-2">
+          {isLoggedIn ? (
+            <Link
+              to="/account"
+              aria-label="My Account"
+              className="p-0.5 rounded-full active:scale-95 transition-transform flex items-center justify-center"
+            >
+              <ProfileAvatar
+                size={28}
+                className="border border-[var(--gold)]/40 shadow-sm"
+              />
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="text-[12px] font-semibold tracking-[0.12em] uppercase text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors px-1 py-1"
+            >
+              Sign In
+            </Link>
+          )}
+
           <Link
             to="/account/wishlist"
             aria-label="Favorites"
@@ -155,3 +197,4 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     </>
   );
 };
+

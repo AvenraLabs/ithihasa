@@ -19,7 +19,10 @@ export class ProductService {
       featured,
       minPrice,
       maxPrice,
+      price_min,
+      price_max,
       size,
+      color,
       search,
       sort,
       page = 1,
@@ -29,23 +32,58 @@ export class ProductService {
     const where: any = { status: 'ACTIVE' };
 
     if (featured !== undefined) {
-      where.featured = featured;
+      where.featured = featured === true || featured === 'true';
     }
 
     if (category) {
       where.category_id = category;
     }
 
-    if (minPrice !== undefined || maxPrice !== undefined) {
+    const effectiveMinPrice = minPrice !== undefined ? minPrice : price_min;
+    const effectiveMaxPrice = maxPrice !== undefined ? maxPrice : price_max;
+
+    if (effectiveMinPrice !== undefined || effectiveMaxPrice !== undefined) {
       where.base_price = {};
-      if (minPrice !== undefined) where.base_price[Op.gte] = minPrice;
-      if (maxPrice !== undefined) where.base_price[Op.lte] = maxPrice;
+      if (effectiveMinPrice !== undefined) where.base_price[Op.gte] = Number(effectiveMinPrice);
+      if (effectiveMaxPrice !== undefined) where.base_price[Op.lte] = Number(effectiveMaxPrice);
     }
 
-    if (search) {
+    // Full-Text & Multi-Token Fuzzy Search Matching
+    if (search && typeof search === 'string') {
+      const cleanSearch = search.trim();
+      const tokens = cleanSearch
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, ' ')
+        .split(/\s+/)
+        .filter((t) => t.length > 0);
+
+      // Expand synonym tokens (e.g. "tee" -> "shirt" / "t-shirt")
+      const expandedTokens: string[] = [];
+      tokens.forEach((tok) => {
+        expandedTokens.push(tok);
+        if (tok === 'tee' || tok === 'tshirt' || tok === 't-shirt') {
+          expandedTokens.push('shirt', 'kurta', 'top', 'apparel');
+        }
+        if (tok.endsWith('s') && tok.length > 3) {
+          expandedTokens.push(tok.slice(0, -1));
+        }
+      });
+
+      const uniqueTokens = Array.from(new Set(expandedTokens));
+
+      const tokenConditions = uniqueTokens.map((tok) => ({
+        [Op.or]: [
+          { name: { [Op.iLike]: `%${tok}%` } },
+          { description: { [Op.iLike]: `%${tok}%` } },
+          { fabric_composition: { [Op.iLike]: `%${tok}%` } },
+          { care_instructions: { [Op.iLike]: `%${tok}%` } },
+        ],
+      }));
+
       where[Op.or] = [
-        { name: { [Op.iLike]: `%${search}%` } },
-        { description: { [Op.iLike]: `%${search}%` } },
+        { name: { [Op.iLike]: `%${cleanSearch}%` } },
+        { description: { [Op.iLike]: `%${cleanSearch}%` } },
+        ...tokenConditions,
       ];
     }
 
@@ -64,10 +102,15 @@ export class ProductService {
     if (size) {
       variantWhere.size = size;
     }
+    if (color) {
+      variantWhere.color = { [Op.iLike]: `%${color}%` };
+    }
 
     let orderClause: SeqOrder = [['created_at', 'DESC']];
     if (sort === 'price_asc') orderClause = [['base_price', 'ASC']];
     if (sort === 'price_desc') orderClause = [['base_price', 'DESC']];
+    if (sort === 'newest') orderClause = [['created_at', 'DESC']];
+    if (sort === 'rating' || sort === 'popularity') orderClause = [['rating', 'DESC'], ['created_at', 'DESC']];
     if (sort === 'featured') orderClause = [['featured', 'DESC'], ['created_at', 'DESC']];
 
     const offset = (page - 1) * limit;
@@ -84,8 +127,8 @@ export class ProductService {
         {
           model: ProductVariant,
           as: 'variants',
-          where: variantWhere,
-          required: Boolean(size),
+          where: Object.keys(variantWhere).length > 1 ? variantWhere : undefined,
+          required: Boolean(size || color),
           include: [
             {
               model: Inventory,

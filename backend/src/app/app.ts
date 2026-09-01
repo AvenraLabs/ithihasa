@@ -33,13 +33,15 @@ export function createApp(): Express {
   app.use(globalRateLimiter);
 
   // Health Checks (GCP / PM2 / Monitoring ready)
-  app.get('/health', (_req, res) => {
+  const healthHandler = (_req: any, res: any) => {
     res.status(200).json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
       service: 'ithihasa-backend',
     });
-  });
+  };
+  app.get('/health', healthHandler);
+  app.get('/api/v1/health', healthHandler);
 
   app.get('/ready', async (_req, res) => {
     try {

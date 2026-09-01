@@ -6,6 +6,14 @@ import { fetchOrders, type OrderData } from '../api/orders.js';
 
 export const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('ithihasa_access_token');
+    if (!token) {
+      navigate('/login?redirect=/account/orders', { replace: true });
+    }
+  }, [navigate]);
+
   const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'DELIVERED'>('ALL');
 
   const { data: orders = [], isLoading } = useQuery<OrderData[]>({

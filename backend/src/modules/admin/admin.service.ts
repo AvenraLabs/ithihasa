@@ -217,7 +217,7 @@ let NOTIFICATIONS: any[] = [
   {
     id: '1',
     title: 'High-Value Order Received',
-    description: 'Lady Catherine Morland placed order #ITH-4925 ($4,850.00)',
+    description: 'Lady Catherine Morland placed order #ITH-4925 (₹1,48,500)',
     time: '5m ago',
     read: false,
     type: 'order',
@@ -235,6 +235,14 @@ let NOTIFICATIONS: any[] = [
     title: 'Bespoke Tailoring Request',
     description: 'New measurement note submitted on order #ITH-4920',
     time: '2h ago',
+    read: true,
+    type: 'bespoke',
+  },
+  {
+    id: '4',
+    title: 'Concierge Inquiry',
+    description: 'Lord Arthur Wellesley requested fitting consultation',
+    time: '4h ago',
     read: true,
     type: 'support',
   },

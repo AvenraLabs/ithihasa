@@ -16,6 +16,13 @@ export const AddressesPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  React.useEffect(() => {
+    const token = localStorage.getItem('ithihasa_access_token');
+    if (!token) {
+      navigate('/login?redirect=/account/addresses', { replace: true });
+    }
+  }, [navigate]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
 

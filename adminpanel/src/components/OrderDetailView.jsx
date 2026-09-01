@@ -11,7 +11,6 @@ import {
   Truck,
   CheckCircle2
 } from 'lucide-react';
-import { INITIAL_ORDERS } from './OrdersView.jsx';
 import { fetchOrders } from '../api/orders.js';
 import { toast } from 'sonner';
 
@@ -33,39 +32,39 @@ export function OrderDetailView({ order, onBack }) {
             id: o.id,
             orderNumber: `#ITH-${o.order_number || o.id.slice(0, 4)}`,
             status: (o.status || 'processing').toLowerCase(),
-            date: new Date(o.created_at || Date.now()).toLocaleDateString('en-US', {
+            date: new Date(o.created_at || Date.now()).toLocaleDateString('en-IN', {
               month: 'long',
               day: 'numeric',
               year: 'numeric',
             }),
             customerName: o.user ? `${o.user.first_name || ''} ${o.user.last_name || ''}`.trim() : 'Atelier Patron',
             customerEmail: o.user?.email || 'patron@ithihasa.com',
-            customerPhone: o.user?.phone || '+1 (555) 019-2834',
+            customerPhone: o.user?.phone || '+91 98765 43210',
             customerType: 'Noir Tier Patron',
-            avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCIPq79k1lT0TGctsHI8ikHkC5NLjPhlFKoJmR7F1zwS5vr7m9RfMD99OIzsfwdfScS7PT_nfC0KGrfUa8rh3xCuOH4DvFGWalM4ku7bD7-JLvCSm_dMPor_i6WxSg2vUcR_QZxNboblIWkv-8U3fTM-O6LEmv2uOaolC3PnpB5urqo1upPLtb-JtJwGGM-TwFRNF6qsX10jeFHq0dnEUStFtjyKBnsYdztl17zay3IdYCOXxPg9C8PAw',
+            avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
             shippingAddress: {
               name: o.user ? `${o.user.first_name || ''} ${o.user.last_name || ''}`.trim() : 'Eleanor Vance',
               street1: '1042 Heritage Lane',
               street2: 'Suite 3B',
-              cityStateZip: 'San Francisco, CA 94109',
-              country: 'United States',
-              method: 'Premium Atelier Delivery (2-3 Days)'
+              cityStateZip: 'Mumbai, MH 400001',
+              country: 'India',
+              method: 'Express Insured Courier (2-3 Days)'
             },
             items: o.items?.length > 0 ? o.items.map((it, idx) => ({
               id: String(idx + 1),
               name: it.product_variant?.product?.name || 'Heritage Atelier Garment',
               spec: `Size: ${it.product_variant?.size || 'Standard'} • Color: ${it.product_variant?.color || 'Heirloom'}`,
               quantity: it.quantity || 1,
-              price: Number(it.unit_price || 850),
-              image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCp2MY-i6FVyIWxqy0BivV4xT41MJJ9908qDTJIXx2JR2ZGU914DIv91Q0lLzgs-12T500ACSURod9mxu09pXYGiH230imPT-nC_Kivu20DwqYqsDZlIEg9CMHPNtuNWuhO1Rr3SOX0nuJjj9ZjSmuX-_u8mjt-aklkmwuk1gpy4yTYGzotBiAJ8_JriQOcnKtr1zO-h1YwFSuJSQTqJ7HPQA8T9HUf3RfeI_yKEjM-kzDW-e-j47BCcQ'
+              price: Number(it.unit_price || 34500),
+              image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80'
             })) : [
               {
                 id: '1',
-                name: 'Kanchipuram Heirloom Saree',
-                spec: 'Color: Crimson & Gold • Size: Standard',
+                name: 'Kanchipuram Heirloom Silk Saree',
+                spec: 'Color: Crimson & Gold • Size: Free Size',
                 quantity: 1,
-                price: 850.00,
-                image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCp2MY-i6FVyIWxqy0BivV4xT41MJJ9908qDTJIXx2JR2ZGU914DIv91Q0lLzgs-12T500ACSURod9mxu09pXYGiH230imPT-nC_Kivu20DwqYqsDZlIEg9CMHPNtuNWuhO1Rr3SOX0nuJjj9ZjSmuX-_u8mjt-aklkmwuk1gpy4yTYGzotBiAJ8_JriQOcnKtr1zO-h1YwFSuJSQTqJ7HPQA8T9HUf3RfeI_yKEjM-kzDW-e-j47BCcQ'
+                price: 34500,
+                image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80'
               }
             ]
           });
@@ -77,54 +76,45 @@ export function OrderDetailView({ order, onBack }) {
     loadDetail();
   }, [orderId]);
 
-  // Lookup order by ID or orderNumber from URL, or use passed order prop, or fallback
-  const foundOrder = orderId
-    ? INITIAL_ORDERS.find(
-        (o) =>
-          o.id === orderId ||
-          o.orderNumber.replace('#', '').toLowerCase() === orderId.replace('#', '').toLowerCase()
-      )
-    : null;
-
-  const currentOrder = liveOrder || order || foundOrder || {
+  const currentOrder = liveOrder || order || {
     orderNumber: '#ITH-4920',
     status: 'processing',
     date: 'October 24, 2023 at 10:42 AM',
     customerName: 'Eleanor Vance',
     customerEmail: 'e.vance@example.com',
-    customerPhone: '+1 (555) 019-2834',
+    customerPhone: '+91 98765 43210',
     customerType: 'Returning Client',
-    avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCIPq79k1lT0TGctsHI8ikHkC5NLjPhlFKoJmR7F1zwS5vr7m9RfMD99OIzsfwdfScS7PT_nfC0KGrfUa8rh3xCuOH4DvFGWalM4ku7bD7-JLvCSm_dMPor_i6WxSg2vUcR_QZxNboblIWkv-8U3fTM-O6LEmv2uOaolC3PnpB5urqo1upPLtb-JtJwGGM-TwFRNF6qsX10jeFHq0dnEUStFtjyKBnsYdztl17zay3IdYCOXxPg9C8PAw',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
     shippingAddress: {
       name: 'Eleanor Vance',
       street1: '1042 Heritage Lane',
       street2: 'Suite 3B',
-      cityStateZip: 'San Francisco, CA 94109',
-      country: 'United States',
-      method: 'Premium Atelier Delivery (2-3 Days)'
+      cityStateZip: 'Mumbai, MH 400001',
+      country: 'India',
+      method: 'Express Insured Courier (2-3 Days)'
     },
     items: [
       {
         id: '1',
-        name: 'Kanchipuram Heirloom Saree',
-        spec: 'Color: Crimson & Gold • Size: Standard',
+        name: 'Kanchipuram Heirloom Silk Saree',
+        spec: 'Color: Crimson & Gold • Size: Free Size',
         quantity: 1,
-        price: 850.00,
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCp2MY-i6FVyIWxqy0BivV4xT41MJJ9908qDTJIXx2JR2ZGU914DIv91Q0lLzgs-12T500ACSURod9mxu09pXYGiH230imPT-nC_Kivu20DwqYqsDZlIEg9CMHPNtuNWuhO1Rr3SOX0nuJjj9ZjSmuX-_u8mjt-aklkmwuk1gpy4yTYGzotBiAJ8_JriQOcnKtr1zO-h1YwFSuJSQTqJ7HPQA8T9HUf3RfeI_yKEjM-kzDW-e-j47BCcQ'
+        price: 34500,
+        image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80'
       },
       {
         id: '2',
-        name: 'Banarasi Silk Dupatta',
-        spec: 'Color: Ivory & Silver • Size: Standard',
+        name: 'Pure Pashmina Regal Stole',
+        spec: 'Color: Antique Gold • Size: Standard',
         quantity: 1,
-        price: 350.00,
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuChGPEW4JwxYYRiybHsS-xDf4jBYLJ3wC01QcXZpvzDppzHBh0sreoHltNCMjc4KSVwiL0E6zgwxQlZk-NtobJXtnx7JlSaoMooxLKskanJ0-jWuFL2CiNu8GLa5f71hcTC3C6yTV_NMkvpIUJN4PwZ5dzej2MmpS2ASUF1YSYmBu0763NoIlWC1BQ0DMdJ66eDXW8yT8E02O-gAXhjiQzc6mDELn72_NapGl1IqfkazBv43sdfse3FIQ'
+        price: 18900,
+        image: 'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?auto=format&fit=crop&w=600&q=80'
       }
     ],
-    subtotal: 1200.00,
-    shipping: 40.00,
-    tax: 0.00,
-    total: 1240.00
+    subtotal: 53400,
+    shipping: 0,
+    tax: 0,
+    total: 53400
   };
 
   const getStatusBadge = (status) => {
@@ -254,7 +244,7 @@ export function OrderDetailView({ order, onBack }) {
                         Qty: {item.quantity}
                       </span>
                       <span className="font-manrope text-[16px] font-semibold text-[var(--text-primary)] tabular-nums">
-                        ${(item.price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        ₹{(item.price || 0).toLocaleString('en-IN')}
                       </span>
                     </div>
                   </div>
@@ -416,26 +406,26 @@ export function OrderDetailView({ order, onBack }) {
               <div className="flex justify-between text-[var(--text-secondary)]">
                 <span>Subtotal</span>
                 <span className="text-[var(--text-primary)] tabular-nums">
-                  ${(currentOrder.subtotal || 1200).toFixed(2)}
+                  ₹{(currentOrder.subtotal || 24500).toLocaleString('en-IN')}
                 </span>
               </div>
               <div className="flex justify-between text-[var(--text-secondary)]">
                 <span>Shipping</span>
                 <span className="text-[var(--text-primary)] tabular-nums">
-                  ${(currentOrder.shipping || 40).toFixed(2)}
+                  ₹{(currentOrder.shipping || 0).toLocaleString('en-IN')}
                 </span>
               </div>
               <div className="flex justify-between text-[var(--text-secondary)]">
                 <span>Tax</span>
                 <span className="text-[var(--text-primary)] tabular-nums">
-                  ${(currentOrder.tax || 0).toFixed(2)}
+                  ₹{(currentOrder.tax || 0).toLocaleString('en-IN')}
                 </span>
               </div>
 
               <div className="flex justify-between pt-3 border-t border-[var(--border-color)] text-[16px] font-semibold text-[var(--text-primary)]">
                 <span className="font-garamond text-[18px]">Total</span>
                 <span className="text-[var(--gold)] tabular-nums font-garamond text-[20px]">
-                  ${(currentOrder.total || 1240).toFixed(2)}
+                  ₹{(currentOrder.total || 24500).toLocaleString('en-IN')}
                 </span>
               </div>
             </div>

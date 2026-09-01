@@ -54,6 +54,13 @@ export class AuthService {
       throw new BusinessRuleError('An account with this email address already exists.');
     }
 
+    if (data.phone) {
+      const existingPhone = await User.findOne({ where: { phone: data.phone.trim() } });
+      if (existingPhone) {
+        throw new BusinessRuleError('An account with this mobile number already exists. Please sign in instead.');
+      }
+    }
+
     const passwordHash = await hashValue(data.password);
 
     const user = await User.create({

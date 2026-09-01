@@ -14,6 +14,7 @@ import { orderRouter } from '../modules/orders/index.js';
 import { paymentRouter } from '../modules/payments/index.js';
 import { returnRouter } from '../modules/returns/index.js';
 import { reviewRouter } from '../modules/reviews/index.js';
+import { merchandisingRouter } from '../modules/merchandising/index.js';
 import { adminRouter } from '../modules/admin/index.js';
 
 export const apiRouter = Router();
@@ -32,6 +33,7 @@ apiRouter.use('/orders', orderRouter);
 apiRouter.use('/payments', paymentRouter);
 apiRouter.use('/returns', returnRouter);
 apiRouter.use('/reviews', reviewRouter);
+apiRouter.use('/merchandising', merchandisingRouter);
 
 // Administrative Sub-Routers (RBAC protected)
 apiRouter.use('/admin', adminRouter);

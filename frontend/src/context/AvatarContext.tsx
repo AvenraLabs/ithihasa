@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useTheme } from './ThemeContext.js';
+import { fetchUserProfile } from '../api/auth.js';
 
 export interface AvatarOption {
   id: string;
@@ -64,11 +65,35 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
     return {
-      fullName: 'Eleanor Vance',
-      email: 'eleanor.v@example.com',
-      phone: '+1 (555) 123-4567',
+      fullName: 'Atelier Patron',
+      email: 'patron@ithihasa.com',
+      phone: '+91 98765 43210',
     };
   });
+
+  // Hydrate from live backend profile whenever user token exists
+  useEffect(() => {
+    async function hydrateProfile() {
+      const token = localStorage.getItem('ithihasa_access_token');
+      if (!token) return;
+
+      try {
+        const user = await fetchUserProfile();
+        if (user && user.name) {
+          const updated = {
+            fullName: user.name,
+            email: user.email,
+            phone: user.phone || '+91 98765 43210',
+          };
+          setProfileDataState(updated);
+          localStorage.setItem('ithihasa_user_profile', JSON.stringify(updated));
+        }
+      } catch (err) {
+        console.warn('Profile hydration note:', err);
+      }
+    }
+    hydrateProfile();
+  }, []);
 
   const setAvatar = (srcOrAuto: string) => {
     setSelectedAvatarState(srcOrAuto);

@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { adminController } from './admin.controller.js';
-import { optionalAuthenticate } from '../../middleware/auth.js';
+import { authenticate } from '../../middleware/auth.js';
+import { requireRole } from '../../middleware/rbac.js';
 
 export const adminRouter = Router();
 
-// Allow optional authentication so development and token-bearing requests work seamlessly
-adminRouter.use(optionalAuthenticate);
+// Enforce strict authentication and ADMIN role on all admin routes
+adminRouter.use(authenticate, requireRole('ADMIN'));
 
 // Analytics & Dashboard
 adminRouter.get('/dashboard', adminController.getDashboard);
@@ -53,13 +54,23 @@ adminRouter.post('/orders/:orderId/refund', adminController.issueRefund);
 adminRouter.post('/products', adminController.createProduct);
 adminRouter.delete('/products/:id', adminController.deleteProduct);
 adminRouter.delete('/inventory/:id', adminController.deleteProduct);
+adminRouter.get('/categories', adminController.getCategories);
 adminRouter.post('/categories', adminController.createCategory);
 adminRouter.patch('/categories/:id', adminController.updateCategory);
+adminRouter.delete('/categories/:id', adminController.deleteCategory);
 
 // Coupons CRUD
 adminRouter.get('/coupons', adminController.listCoupons);
 adminRouter.post('/coupons', adminController.createCoupon);
 adminRouter.patch('/coupons/:id', adminController.updateCoupon);
+
+// Merchandising & Storefront CMS
+import { merchandisingController } from '../merchandising/index.js';
+adminRouter.get('/merchandising/storefront', merchandisingController.getStorefront);
+adminRouter.put('/merchandising/storefront', merchandisingController.updateStorefront);
+
+// Media & Asset Ingestion
+adminRouter.post('/upload', adminController.uploadMedia);
 
 // Audit Trail
 adminRouter.get('/audit', adminController.getAuditLogs);

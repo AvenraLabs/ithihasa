@@ -15,59 +15,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const INITIAL_TICKETS = [
-  {
-    id: '#TK-4029',
-    customer: 'Eleanor Vance',
-    subject: 'Inquiry regarding bespoke silk tailoring measurements',
-    priority: 'High',
-    status: 'OPEN',
-    date: '10 mins ago',
-    messages: [
-      {
-        sender: 'Eleanor Vance',
-        text: 'Hello, I wanted to confirm if the master artisan can adjust the sleeve hem on the Banarasi Brocade Sherwani before dispatch?',
-        time: '10 mins ago'
-      }
-    ]
-  },
-  {
-    id: '#TK-4028',
-    customer: 'Arthur Pendelton',
-    subject: 'Shipping delay on Fall Lookbook order',
-    priority: 'Med',
-    status: 'PENDING',
-    date: '2 hours ago',
-    messages: [
-      {
-        sender: 'Arthur Pendelton',
-        text: 'Tracking indicates courier customs clearance in London. Is delivery still scheduled for Friday?',
-        time: '2 hours ago'
-      }
-    ]
-  },
-  {
-    id: '#TK-4027',
-    customer: 'Clara Bow',
-    subject: 'Care instructions for cashmere blend cardigan',
-    priority: 'Low',
-    status: 'RESOLVED',
-    date: 'Yesterday',
-    messages: [
-      {
-        sender: 'Clara Bow',
-        text: 'Should this piece be dry cleaned or hand washed with silk detergent?',
-        time: 'Yesterday'
-      },
-      {
-        sender: 'Atelier Concierge',
-        text: 'We recommend gentle organic dry cleaning to preserve the natural lanolin in the cashmere fibers.',
-        time: 'Yesterday'
-      }
-    ]
-  }
-];
-
 import {
   fetchSupportMetrics,
   fetchSupportTickets,
@@ -77,12 +24,12 @@ import {
 
 export function SupportView() {
   const navigate = useNavigate();
-  const [tickets, setTickets] = useState(INITIAL_TICKETS);
+  const [tickets, setTickets] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadSupport() {
@@ -93,11 +40,14 @@ export function SupportView() {
           fetchSupportTickets().catch(() => null),
         ]);
         if (metricsData) setMetrics(metricsData);
-        if (ticketsData && Array.isArray(ticketsData) && ticketsData.length > 0) {
+        if (ticketsData && Array.isArray(ticketsData)) {
           setTickets(ticketsData);
+        } else {
+          setTickets([]);
         }
       } catch (err) {
-        console.warn('Support load note:', err.message);
+        console.error('Support load error:', err);
+        toast.error('Unable to fetch concierge support tickets. Please check connection.');
       } finally {
         setLoading(false);
       }

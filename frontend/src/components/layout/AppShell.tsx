@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AppHeader } from './AppHeader.js';
 import { BottomNav } from './BottomNav.js';
 import {
   X,
-  Sparkles,
-  BookOpen,
   Compass,
   Leaf,
   HelpCircle,
@@ -13,8 +11,11 @@ import {
   Phone,
   Mail,
   MapPin,
+  User,
+  LogOut,
+  Smartphone,
 } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { fetchCart } from '../../api/cart.js';
 import { fetchWishlist } from '../../api/wishlist.js';
 
@@ -25,111 +26,163 @@ interface AppShellProps {
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const isPDP = location.pathname.startsWith('/products/');
+
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return Boolean(localStorage.getItem('ithihasa_access_token'));
+  });
+
+  // Keep auth state synchronized
+  useEffect(() => {
+    setIsLoggedIn(Boolean(localStorage.getItem('ithihasa_access_token')));
+  }, [location.pathname]);
+
+  // PWA Install prompt listener
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      alert('To install Ithihasa on your device:\n\n• iOS (Safari): Tap Share ➔ "Add to Home Screen"\n• Android (Chrome): Tap browser menu (⋮) ➔ "Install App"');
+    }
+  };
 
   // Auto-close sidebar on any route or parameter change
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname, location.search]);
 
-  // Listen to custom wishlist updates
-  useEffect(() => {
-    const handleWishlistUpdate = () => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-    };
-    window.addEventListener('wishlist-updated', handleWishlistUpdate);
-    return () => window.removeEventListener('wishlist-updated', handleWishlistUpdate);
-  }, [queryClient]);
-
   // Live cart query for badge counts
   const { data: cart } = useQuery({
     queryKey: ['cart'],
     queryFn: () => fetchCart(),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30,
   });
 
   // Live wishlist query for badge counts
   const { data: wishlist = [] } = useQuery({
     queryKey: ['wishlist'],
-    queryFn: fetchWishlist,
+    queryFn: () => fetchWishlist(),
+    staleTime: 1000 * 30,
   });
 
-  const cartItemCount = cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
-  const wishlistItemCount = wishlist.length;
+  const cartItemCount = cart?.items?.reduce((total: number, item: any) => total + item.quantity, 0) || 0;
+  const wishlistItemCount = Array.isArray(wishlist) ? wishlist.length : 0;
+
+  const handleSignOut = () => {
+    localStorage.removeItem('ithihasa_access_token');
+    localStorage.removeItem('ithihasa_user_profile');
+    setIsLoggedIn(false);
+    setIsMenuOpen(false);
+    navigate('/login');
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">
-      {/* Header */}
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col antialiased transition-colors duration-300 font-sans selection:bg-[var(--gold)] selection:text-[#0A0A0A]">
+      {/* Top Header */}
       <AppHeader
         cartItemCount={cartItemCount}
         wishlistItemCount={wishlistItemCount}
         onOpenMenu={() => setIsMenuOpen(true)}
       />
 
-      {/* Navigation Drawer (Opens 75% width on mobile, 25% right side backdrop visible) */}
+      {/* Slide-out Sidebar Drawer (z-[150] strictly above BottomNav z-50) */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[100] flex">
-          {/* Overlay with backdrop blur (fills 100% of viewport, clicking right 25% closes drawer) */}
+        <div className="fixed inset-0 z-[150] flex">
+          {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-500 ease-out"
+            className="fixed inset-0 bg-black/65 backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setIsMenuOpen(false)}
           />
 
-          {/* Navigation Drawer Aside Panel (Width: 75% on mobile, max 320px on desktop) */}
-          <aside className="relative z-50 h-full w-[75vw] sm:w-80 sm:max-w-[320px] bg-[var(--bg-primary)] text-[var(--text-primary)] transform translate-x-0 transition-transform duration-500 ease-out flex flex-col justify-between border-r border-[var(--border-color)] shadow-2xl overflow-y-auto pb-safe">
+          {/* Drawer Menu */}
+          <aside className="relative z-[160] h-full w-[75vw] sm:w-80 sm:max-w-[320px] bg-[var(--bg-primary)] text-[var(--text-primary)] transform translate-x-0 transition-transform duration-500 ease-out flex flex-col justify-between border-r border-[var(--border-color)] shadow-2xl overflow-y-auto pb-safe">
             <div>
               {/* Header */}
-              <div className="flex items-center justify-between p-6 pt-10 mb-4">
-                <h2
-                  className="text-[30px] sm:text-[36px] uppercase tracking-wider text-[var(--gold)] font-normal"
-                  style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
-                >
-                  ITHIHASA
-                </h2>
+              <div className="flex items-center justify-between p-6 pt-8 mb-2 border-b border-[var(--border-color)]">
+                <div>
+                  <h2
+                    className="text-[26px] sm:text-[30px] uppercase tracking-wider text-[var(--gold)] font-normal leading-tight"
+                    style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+                  >
+                    ITHIHASA
+                  </h2>
+                  <span className="label-caps text-[9.5px] uppercase tracking-widest text-[var(--text-secondary)]">
+                    Wear Your Legacy
+                  </span>
+                </div>
                 <button
                   onClick={() => setIsMenuOpen(false)}
                   aria-label="Close navigation"
-                  className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors p-2"
+                  className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors p-2 cursor-pointer"
                 >
-                  <X size={24} strokeWidth={1.5} />
+                  <X size={22} strokeWidth={1.5} />
                 </button>
               </div>
 
+              {/* Patron Authentication Status Banner */}
+              <div className="px-6 py-4 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/40 mb-2">
+                {isLoggedIn ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[var(--gold)] text-black flex items-center justify-center font-bold text-[12px]">
+                        <User size={15} />
+                      </div>
+                      <div>
+                        <span className="label-caps text-[10px] uppercase text-[var(--gold)] font-semibold block">
+                          Patron Active
+                        </span>
+                        <Link
+                          to="/account"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="body-sm text-[13px] font-medium text-[var(--text-primary)] hover:text-[var(--gold)]"
+                        >
+                          View Account
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center justify-between group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[var(--gold)]/20 border border-[var(--gold)] text-[var(--gold)] flex items-center justify-center">
+                        <User size={15} />
+                      </div>
+                      <div>
+                        <span className="label-caps text-[11px] uppercase tracking-wider text-[var(--gold)] font-bold block">
+                          Sign In / Register
+                        </span>
+                        <span className="body-sm text-[11px] text-[var(--text-secondary)]">
+                          Access orders & wishlist
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                )}
+              </div>
+
               {/* Navigation Links */}
-              <nav className="flex flex-col px-6 space-y-4">
-                {/* 1. New Arrivals (Featured Active with Underline) */}
-                <Link
-                  to="/shop?sort=newest"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="group flex items-center space-x-4 py-2.5 text-[var(--text-primary)] border-b border-[var(--text-primary)] duration-300 ease-out"
-                >
-                  <Sparkles
-                    size={19}
-                    className="text-[var(--gold)] shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  />
-                  <span className="label-caps font-bold tracking-widest uppercase">
-                    New Arrivals
-                  </span>
-                </Link>
-
-                {/* 2. Collections */}
-                <Link
-                  to="/shop"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="group flex items-center space-x-4 py-2.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors duration-300 ease-out"
-                >
-                  <BookOpen
-                    size={19}
-                    strokeWidth={1.75}
-                    className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0"
-                  />
-                  <span className="label-caps tracking-widest uppercase">
-                    Collections
-                  </span>
-                </Link>
-
-                {/* 3. The Atelier */}
+              <nav className="flex flex-col px-6 space-y-3">
+                {/* 1. The Atelier */}
                 <Link
                   to="/atelier"
                   onClick={() => setIsMenuOpen(false)}
@@ -140,12 +193,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     strokeWidth={1.75}
                     className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0"
                   />
-                  <span className="label-caps tracking-widest uppercase">
+                  <span className="label-caps tracking-widest uppercase text-[12px]">
                     The Atelier
                   </span>
                 </Link>
 
-                {/* 4. Sustainability */}
+                {/* 2. Sustainability */}
                 <Link
                   to="/sustainability"
                   onClick={() => setIsMenuOpen(false)}
@@ -156,12 +209,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     strokeWidth={1.75}
                     className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0"
                   />
-                  <span className="label-caps tracking-widest uppercase">
+                  <span className="label-caps tracking-widest uppercase text-[12px]">
                     Sustainability
                   </span>
                 </Link>
 
-                {/* 5. Customer Care */}
+                {/* 3. Customer Care */}
                 <Link
                   to="/care"
                   onClick={() => setIsMenuOpen(false)}
@@ -172,10 +225,44 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     strokeWidth={1.75}
                     className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0"
                   />
-                  <span className="label-caps tracking-widest uppercase">
+                  <span className="label-caps tracking-widest uppercase text-[12px]">
                     Customer Care
                   </span>
                 </Link>
+
+                {/* 4. Install App */}
+                <button
+                  type="button"
+                  onClick={handleInstallClick}
+                  className="group flex items-center space-x-4 py-2.5 text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors duration-300 ease-out text-left w-full cursor-pointer"
+                >
+                  <Smartphone
+                    size={19}
+                    strokeWidth={1.75}
+                    className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0"
+                  />
+                  <span className="label-caps tracking-widest uppercase text-[12px]">
+                    Install Mobile App
+                  </span>
+                </button>
+
+                {/* Sign Out (Only when authenticated) */}
+                {isLoggedIn && (
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="group flex items-center space-x-4 py-2.5 text-[var(--text-secondary)] hover:text-[var(--error)] transition-colors duration-300 ease-out text-left w-full cursor-pointer"
+                  >
+                    <LogOut
+                      size={18}
+                      strokeWidth={1.75}
+                      className="text-[var(--text-secondary)] group-hover:text-[var(--error)] transition-colors shrink-0"
+                    />
+                    <span className="label-caps tracking-widest uppercase text-[12px]">
+                      Sign Out
+                    </span>
+                  </button>
+                )}
               </nav>
             </div>
 
@@ -183,11 +270,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             <div className="p-6 mt-auto border-t border-[var(--border-color)]">
               <div className="flex items-center space-x-3 mb-2">
                 <Globe size={16} strokeWidth={1.75} className="text-[var(--text-secondary)]" />
-                <span className="label-caps text-[var(--text-secondary)] tracking-widest uppercase">
-                  EN / INR
+                <span className="label-caps text-[var(--text-secondary)] tracking-widest uppercase text-[11px]">
+                  EN / INR (₹)
                 </span>
               </div>
-              <p className="body-sm text-[12px] text-[var(--text-muted)] tracking-wider">
+              <p className="body-sm text-[11px] text-[var(--text-secondary)] tracking-wider">
                 © {new Date().getFullYear()} ITHIHASA
               </p>
             </div>

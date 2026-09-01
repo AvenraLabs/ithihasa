@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Star,
   Heart,
+  Share2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -183,7 +184,28 @@ export const ProductDetailPage: React.FC = () => {
     setIsSizeSheetOpen(false);
   };
 
-  const lookProducts = recommendedProducts.filter((p) => p.id !== product.id).slice(0, 2);
+  const handleShare = async () => {
+    if (!product) return;
+    const shareData = {
+      title: `${product.name} — Ithihasa Atelier`,
+      text: `${product.name}: Premium royal heritage clothing handcrafted by Ithihasa.`,
+      url: window.location.href,
+    };
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // cancelled by user
+      }
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard');
+      } catch (err) {}
+    }
+  };
+
+  const lookProducts = (recommendedProducts || []).filter((p: Product) => p.id !== product.id).slice(0, 2);
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors pb-24 md:pb-16 relative">
@@ -330,7 +352,7 @@ export const ProductDetailPage: React.FC = () => {
               onClick={() => wishlistMutation.mutate()}
               disabled={wishlistMutation.isPending}
               aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-              className={`w-14 h-[50px] border flex items-center justify-center transition-colors ${
+              className={`w-14 h-[50px] border flex items-center justify-center transition-colors cursor-pointer ${
                 isWishlisted
                   ? 'border-[var(--gold)] text-[var(--gold)] bg-[var(--bg-card)]'
                   : 'border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--gold)] hover:text-[var(--gold)]'
@@ -341,6 +363,17 @@ export const ProductDetailPage: React.FC = () => {
                 strokeWidth={1.75}
                 className="text-[var(--gold)]"
                 fill={isWishlisted ? "currentColor" : "none"}
+              />
+            </button>
+
+            <button
+              onClick={handleShare}
+              aria-label="Share Silhouette"
+              className="w-14 h-[50px] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--gold)] hover:text-[var(--gold)] flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <Share2
+                size={20}
+                strokeWidth={1.75}
               />
             </button>
           </div>

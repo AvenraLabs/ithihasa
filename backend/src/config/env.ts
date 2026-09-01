@@ -10,7 +10,7 @@ const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
   API_PREFIX: z.string().default('/api/v1'),
 
-  CORS_ORIGINS: z.string().default('http://localhost:5173,http://localhost:3000,capacitor://localhost,http://localhost'),
+  CORS_ORIGINS: z.string().default('http://localhost:5173,http://localhost:5174,http://localhost:3000,capacitor://localhost,http://localhost'),
 
   DATABASE_URL: z.string().default('postgres://postgres:admin123@localhost:5432/ithihasa_db'),
   DB_LOGGING: z.string().transform((val) => val === 'true').default('false'),

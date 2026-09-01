@@ -43,8 +43,9 @@ export interface ProductFilters {
   minPrice?: number;
   maxPrice?: number;
   size?: string;
+  color?: string;
   search?: string;
-  sort?: 'price_asc' | 'price_desc' | 'newest' | 'featured';
+  sort?: 'price_asc' | 'price_desc' | 'newest' | 'featured' | string;
   page?: number;
   limit?: number;
 }
@@ -76,6 +77,7 @@ export async function fetchProducts(filters: ProductFilters = {}): Promise<Produ
   if (filters.minPrice !== undefined) params.append('minPrice', String(filters.minPrice));
   if (filters.maxPrice !== undefined) params.append('maxPrice', String(filters.maxPrice));
   if (filters.size) params.append('size', filters.size);
+  if (filters.color) params.append('color', filters.color);
   if (filters.search) params.append('search', filters.search);
   if (filters.sort) params.append('sort', filters.sort);
   if (filters.page) params.append('page', String(filters.page));

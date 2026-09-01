@@ -21,33 +21,6 @@ import {
   removeTeamMember
 } from '../api/settings.js';
 
-const INITIAL_TEAM = [
-  {
-    id: '1',
-    name: 'Eleanor Vance',
-    email: 'eleanor.v@ithihasa.com',
-    role: 'Administrator',
-    status: 'Active',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCIPq79k1lT0TGctsHI8ikHkC5NLjPhlFKoJmR7F1zwS5vr7m9RfMD99OIzsfwdfScS7PT_nfC0KGrfUa8rh3xCuOH4DvFGWalM4ku7bD7-JLvCSm_dMPor_i6WxSg2vUcR_QZxNboblIWkv-8U3fTM-O6LEmv2uOaolC3PnpB5urqo1upPLtb-JtJwGGM-TwFRNF6qsX10jeFHq0dnEUStFtjyKBnsYdztl17zay3IdYCOXxPg9C8PAw'
-  },
-  {
-    id: '2',
-    name: 'Julian Mercer',
-    email: 'julian.m@ithihasa.com',
-    role: 'Atelier Curator',
-    status: 'Active',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDe93d9Pz_XVMVcF1UQnXnVr48RRchMVpwxzMriZkRNEtttupoGULEz4vsxMGTsLW66UT6GEd5Q4mNYDgwq1r_4vIxRE-e2RR_yNCMl19o0FPTHHT0mLLX0nwKScWwXhd8KqpcPVbPLAUm8p4Pf6378shfVgqEiRDVO8G01SwWSDVFk9rqOPiPe_DWu6gs-QLHX_Lo2IZ2uhFU9zvhN6unayDIYd7rbHo1tud1OhcArI1kbuwiaNbm3LQ'
-  },
-  {
-    id: '3',
-    name: 'Siddharth Rao',
-    email: 'siddharth@ithihasa.com',
-    role: 'Master Tailor Concierge',
-    status: 'Active',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBoDg2wffgKhY_FA7VHkWvUdtWkWsnjdKLu7fHCONK_oCZ9Y7SYUIeLnbPgM99Iacxbe9-dWyL7a6oFl3vK1inYPdAiJP_evLhbqvl9UOQ7UUnx2lbn2DWCprdJAnw-YTpKHfvLLZE_s72lf7FcK_CJQw9Lo8Igtn8PKy6-_5rWitY_9kvkhkSVuliFaXpQEfHCdxtzWyYP-0-qHU67JIQ8VBBgx2Gkr1sh4es30g9wqaNxJDBR-xEEbA'
-  }
-];
-
 export function SettingsView() {
   const [activeSection, setActiveSection] = useState('general');
   const [isSaved, setIsSaved] = useState(false);
@@ -56,7 +29,7 @@ export function SettingsView() {
   const [storeName, setStoreName] = useState('Ithihasa Atelier');
   const [storeTagline, setStoreTagline] = useState('Wear Your Legacy');
   const [contactEmail, setContactEmail] = useState('concierge@ithihasa.com');
-  const [currency, setCurrency] = useState('USD ($)');
+  const [currency, setCurrency] = useState('INR (₹)');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
 
   // Payment Gateways
@@ -66,13 +39,15 @@ export function SettingsView() {
   const [showSecret, setShowSecret] = useState(false);
 
   // Team State
-  const [team, setTeam] = useState(INITIAL_TEAM);
+  const [team, setTeam] = useState([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('Atelier Curator');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadConfig() {
       try {
+        setLoading(true);
         const [settingsData, teamData] = await Promise.all([
           fetchSettings().catch(() => null),
           fetchTeamMembers().catch(() => null),
@@ -86,11 +61,32 @@ export function SettingsView() {
           if (settingsData.razorpayKey) setRazorpayKey(settingsData.razorpayKey);
           if (settingsData.stripeKey) setStripeKey(settingsData.stripeKey);
         }
-        if (teamData && Array.isArray(teamData) && teamData.length > 0) {
+        if (teamData && Array.isArray(teamData)) {
           setTeam(teamData);
+        } else {
+          setTeam([
+            {
+              id: '1',
+              name: 'Eleanor Vance',
+              email: 'eleanor.v@ithihasa.com',
+              role: 'Administrator',
+              status: 'Active',
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80'
+            },
+            {
+              id: '2',
+              name: 'Julian Mercer',
+              email: 'julian.m@ithihasa.com',
+              role: 'Atelier Curator',
+              status: 'Active',
+              avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80'
+            }
+          ]);
         }
       } catch (err) {
-        console.warn('Settings load note:', err.message);
+        console.error('Settings load note:', err.message);
+      } finally {
+        setLoading(false);
       }
     }
     loadConfig();

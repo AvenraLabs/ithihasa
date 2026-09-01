@@ -2,6 +2,12 @@
 const SESSION_ID_KEY = 'ithihasa_session_id';
 const ACCESS_TOKEN_KEY = 'ithihasa_access_token';
 
+const API_BASE_URL = (
+  (import.meta as any).env?.VITE_API_URL ||
+  (import.meta as any).env?.VITE_API_BASE_URL ||
+  'http://localhost:5000/api/v1'
+).replace(/\/+$/, '');
+
 export function getSessionId(): string {
   let sessionId = localStorage.getItem(SESSION_ID_KEY);
   if (!sessionId) {
@@ -43,7 +49,8 @@ export async function apiClient<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `/api/v1${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${cleanEndpoint}`;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

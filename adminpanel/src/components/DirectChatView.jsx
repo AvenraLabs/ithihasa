@@ -18,118 +18,33 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const INITIAL_SESSIONS = [
-  {
-    id: 'chat-1',
-    patronName: 'Lady Catherine Morland',
-    tier: 'Noir',
-    location: 'London, UK',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&auto=format&fit=crop',
-    activeOrder: '#ITH-4925 (Gold Zari Dupatta)',
-    lastMessage: 'Inquiring if the Gold Zari Dupatta can be delivered in bespoke gift wrapping to South Kensington.',
-    time: 'Just now',
-    unread: true,
-    messages: [
-      {
-        id: 'm1',
-        sender: 'patron',
-        text: 'Good afternoon. I recently placed an order for the Gold Zari Dupatta.',
-        time: '14:20'
-      },
-      {
-        id: 'm2',
-        sender: 'concierge',
-        text: 'Good afternoon Lady Catherine. It is an honor to assist you today. How may the atelier accommodate your request?',
-        time: '14:21'
-      },
-      {
-        id: 'm3',
-        sender: 'patron',
-        text: 'Inquiring if the Gold Zari Dupatta can be delivered in bespoke gift wrapping with silk ribbons to South Kensington for Friday evening?',
-        time: '14:22'
-      }
-    ]
-  },
-  {
-    id: 'chat-2',
-    patronName: 'Lord Arthur Pendelton',
-    tier: 'Gold',
-    location: 'Edinburgh, UK',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=256&auto=format&fit=crop',
-    activeOrder: '#ITH-4919 (Velvet Bandhgala)',
-    lastMessage: 'Is courier delivery still scheduled for Friday afternoon?',
-    time: '18m ago',
-    unread: false,
-    messages: [
-      {
-        id: 'm1',
-        sender: 'patron',
-        text: 'Hello, tracking indicates courier clearance in London. Is delivery still scheduled for Friday?',
-        time: '13:45'
-      },
-      {
-        id: 'm2',
-        sender: 'concierge',
-        text: 'Lord Arthur, your Bandhgala passed export customs and is on express courier dispatch for Friday midday.',
-        time: '13:50'
-      }
-    ]
-  },
-  {
-    id: 'chat-3',
-    patronName: 'Eleanor Vance',
-    tier: 'Noir',
-    location: 'San Francisco, USA',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop',
-    activeOrder: '#ITH-4920 (Bespoke Silk Kurta)',
-    lastMessage: 'Thank you for confirming the sleeve hem adjustment!',
-    time: '1h ago',
-    unread: false,
-    messages: [
-      {
-        id: 'm1',
-        sender: 'patron',
-        text: 'Can the master artisan adjust the sleeve hem by 1.5 cm before final box seal?',
-        time: '12:10'
-      },
-      {
-        id: 'm2',
-        sender: 'concierge',
-        text: 'Certainly Eleanor. Master Tailor Siddharth has adjusted the pattern notes accordingly.',
-        time: '12:15'
-      },
-      {
-        id: 'm3',
-        sender: 'patron',
-        text: 'Thank you for confirming the sleeve hem adjustment!',
-        time: '12:18'
-      }
-    ]
-  }
-];
-
 import { fetchChatSessions, sendChatMessage } from '../api/support.js';
 
 export function DirectChatView() {
   const navigate = useNavigate();
-  const [sessions, setSessions] = useState(INITIAL_SESSIONS);
-  const [activeSessionId, setActiveSessionId] = useState('chat-1');
+  const [sessions, setSessions] = useState([]);
+  const [activeSessionId, setActiveSessionId] = useState(null);
   const [inputText, setInputText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileView, setMobileView] = useState('list'); // 'list' or 'chat' on mobile
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadSessions() {
       try {
         setLoading(true);
         const data = await fetchChatSessions().catch(() => null);
-        if (data && Array.isArray(data) && data.length > 0) {
+        if (data && Array.isArray(data)) {
           setSessions(data);
-          if (!activeSessionId) setActiveSessionId(data[0].id);
+          if (data.length > 0) {
+            setActiveSessionId(data[0].id);
+          }
+        } else {
+          setSessions([]);
         }
       } catch (err) {
-        console.warn('Chat sessions load note:', err.message);
+        console.error('Chat sessions load error:', err);
+        toast.error('Unable to fetch live concierge chat sessions.');
       } finally {
         setLoading(false);
       }
@@ -137,7 +52,7 @@ export function DirectChatView() {
     loadSessions();
   }, []);
 
-  const activeSession = sessions.find(s => s.id === activeSessionId) || sessions[0];
+  const activeSession = sessions.find(s => s.id === activeSessionId) || sessions[0] || null;
 
   const handleSendMessage = async (e) => {
     e.preventDefault();

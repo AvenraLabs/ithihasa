@@ -13,6 +13,14 @@ import {
 } from 'lucide-react';
 import { fetchDashboardAnalytics } from '../api/dashboard.js';
 
+const formatINR = (val) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(val || 0);
+};
+
 export function DashboardView({ onNavigateToOrders }) {
   const [timeFilter, setTimeFilter] = useState('This Week');
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
@@ -33,18 +41,23 @@ export function DashboardView({ onNavigateToOrders }) {
     loadStats();
   }, []);
 
+  const overview = data?.overview || {
+    totalRevenue: 1248500,
+    totalOrders: 148,
+    totalCustomers: 2481,
+    averageOrderValue: 34500,
+  };
+
   return (
     <div className="p-5 md:p-10 max-w-[1440px] w-full mx-auto space-y-8 flex-1">
       {/* Welcome & Live Status Header */}
       <section className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1
-            className="font-garamond text-[32px] sm:text-[40px] text-[var(--text-primary)] font-normal tracking-tight leading-tight"
-          >
+          <h1 className="font-garamond text-[32px] sm:text-[40px] text-[var(--text-primary)] font-normal tracking-tight leading-tight">
             Good Morning, Administrator
           </h1>
           <p className="body-md text-[14px] md:text-[15px] text-[var(--text-secondary)] mt-1">
-            Here is the performance overview for Ithihasa Atelier today.
+            Here is the live performance overview for Ithihasa Atelier today.
           </p>
         </div>
 
@@ -70,8 +83,8 @@ export function DashboardView({ onNavigateToOrders }) {
             </div>
           </div>
           <div>
-            <div className="font-garamond text-[30px] md:text-[34px] text-[var(--text-primary)] font-normal tabular-nums leading-none">
-              $124,500.00
+            <div className="font-garamond text-[28px] md:text-[32px] text-[var(--text-primary)] font-normal tabular-nums leading-none">
+              {formatINR(overview.totalRevenue)}
             </div>
             <div className="flex items-center gap-1.5 mt-2.5">
               <span className="flex items-center text-emerald-600 dark:text-emerald-400 font-semibold text-[12px]">
@@ -96,8 +109,8 @@ export function DashboardView({ onNavigateToOrders }) {
             </div>
           </div>
           <div>
-            <div className="font-garamond text-[30px] md:text-[34px] text-[var(--text-primary)] font-normal tabular-nums leading-none">
-              1,204
+            <div className="font-garamond text-[28px] md:text-[32px] text-[var(--text-primary)] font-normal tabular-nums leading-none">
+              {overview.totalOrders.toLocaleString('en-IN')}
             </div>
             <div className="flex items-center gap-1.5 mt-2.5">
               <span className="flex items-center text-emerald-600 dark:text-emerald-400 font-semibold text-[12px]">
@@ -108,19 +121,19 @@ export function DashboardView({ onNavigateToOrders }) {
           </div>
         </div>
 
-        {/* Metric 3: Active Customers */}
+        {/* Metric 3: Active Patrons */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 transition-all duration-300 hover:border-[var(--gold)] shadow-sm group">
           <div className="flex justify-between items-start mb-6">
             <h3 className="label-caps text-[11px] uppercase tracking-widest text-[var(--text-secondary)]">
-              Active Customers
+              Active Patrons
             </h3>
             <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors">
               <Users size={16} strokeWidth={1.75} />
             </div>
           </div>
           <div>
-            <div className="font-garamond text-[30px] md:text-[34px] text-[var(--text-primary)] font-normal tabular-nums leading-none">
-              8,432
+            <div className="font-garamond text-[28px] md:text-[32px] text-[var(--text-primary)] font-normal tabular-nums leading-none">
+              {overview.totalCustomers.toLocaleString('en-IN')}
             </div>
             <div className="flex items-center gap-1.5 mt-2.5">
               <span className="flex items-center text-emerald-600 dark:text-emerald-400 font-semibold text-[12px]">
@@ -142,8 +155,8 @@ export function DashboardView({ onNavigateToOrders }) {
             </div>
           </div>
           <div>
-            <div className="font-garamond text-[30px] md:text-[34px] text-[var(--text-primary)] font-normal tabular-nums leading-none">
-              $850.00
+            <div className="font-garamond text-[28px] md:text-[32px] text-[var(--text-primary)] font-normal tabular-nums leading-none">
+              {formatINR(overview.averageOrderValue)}
             </div>
             <div className="flex items-center gap-1.5 mt-2.5">
               <span className="flex items-center text-[var(--text-secondary)] font-semibold text-[12px]">
@@ -169,7 +182,7 @@ export function DashboardView({ onNavigateToOrders }) {
               <div className="relative">
                 <button
                   onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                  className="label-caps uppercase tracking-widest text-[11px] text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors flex items-center gap-1"
+                  className="label-caps uppercase tracking-widest text-[11px] text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <span>Filter: {timeFilter}</span>
                   <ChevronDown size={14} />
@@ -184,7 +197,7 @@ export function DashboardView({ onNavigateToOrders }) {
                           setTimeFilter(opt);
                           setIsFilterDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-[var(--bg-secondary)] transition-colors ${
+                        className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-[var(--bg-secondary)] transition-colors cursor-pointer ${
                           timeFilter === opt ? 'text-[var(--gold)] font-bold' : 'text-[var(--text-primary)]'
                         }`}
                       >
@@ -256,8 +269,8 @@ export function DashboardView({ onNavigateToOrders }) {
               {/* Category 1: Outerwear */}
               <div>
                 <div className="flex justify-between mb-1.5 font-manrope text-[13px]">
-                  <span className="font-medium text-[var(--text-primary)]">Outerwear & Bandhgalas</span>
-                  <span className="tabular-nums font-semibold text-[var(--text-primary)]">$45,200</span>
+                  <span className="font-medium text-[var(--text-primary)]">Bandhgalas & Outerwear</span>
+                  <span className="tabular-nums font-semibold text-[var(--text-primary)]">₹4,52,000</span>
                 </div>
                 <div className="w-full bg-[var(--bg-secondary)] h-2.5 rounded-full overflow-hidden">
                   <div className="bg-[var(--text-primary)] h-full rounded-full" style={{ width: '75%' }} />
@@ -267,8 +280,8 @@ export function DashboardView({ onNavigateToOrders }) {
               {/* Category 2: Dresses & Kurtas */}
               <div>
                 <div className="flex justify-between mb-1.5 font-manrope text-[13px]">
-                  <span className="font-medium text-[var(--text-primary)]">Heritage Kurtas & Sets</span>
-                  <span className="tabular-nums font-semibold text-[var(--text-primary)]">$32,100</span>
+                  <span className="font-medium text-[var(--text-primary)]">Heritage Silk Kurtas</span>
+                  <span className="tabular-nums font-semibold text-[var(--text-primary)]">₹3,21,000</span>
                 </div>
                 <div className="w-full bg-[var(--bg-secondary)] h-2.5 rounded-full overflow-hidden">
                   <div className="bg-[var(--gold)] h-full rounded-full opacity-90" style={{ width: '55%' }} />
@@ -278,8 +291,8 @@ export function DashboardView({ onNavigateToOrders }) {
               {/* Category 3: Shawls & Accessories */}
               <div>
                 <div className="flex justify-between mb-1.5 font-manrope text-[13px]">
-                  <span className="font-medium text-[var(--text-primary)]">Royal Shawls & Accessories</span>
-                  <span className="tabular-nums font-semibold text-[var(--text-primary)]">$28,500</span>
+                  <span className="font-medium text-[var(--text-primary)]">Royal Pashmina Shawls</span>
+                  <span className="tabular-nums font-semibold text-[var(--text-primary)]">₹2,85,000</span>
                 </div>
                 <div className="w-full bg-[var(--bg-secondary)] h-2.5 rounded-full overflow-hidden">
                   <div className="bg-[var(--text-secondary)] h-full rounded-full opacity-70" style={{ width: '45%' }} />
@@ -297,7 +310,7 @@ export function DashboardView({ onNavigateToOrders }) {
             </h2>
             <button
               onClick={onNavigateToOrders}
-              className="label-caps uppercase tracking-widest text-[11px] text-[var(--gold)] hover:underline"
+              className="label-caps uppercase tracking-widest text-[11px] text-[var(--gold)] hover:underline cursor-pointer"
             >
               View All
             </button>
@@ -305,19 +318,16 @@ export function DashboardView({ onNavigateToOrders }) {
 
           <div className="flex-1 space-y-5 overflow-y-auto pr-1">
             {/* Activity 1 */}
-            <div
-              onClick={onNavigateToOrders}
-              className="flex items-start gap-3.5 group cursor-pointer"
-            >
+            <div onClick={onNavigateToOrders} className="flex items-start gap-3.5 group cursor-pointer">
               <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center shrink-0 mt-0.5 text-[var(--text-primary)] group-hover:bg-[var(--gold)] group-hover:text-black transition-colors">
                 <ShoppingBag size={14} />
               </div>
               <div>
                 <p className="text-[13px] text-[var(--text-primary)] leading-snug">
-                  <span className="font-semibold">New Order #8901</span> placed by Eleanor Vance.
+                  <span className="font-semibold">New Order #ITH-4920</span> placed by Eleanor Vance.
                 </p>
                 <p className="label-caps text-[10px] text-[var(--text-muted)] mt-1 tracking-wider">
-                  2 mins ago • $1,250.00
+                  2 mins ago • ₹34,500
                 </p>
               </div>
             </div>
@@ -329,7 +339,7 @@ export function DashboardView({ onNavigateToOrders }) {
               </div>
               <div>
                 <p className="text-[13px] text-[var(--text-primary)] leading-snug">
-                  <span className="font-semibold">New Signup:</span> Arthur Pendelton registered an account.
+                  <span className="font-semibold">New Patron:</span> Arthur Pendelton registered an account.
                 </p>
                 <p className="label-caps text-[10px] text-[var(--text-muted)] mt-1 tracking-wider">
                   15 mins ago
@@ -338,19 +348,16 @@ export function DashboardView({ onNavigateToOrders }) {
             </div>
 
             {/* Activity 3 */}
-            <div
-              onClick={onNavigateToOrders}
-              className="flex items-start gap-3.5 group cursor-pointer"
-            >
+            <div onClick={onNavigateToOrders} className="flex items-start gap-3.5 group cursor-pointer">
               <div className="w-8 h-8 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center shrink-0 mt-0.5 text-[var(--text-primary)] group-hover:bg-[var(--gold)] group-hover:text-black transition-colors">
                 <ShoppingBag size={14} />
               </div>
               <div>
                 <p className="text-[13px] text-[var(--text-primary)] leading-snug">
-                  <span className="font-semibold">New Order #8900</span> placed by Sarah Jenkins.
+                  <span className="font-semibold">New Order #ITH-4919</span> placed by Marcus James.
                 </p>
                 <p className="label-caps text-[10px] text-[var(--text-muted)] mt-1 tracking-wider">
-                  1 hour ago • $890.00
+                  1 hour ago • ₹48,000
                 </p>
               </div>
             </div>
@@ -362,7 +369,7 @@ export function DashboardView({ onNavigateToOrders }) {
               </div>
               <div>
                 <p className="text-[13px] text-[var(--text-primary)] leading-snug">
-                  <span className="font-semibold text-amber-600 dark:text-amber-400">Low Stock Alert:</span> Silk Evening Gown (Size M) is below threshold.
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">Low Stock Alert:</span> Pure Pashmina Regal Stole reached threshold.
                 </p>
                 <p className="label-caps text-[10px] text-[var(--text-muted)] mt-1 tracking-wider">
                   3 hours ago

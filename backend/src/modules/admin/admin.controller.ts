@@ -297,9 +297,8 @@ export class AdminController {
 
   public async deleteCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const category = await Category.findByPk(req.params.id);
-      if (category) await category.destroy();
-      sendSuccess(res, { success: true, message: 'Category deleted' }, 200);
+      const result = await categoryService.deleteCategory(req.params.id);
+      sendSuccess(res, result, 200);
     } catch (error) {
       next(error);
     }
@@ -336,6 +335,32 @@ export class AdminController {
     try {
       const result = await productService.deleteProduct(req.params.id);
       sendSuccess(res, result, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public async uploadMedia(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { url, filename, base64 } = req.body;
+      let finalUrl = url;
+
+      if (!finalUrl && !base64) {
+        res.status(400).json({ success: false, error: { message: 'Either url or base64 payload is required' } });
+        return;
+      }
+
+      if (!finalUrl && base64) {
+        // Mock S3/Cloudinary storage resolution for base64
+        const extension = filename ? filename.split('.').pop() : 'png';
+        finalUrl = `https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=85#${Date.now()}.${extension}`;
+      }
+
+      sendSuccess(res, {
+        url: finalUrl,
+        filename: filename || 'heritage-garment.jpg',
+        uploadedAt: new Date().toISOString(),
+      }, 201);
     } catch (error) {
       next(error);
     }

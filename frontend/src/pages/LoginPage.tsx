@@ -109,7 +109,7 @@ export const LoginPage: React.FC = () => {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-85 mix-blend-multiply dark:mix-blend-luminosity dark:opacity-40"
           style={{
-            backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuBonawBmw-xMojoIF70v4EKXlCKlQ44FpkDA2HzJ5NumL1GI8P5TnbDEIS4BVmnDklqFuAwcv4KIkeDtrA9gpUlqTPpr0n2avUwd4VJGA_mnLpogabPa30f3kcGWwW-W5Sy5mfAReFpjl7fRE5PAPftGys03lsEGmK11PYUzWTe__uO1B2sOzvC5mDvYE2xiwuy3sFZFErxQ618UsFhRHUeZK7MqJuXH5SOyzjWz8tJE8xGuO54geEIhA')`,
+            backgroundImage: `url('https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=85')`,
           }}
         />
         <div className="z-10 text-center px-8">

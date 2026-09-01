@@ -111,7 +111,7 @@ export const RegisterPage: React.FC = () => {
         <div
           className="absolute inset-0 w-full h-full bg-cover bg-center opacity-90"
           style={{
-            backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuBnfZCNFAnp0cHMgp0D0rzdFnBEHMn3HkjMFgeZlGy46wHQz1uPO-kIylK0uhKPn9Ec20fAkmSlIOOc43tCPicxwlx-sUHVGidYfU2g5Y6y5qNYm1Xx5i1ZhGWLmMUANaJfLckkwAKlpr6kZ4NWaQTbJCoNzd0KbaJHrxOcuYgaDx0dPrxprHE9DhJdbzQ5ZnXBhh8xj4_BrNW5Z2ptxHFQEPXuJ4vmpfyRnhBmiowtbPRr9zzcrd1G9w')`,
+            backgroundImage: `url('https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=85')`,
           }}
         />
         <div className="absolute inset-0 bg-[#0A0A0A]/10" />

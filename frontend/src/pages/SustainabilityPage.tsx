@@ -48,7 +48,7 @@ export const SustainabilityPage: React.FC = () => {
               <img
                 alt="Ethical Sourcing"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfuAOnPCqC8BXeZn57yr9eiUKBdl4u3WIp81uO-yo3Z8Cof9YExTNdCx26LKQV3mroFg6i7O3cXvyDYc4UgWBhQrz3dpc__Wo22wYOJ0pOqqhqgSLgkLd-HTCKL4v4Zj0VesOcGUPq5_3Ut0JT-E1b15oYZO2iaG9Ho4cyt16ZQsIdG1bIT_X4Xgf-WMIMpDUgMq_glHSZDvTUugwwolAJvrPDVEJS5mXcwTc3Lnb5JLDCeQmnuRpayQ"
+                src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=85"
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
@@ -110,7 +110,7 @@ export const SustainabilityPage: React.FC = () => {
               <img
                 alt="Natural dye materials"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuABWSNU5HRkGUrZWjeT5HVNVyNXYalmCjRT7O63MhAtIkvqSAkDWK4iQfX-vxFqRY-ChEGDVJuwzv1mUoAUucBChkamraA6cbFb8_zKa8K2YiFS_BlfHUn_x_BWfkFZ8D0PpQA-610NUxTCHG17sDg6PY1SS7x6TeFRtRO9UKYtWgV6Ij4bYWRwF0VIKk9C6z4_Gwvv8UT-3CFTGcEuEQe9g2HOj0UD3EZbF9xe38RhqmfN_135KwuGWQ"
+                src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=85"
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-black/20" />

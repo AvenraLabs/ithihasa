@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProducts, type Product } from '../api/products.js';
-import { Search as SearchIcon, X, History, Sparkles, ArrowRight } from 'lucide-react';
+import { fetchStorefrontData } from '../api/merchandising.js';
+import { Search as SearchIcon, X, History, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const SearchPage: React.FC = () => {
@@ -9,9 +10,14 @@ export const SearchPage: React.FC = () => {
   const [recentSearches, setRecentSearches] = useState<string[]>([
     'Varanasi Silk Kurtas',
     'Imperial Bandhgala',
-    'The Royal Heritage Series',
-    'Mulberry Silk Dhoti',
+    'Black T Shirt',
+    'Mulberry Silk',
   ]);
+
+  const { data: cms } = useQuery({
+    queryKey: ['storefront'],
+    queryFn: fetchStorefrontData,
+  });
 
   const { data: results = [], isLoading } = useQuery<Product[]>({
     queryKey: ['products', 'search', searchTerm],
@@ -40,6 +46,33 @@ export const SearchPage: React.FC = () => {
     }).format(amount);
   };
 
+  const trendingCollections = cms?.trendingCollections || [
+    {
+      name: 'Heritage Kurtas',
+      slug: 'heritage-kurtas',
+      itemCount: 14,
+      imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80',
+    },
+    {
+      name: 'Bandhgalas & Jackets',
+      slug: 'bandhgalas-jackets',
+      itemCount: 8,
+      imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=600&q=80',
+    },
+    {
+      name: 'Royal Shawls & Stoles',
+      slug: 'royal-shawls-stoles',
+      itemCount: 12,
+      imageUrl: 'https://images.unsplash.com/photo-1601924994987-69e26d50dc26?auto=format&fit=crop&w=600&q=80',
+    },
+    {
+      name: 'Atelier Bespoke',
+      slug: 'atelier-bespoke',
+      itemCount: 6,
+      imageUrl: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80',
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors">
       <main className="flex-grow w-full max-w-[1440px] mx-auto px-5 md:px-20 py-8 md:py-16 pb-24 md:pb-16">
@@ -66,16 +99,16 @@ export const SearchPage: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search Heritage Silhouettes..."
+            placeholder="Search Heritage Silhouettes (e.g. silk, black shirt, kurta)..."
             autoFocus
             autoComplete="off"
-            className="w-full pl-10 pr-10 py-4 font-normal text-[22px] md:text-[32px] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 placeholder:font-light bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] focus:outline-none transition-colors rounded-none"
+            className="w-full pl-10 pr-10 py-4 font-normal text-[20px] md:text-[30px] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 placeholder:font-light bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] focus:outline-none transition-colors rounded-none"
             style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
           />
           {searchTerm.length > 0 && (
             <button
               onClick={handleClear}
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors p-1"
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors p-1 cursor-pointer"
               aria-label="Clear search"
             >
               <X size={22} />
@@ -143,11 +176,11 @@ export const SearchPage: React.FC = () => {
                   No Silhouettes Found
                 </h3>
                 <p className="text-[14px] text-[var(--text-secondary)] mb-6">
-                  No pieces matched "{searchTerm}". Try searching for silk, bandhgala, or explore our curated collections.
+                  No pieces matched "{searchTerm}". Try searching for silk, bandhgala, kurta, or explore our curated collections below.
                 </p>
                 <button
                   onClick={handleClear}
-                  className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] hover:bg-[var(--gold)] hover:text-[#0A0A0A] px-8 py-3.5 label-caps uppercase tracking-widest transition-colors"
+                  className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] hover:bg-[var(--gold)] hover:text-[#0A0A0A] px-8 py-3.5 label-caps uppercase tracking-widest transition-colors cursor-pointer"
                 >
                   Clear Search
                 </button>
@@ -169,7 +202,7 @@ export const SearchPage: React.FC = () => {
                     <li key={index}>
                       <button
                         onClick={() => handleSelectRecent(term)}
-                        className="group flex items-center gap-3 body-md text-[14px] md:text-[15px] text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors text-left w-full"
+                        className="group flex items-center gap-3 body-md text-[14px] md:text-[15px] text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors text-left w-full cursor-pointer"
                       >
                         <History size={16} className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors shrink-0" />
                         <span>{term}</span>
@@ -179,31 +212,31 @@ export const SearchPage: React.FC = () => {
                 </ul>
               </section>
 
-              {/* Suggestions */}
+              {/* Quick Suggestion Chips */}
               <section className="pt-4 border-t border-[var(--border-color)]">
                 <h2 className="label-caps text-[12px] text-[var(--gold)] mb-4 tracking-[0.15em] uppercase font-bold">
-                  Popular Categories
+                  Quick Query Tags
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { label: 'Pure Handloom Kurtas', query: 'kurtas' },
+                    { label: 'Black Silk Shirts', query: 'black shirt' },
+                    { label: 'Heritage Kurtas', query: 'kurta' },
                     { label: 'Imperial Bandhgalas', query: 'bandhgala' },
-                    { label: 'Silk Dhotis & Sarees', query: 'silk' },
-                    { label: 'Pashmina Shawls', query: 'pashmina' },
+                    { label: 'Pashmina Shawls', query: 'shawl' },
                   ].map((cat, i) => (
-                    <Link
+                    <button
                       key={i}
-                      to={`/shop?category=${cat.query}`}
-                      className="px-3.5 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[12px] label-caps text-[var(--text-primary)] hover:border-[var(--gold)] hover:text-[var(--gold)] transition-colors"
+                      onClick={() => setSearchTerm(cat.query)}
+                      className="px-3.5 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[12px] label-caps text-[var(--text-primary)] hover:border-[var(--gold)] hover:text-[var(--gold)] transition-colors cursor-pointer"
                     >
                       {cat.label}
-                    </Link>
+                    </button>
                   ))}
                 </div>
               </section>
             </div>
 
-            {/* Right Column: Trending Bento Grid (7 cols matching Stitch) */}
+            {/* Right Column: Trending Collections Grid */}
             <div className="md:col-span-7 flex flex-col gap-6">
               <section>
                 <div className="flex items-center justify-between mb-4">
@@ -218,66 +251,36 @@ export const SearchPage: React.FC = () => {
                   </Link>
                 </div>
 
-                {/* Bento Grid */}
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
-                  {/* Large Featured Card */}
-                  <Link
-                    to="/shop"
-                    className="col-span-2 group relative block h-64 overflow-hidden bg-[var(--bg-secondary)] border border-[var(--border-color)] shadow-sm"
-                  >
-                    <img
-                      src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1200&auto=format&fit=crop"
-                      alt="The Silk Archive"
-                      className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4 text-white">
-                      <h3
-                        className="text-[22px] md:text-[26px] font-normal leading-snug"
-                        style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
-                      >
-                        The Silk Archive
-                      </h3>
-                      <p className="label-caps text-[11px] text-white/80 mt-1 uppercase tracking-wider">
-                        Explore Curated Masterpieces
-                      </p>
-                    </div>
-                  </Link>
-
-                  {/* Small Card 1 */}
-                  <Link
-                    to="/shop"
-                    className="col-span-1 group relative block h-40 overflow-hidden bg-[var(--bg-secondary)] border border-[var(--border-color)] shadow-sm"
-                  >
-                    <img
-                      src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=600&auto=format&fit=crop"
-                      alt="Atelier Craft"
-                      className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
-                    <div className="absolute inset-0 flex items-center justify-center p-2">
-                      <span className="label-caps text-[11px] text-white bg-black/60 backdrop-blur-md px-3 py-1.5 border border-white/20 uppercase tracking-widest text-center">
-                        Atelier Weaves
-                      </span>
-                    </div>
-                  </Link>
-
-                  {/* Small Card 2 */}
-                  <Link
-                    to="/shop"
-                    className="col-span-1 group relative block h-40 overflow-hidden bg-[var(--bg-card)] flex flex-col items-center justify-center p-4 text-center border border-[var(--border-color)] hover:border-[var(--gold)] transition-colors shadow-sm"
-                  >
-                    <Sparkles size={28} className="text-[var(--gold)] mb-2 group-hover:scale-110 transition-transform" />
-                    <h4
-                      className="text-[18px] font-normal text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors"
-                      style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+                {/* Dynamic Collections Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                  {trendingCollections.map((col, idx) => (
+                    <Link
+                      key={col.slug || idx}
+                      to={`/shop?category=${col.slug}`}
+                      className="group relative block h-44 overflow-hidden bg-[var(--bg-secondary)] border border-[var(--border-color)] shadow-sm"
                     >
-                      Royal Heritage
-                    </h4>
-                    <span className="label-caps text-[10px] text-[var(--text-secondary)] mt-1 uppercase tracking-wider">
-                      Handcrafted
-                    </span>
-                  </Link>
+                      <img
+                        src={col.imageUrl}
+                        alt={col.name}
+                        className="w-full h-full object-cover brightness-75 group-hover:scale-105 transition-transform duration-700 ease-out"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                      <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white flex justify-between items-end">
+                        <div>
+                          <h3
+                            className="text-[18px] sm:text-[20px] font-normal leading-snug"
+                            style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+                          >
+                            {col.name}
+                          </h3>
+                          <span className="label-caps text-[10px] text-[var(--gold)] uppercase tracking-wider block mt-0.5">
+                            {col.itemCount} Masterpieces
+                          </span>
+                        </div>
+                        <ArrowRight size={16} className="text-[var(--gold)] group-hover:translate-x-1 transition-transform shrink-0" />
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </section>
             </div>

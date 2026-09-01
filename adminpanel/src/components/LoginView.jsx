@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 export function LoginView({ onLoginSuccess }) {
   const navigate = useNavigate();
   const [username, setUsername] = useState('admin@ithihasa.com');
-  const [password, setPassword] = useState('admin123');
+  const [password, setPassword] = useState('Admin@123456');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,16 +27,16 @@ export function LoginView({ onLoginSuccess }) {
 
     try {
       await loginAdmin({ identifier: username, password });
+      toast.success('Authenticated as Atelier Administrator');
       if (onLoginSuccess) {
         onLoginSuccess();
       }
       navigate('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
-      // Even if offline, allow graceful local entrance
-      localStorage.setItem('ithihasa_admin_authenticated', 'true');
-      if (onLoginSuccess) onLoginSuccess();
-      navigate('/dashboard');
+      const msg = err.message || 'Invalid credentials. Please verify your email and password.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }

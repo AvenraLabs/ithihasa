@@ -1,0 +1,19 @@
+{
+  "name": "ITHIHASA — Wear Your Legacy",
+  "short_name": "Ithihasa",
+  "description": "Premium royal heritage clothing, silk kurtas, bandhgalas, and pure pashminas handcrafted in India.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/ithihasa.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

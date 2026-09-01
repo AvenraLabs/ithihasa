@@ -19,7 +19,8 @@ import {
   Bell,
   Menu,
   X,
-  ExternalLink
+  ExternalLink,
+  Sparkles
 } from 'lucide-react';
 import { ThemeIcon } from './components/ThemeIcon.jsx';
 import { DashboardView } from './components/DashboardView.jsx';
@@ -28,12 +29,15 @@ import { OrderDetailView } from './components/OrderDetailView.jsx';
 import { InventoryView } from './components/InventoryView.jsx';
 import { CustomersView } from './components/CustomersView.jsx';
 import { MarketingView } from './components/MarketingView.jsx';
+import { StorefrontCMSView } from './components/StorefrontCMSView.jsx';
 import { SettingsView } from './components/SettingsView.jsx';
 import { SupportView } from './components/SupportView.jsx';
 import { DirectChatView } from './components/DirectChatView.jsx';
 import { LoginView } from './components/LoginView.jsx';
+import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { NotificationsDrawer } from './components/NotificationsDrawer.jsx';
 import { fetchNotifications, markNotificationsRead } from './api/notifications.js';
+import { logoutAdmin } from './api/auth.js';
 import { Toaster } from 'sonner';
 
 export default function App() {
@@ -129,6 +133,7 @@ export default function App() {
     { id: 'dashboard', path: '/dashboard', alias: '/', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'orders', path: '/orders', label: 'Orders', icon: ShoppingBag, count: 12 },
     { id: 'inventory', path: '/inventory', label: 'Inventory', icon: Package, alert: true },
+    { id: 'storefront', path: '/storefront', label: 'Storefront CMS', icon: Sparkles },
     { id: 'customers', path: '/customers', label: 'Customers', icon: Users },
     { id: 'marketing', path: '/marketing', label: 'Marketing', icon: Megaphone },
     { id: 'settings', path: '/settings', label: 'Settings', icon: Settings },
@@ -169,9 +174,9 @@ export default function App() {
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-full overflow-hidden border border-[var(--border-color)] shrink-0 bg-[var(--bg-secondary)] shadow-sm">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN6YGn433thz6sYn0x7UeWugOYwNt38nb0ZDSkJamplGWA0o_1xeK6yk52C6bB96V3Z-uKAzaMoO9uV8Zl22ZqfmUZ5IWD74TPEKCvfiKdPRcEbT9jMZX7YHUob4O_bBQJNFUePqaAeYXW1JebK2JBIVtHhQ7MDvQdHpM5bsrRXwzyawuCUeGkliSrVaBzz6LTQZ7JWAzBaRgqVgfcPD54IIZJmZYvy7ZNnTDBLisAPKHhlwkUIIEK_g"
+                  src="/ithihasa.png"
                   alt="Ithihasa Atelier Mark"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain p-1"
                 />
               </div>
               <div>
@@ -265,7 +270,7 @@ export default function App() {
             </button>
             <button
               onClick={() => {
-                localStorage.removeItem('ithihasa_admin_authenticated');
+                logoutAdmin();
                 navigate('/login');
                 setIsMobileMenuOpen(false);
               }}
@@ -346,28 +351,33 @@ export default function App() {
           </div>
         </header>
 
-        {/* Dynamic Route Pages */}
+        {/* Dynamic Route Pages (Protected behind valid Admin Session) */}
         <Routes>
-          <Route path="/" element={<DashboardView />} />
-          <Route path="/dashboard" element={<DashboardView />} />
+          <Route path="/" element={<ProtectedRoute><DashboardView /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardView /></ProtectedRoute>} />
           <Route
             path="/orders"
             element={
-              <OrdersView
-                onSelectOrder={(order) => navigate(`/orders/${order.id}`)}
-              />
+              <ProtectedRoute>
+                <OrdersView onSelectOrder={(order) => navigate(`/orders/${order.id}`)} />
+              </ProtectedRoute>
             }
           />
           <Route
             path="/orders/:orderId"
-            element={<OrderDetailView onBack={() => navigate('/orders')} />}
+            element={
+              <ProtectedRoute>
+                <OrderDetailView onBack={() => navigate('/orders')} />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/inventory" element={<InventoryView />} />
-          <Route path="/customers" element={<CustomersView />} />
-          <Route path="/marketing" element={<MarketingView />} />
-          <Route path="/settings" element={<SettingsView />} />
-          <Route path="/support" element={<SupportView />} />
-          <Route path="/support/chat" element={<DirectChatView />} />
+          <Route path="/inventory" element={<ProtectedRoute><InventoryView /></ProtectedRoute>} />
+          <Route path="/storefront" element={<ProtectedRoute><StorefrontCMSView /></ProtectedRoute>} />
+          <Route path="/customers" element={<ProtectedRoute><CustomersView /></ProtectedRoute>} />
+          <Route path="/marketing" element={<ProtectedRoute><MarketingView /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsView /></ProtectedRoute>} />
+          <Route path="/support" element={<ProtectedRoute><SupportView /></ProtectedRoute>} />
+          <Route path="/support/chat" element={<ProtectedRoute><DirectChatView /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

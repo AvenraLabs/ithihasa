@@ -1,0 +1,18 @@
+{
+  "name": "Atelier Admin — Ithihasa Heritage Edition",
+  "short_name": "Atelier Admin",
+  "description": "Authorized portal for Ithihasa artisans, curators, and atelier management.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
+  "icons": [
+    {
+      "src": "/ithihasa.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
