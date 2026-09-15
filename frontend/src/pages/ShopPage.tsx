@@ -6,6 +6,7 @@ import { fetchCategories, type Category } from '../api/categories.js';
 import { fetchWishlist, toggleWishlist } from '../api/wishlist.js';
 import { addToCart } from '../api/cart.js';
 import { SizeGuideModal } from '../components/ui/SizeGuideModal.js';
+import { fetchStorefrontSettings, type StorefrontSettings } from '../api/settings.js';
 import {
   SlidersHorizontal,
   ChevronDown,
@@ -235,6 +236,13 @@ export const ShopPage: React.FC = () => {
     queryFn: fetchCategories,
   });
 
+  // Fetch store settings (master sizes & colors configured in admin)
+  const { data: storeSettings } = useQuery<StorefrontSettings>({
+    queryKey: ['storefront-settings'],
+    queryFn: fetchStorefrontSettings,
+    staleTime: 60000,
+  });
+
   // Fetch all products (unfiltered) to dynamically extract sizes & colors present in the atelier
   const { data: allCatalogProducts = [] } = useQuery<Product[]>({
     queryKey: ['all-catalog-products-for-filters'],
@@ -254,16 +262,17 @@ export const ShopPage: React.FC = () => {
   });
 
   // Extract dynamic sizes from actual backend product inventory
-  const dynamicSizes = Array.from(
+  const productSizes = Array.from(
     new Set(
       allCatalogProducts
         .flatMap((p) => p.variants?.map((v) => v.size) || [])
         .filter(Boolean)
     )
   );
-  const availableSizes = dynamicSizes.length > 0
-    ? dynamicSizes
-    : ['36', '38', '40', '42', '44', '46', 'Free Size'];
+  // Show product sizes if products exist; otherwise show active store-configured master sizes (no fake fallback)
+  const availableSizes: string[] = productSizes.length > 0
+    ? productSizes
+    : (Array.isArray(storeSettings?.sizes) ? storeSettings.sizes : []);
 
   // Extract dynamic colors from actual backend product inventory
   const colorMap = new Map<string, string>();
@@ -289,15 +298,12 @@ export const ShopPage: React.FC = () => {
     });
   });
 
-  const availableColors = colorMap.size > 0
+  // Show product colors if products exist; otherwise show active store-configured master colors (no fake fallback)
+  const availableColors: { name: string; hex: string }[] = colorMap.size > 0
     ? Array.from(colorMap.entries()).map(([name, hex]) => ({ name, hex }))
-    : [
-        { name: 'Midnight Noir', hex: '#0A0A0A' },
-        { name: 'Royal Crimson', hex: '#7A1C22' },
-        { name: 'Antique Gold', hex: '#C9A24B' },
-        { name: 'Ivory Silk', hex: '#F4EFE6' },
-        { name: 'Emerald Heritage', hex: '#1B4D3E' },
-      ];
+    : ((Array.isArray(storeSettings?.colors) ? storeSettings.colors : []) as any[]).map((c: any) =>
+        typeof c === 'string' ? { name: c, hex: '#C9A24B' } : { name: c.name, hex: c.hex || '#C9A24B' }
+      );
 
   // Calculate active applied filter count
   const activeFilters = [
@@ -934,92 +940,96 @@ export const ShopPage: React.FC = () => {
               </div>
 
               {/* Dynamic Sizes Filter */}
-              <div className="border-t border-[var(--border-color)] pt-5">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="label-caps text-[12px] font-bold text-[var(--gold)] uppercase tracking-wider">
-                    SIZE
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setIsSizeGuideOpen(true)}
-                    className="text-[11px] text-[var(--text-secondary)] hover:text-[var(--gold)] flex items-center gap-1 cursor-pointer"
-                  >
-                    <Ruler size={13} />
-                    <span>Size Guide</span>
-                  </button>
+              {availableSizes.length > 0 && (
+                <div className="border-t border-[var(--border-color)] pt-5">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="label-caps text-[12px] font-bold text-[var(--gold)] uppercase tracking-wider">
+                      SIZE
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsSizeGuideOpen(true)}
+                      className="text-[11px] text-[var(--text-secondary)] hover:text-[var(--gold)] flex items-center gap-1 cursor-pointer"
+                    >
+                      <Ruler size={13} />
+                      <span>Size Guide</span>
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSize('')}
+                      className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border rounded transition-all cursor-pointer ${
+                        selectedSize === ''
+                          ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                          : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
+                      }`}
+                    >
+                      All Sizes
+                    </button>
+                    {availableSizes.map((sz) => {
+                      const isSelected = selectedSize === sz;
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => setSelectedSize(isSelected ? '' : sz)}
+                          className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border rounded transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                              : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSize('')}
-                    className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border rounded transition-all cursor-pointer ${
-                      selectedSize === ''
-                        ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
-                    }`}
-                  >
-                    All Sizes
-                  </button>
-                  {availableSizes.map((sz) => {
-                    const isSelected = selectedSize === sz;
-                    return (
-                      <button
-                        key={sz}
-                        type="button"
-                        onClick={() => setSelectedSize(isSelected ? '' : sz)}
-                        className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider border rounded transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-                            : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
-                        }`}
-                      >
-                        {sz}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              )}
 
               {/* Dynamic Colors Filter */}
-              <div className="border-t border-[var(--border-color)] pt-5">
-                <h3 className="label-caps text-[12px] font-bold text-[var(--gold)] mb-3 uppercase tracking-wider">
-                  COLOR / SHADE
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedColor('')}
-                    className={`px-3 py-1.5 text-[11px] font-semibold tracking-wider border rounded transition-all cursor-pointer ${
-                      selectedColor === ''
-                        ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
-                    }`}
-                  >
-                    All Colors
-                  </button>
-                  {availableColors.map((col) => {
-                    const isSelected = selectedColor === col.name;
-                    return (
-                      <button
-                        key={col.name}
-                        type="button"
-                        onClick={() => setSelectedColor(isSelected ? '' : col.name)}
-                        className={`flex items-center gap-2 px-3 py-1.5 text-[11px] font-medium tracking-wider border rounded-full transition-all cursor-pointer ${
-                          isSelected
-                            ? 'border-[var(--gold)] bg-[var(--gold)]/15 text-[var(--gold)] font-bold ring-1 ring-[var(--gold)]'
-                            : 'border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:border-[var(--gold)]'
-                        }`}
-                      >
-                        <span
-                          className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
-                          style={{ backgroundColor: col.hex }}
-                        />
-                        <span>{col.name}</span>
-                      </button>
-                    );
-                  })}
+              {availableColors.length > 0 && (
+                <div className="border-t border-[var(--border-color)] pt-5">
+                  <h3 className="label-caps text-[12px] font-bold text-[var(--gold)] mb-3 uppercase tracking-wider">
+                    COLOR / SHADE
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedColor('')}
+                      className={`px-3 py-1.5 text-[11px] font-semibold tracking-wider border rounded transition-all cursor-pointer ${
+                        selectedColor === ''
+                          ? 'bg-[var(--gold)] text-black border-[var(--gold)]'
+                          : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
+                      }`}
+                    >
+                      All Colors
+                    </button>
+                    {availableColors.map((col) => {
+                      const isSelected = selectedColor === col.name;
+                      return (
+                        <button
+                          key={col.name}
+                          type="button"
+                          onClick={() => setSelectedColor(isSelected ? '' : col.name)}
+                          className={`flex items-center gap-2 px-3 py-1.5 text-[11px] font-medium tracking-wider border rounded-full transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-[var(--gold)] bg-[var(--gold)]/15 text-[var(--gold)] font-bold ring-1 ring-[var(--gold)]'
+                              : 'border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:border-[var(--gold)]'
+                          }`}
+                        >
+                          <span
+                            className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
+                            style={{ backgroundColor: col.hex }}
+                          />
+                          <span>{col.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Sort Order Filter */}
               <div className="border-t border-[var(--border-color)] pt-5">

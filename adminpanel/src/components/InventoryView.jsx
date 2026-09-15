@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { fetchInventory, adjustInventoryStock, createProduct, deleteProduct } from '../api/inventory.js';
 import { fetchCategories, createCategory, deleteCategory } from '../api/categories.js';
+import { fetchSettings, updateSettings } from '../api/settings.js';
 import { uploadImage } from '../api/upload.js';
 import { ImageUploader } from './ImageUploader.jsx';
 import { toast } from 'sonner';
@@ -45,40 +46,28 @@ const formatINR = (val) => {
   }).format(val || 0);
 };
 
-const DEFAULT_SIZES = ['36', '38', '40', '42', '44', '46', '48', 'Free Size', 'S', 'M', 'L', 'XL', 'XXL'];
-
-const DEFAULT_COLORS = [
-  { name: 'Midnight Noir', hex: '#0A0A0A' },
-  { name: 'Royal Crimson', hex: '#7A1C22' },
-  { name: 'Antique Gold', hex: '#C9A24B' },
-  { name: 'Ivory Silk', hex: '#F4EFE6' },
-  { name: 'Emerald Heritage', hex: '#1B4D3E' },
-  { name: 'Deep Sapphire', hex: '#1A2A44' },
-  { name: 'Burnt Ochre', hex: '#A35D2A' }
-];
-
 export function InventoryView() {
   const [inventory, setInventory] = useState([]);
   const [categories, setCategories] = useState([]);
   const [deletePieceTarget, setDeletePieceTarget] = useState(null);
   const [isDeletingPiece, setIsDeletingPiece] = useState(false);
 
-  // Masters
+  // Masters — start empty by default, allowing admin to define custom sizes & colors as needed
   const [masterSizes, setMasterSizes] = useState(() => {
     try {
       const saved = localStorage.getItem('ithihasa_master_sizes');
-      return saved ? JSON.parse(saved) : DEFAULT_SIZES;
+      return saved ? JSON.parse(saved) : [];
     } catch {
-      return DEFAULT_SIZES;
+      return [];
     }
   });
 
   const [masterColors, setMasterColors] = useState(() => {
     try {
       const saved = localStorage.getItem('ithihasa_master_colors');
-      return saved ? JSON.parse(saved) : DEFAULT_COLORS;
+      return saved ? JSON.parse(saved) : [];
     } catch {
-      return DEFAULT_COLORS;
+      return [];
     }
   });
 
@@ -119,29 +108,55 @@ export function InventoryView() {
   const [isCollectionDropdownOpen, setIsCollectionDropdownOpen] = useState(false);
   const [uploadingColorIdx, setUploadingColorIdx] = useState(null);
 
-  // Save Masters to localStorage
-  const saveMasterSizes = (sizes) => {
+  // Save Masters to localStorage AND sync to backend settings
+  const saveMasterSizes = async (sizes) => {
     setMasterSizes(sizes);
     try {
       localStorage.setItem('ithihasa_master_sizes', JSON.stringify(sizes));
     } catch {}
+    try {
+      await updateSettings({ sizes });
+    } catch (err) {
+      console.warn('Failed to sync sizes to backend database:', err);
+    }
   };
 
-  const saveMasterColors = (colors) => {
+  const saveMasterColors = async (colors) => {
     setMasterColors(colors);
     try {
       localStorage.setItem('ithihasa_master_colors', JSON.stringify(colors));
     } catch {}
+    try {
+      await updateSettings({ colors });
+    } catch (err) {
+      console.warn('Failed to sync colors to backend database:', err);
+    }
   };
 
   // Load live data
   const loadData = async () => {
     try {
       setLoading(true);
-      const [inventoryData, categoriesData] = await Promise.all([
+      const [inventoryData, categoriesData, settingsData] = await Promise.all([
         fetchInventory({ search: searchQuery || undefined }).catch(() => null),
-        fetchCategories().catch(() => null)
+        fetchCategories().catch(() => null),
+        fetchSettings().catch(() => null)
       ]);
+
+      if (settingsData) {
+        if (Array.isArray(settingsData.sizes)) {
+          setMasterSizes(settingsData.sizes);
+          try {
+            localStorage.setItem('ithihasa_master_sizes', JSON.stringify(settingsData.sizes));
+          } catch {}
+        }
+        if (Array.isArray(settingsData.colors)) {
+          setMasterColors(settingsData.colors);
+          try {
+            localStorage.setItem('ithihasa_master_colors', JSON.stringify(settingsData.colors));
+          } catch {}
+        }
+      }
 
       if (categoriesData && Array.isArray(categoriesData)) {
         setCategories(categoriesData);
@@ -379,6 +394,20 @@ export function InventoryView() {
     const updated = masterColors.filter((c) => c.name !== colorName);
     saveMasterColors(updated);
     toast.success(`Removed color "${colorName}" from master`);
+  };
+
+  const handleClearAllSizes = () => {
+    if (window.confirm('Are you sure you want to clear all sizes from the master list?')) {
+      saveMasterSizes([]);
+      toast.success('All sizes cleared from master.');
+    }
+  };
+
+  const handleClearAllColors = () => {
+    if (window.confirm('Are you sure you want to clear all colors from the master palette?')) {
+      saveMasterColors([]);
+      toast.success('All colors cleared from master.');
+    }
   };
 
   // Per-Color Image Upload Handler (0 to 3 images)
@@ -636,52 +665,71 @@ export function InventoryView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* COLOR MASTER SECTION */}
           <section className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 space-y-6">
-            <div className="flex items-center gap-3 border-b border-[var(--border-color)] pb-4">
-              <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--gold)]">
-                <Palette size={20} />
+            <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--gold)]">
+                  <Palette size={20} />
+                </div>
+                <div>
+                  <h2 className="text-[20px] font-normal text-[var(--text-primary)] font-garamond">
+                    Color Master ({masterColors.length})
+                  </h2>
+                  <p className="text-[12px] text-[var(--text-secondary)]">
+                    Luxury palette definitions and hex rounds used across the storefront.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-[20px] font-normal text-[var(--text-primary)] font-garamond">
-                  Color Master ({masterColors.length})
-                </h2>
-                <p className="text-[12px] text-[var(--text-secondary)]">
-                  Luxury palette definitions and hex rounds used across the storefront.
-                </p>
-              </div>
+              {masterColors.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAllColors}
+                  className="text-[11px] text-rose-400 hover:text-rose-300 hover:underline px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/20 cursor-pointer"
+                >
+                  Clear All
+                </button>
+              )}
             </div>
 
             {/* Active Colors List */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
-              {masterColors.map((color) => (
-                <div
-                  key={color.name}
-                  className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded"
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="w-6 h-6 rounded-full border border-white/20 shadow-sm shrink-0"
-                      style={{ backgroundColor: color.hex }}
-                    />
-                    <div>
-                      <span className="text-[13px] font-semibold text-[var(--text-primary)] block">
-                        {color.name}
-                      </span>
-                      <span className="text-[11px] font-mono text-[var(--text-secondary)] uppercase">
-                        {color.hex}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleDeleteColorMaster(color.name)}
-                    className="p-1.5 text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 rounded transition-colors cursor-pointer"
-                    title="Remove color"
+            {masterColors.length === 0 ? (
+              <div className="py-8 text-center bg-[var(--bg-secondary)]/30 border border-dashed border-[var(--border-color)] rounded p-4">
+                <Palette size={24} className="mx-auto text-[var(--text-muted)] mb-2 opacity-50" />
+                <p className="text-[13px] text-[var(--text-secondary)] font-medium">No custom colors created yet</p>
+                <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Use the form below to add colors to your palette.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
+                {masterColors.map((color) => (
+                  <div
+                    key={color.name}
+                    className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded"
                   >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="w-6 h-6 rounded-full border border-white/20 shadow-sm shrink-0"
+                        style={{ backgroundColor: color.hex }}
+                      />
+                      <div>
+                        <span className="text-[13px] font-semibold text-[var(--text-primary)] block">
+                          {color.name}
+                        </span>
+                        <span className="text-[11px] font-mono text-[var(--text-secondary)] uppercase">
+                          {color.hex}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleDeleteColorMaster(color.name)}
+                      className="p-1.5 text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 rounded transition-colors cursor-pointer"
+                      title="Remove color"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Add Color Form */}
             <form onSubmit={handleAddColorMaster} className="space-y-4 pt-4 border-t border-[var(--border-color)]">
@@ -733,38 +781,57 @@ export function InventoryView() {
 
           {/* SIZE MASTER SECTION */}
           <section className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 space-y-6">
-            <div className="flex items-center gap-3 border-b border-[var(--border-color)] pb-4">
-              <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--gold)]">
-                <Ruler size={20} />
+            <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--gold)]">
+                  <Ruler size={20} />
+                </div>
+                <div>
+                  <h2 className="text-[20px] font-normal text-[var(--text-primary)] font-garamond">
+                    Size Master ({masterSizes.length})
+                  </h2>
+                  <p className="text-[12px] text-[var(--text-secondary)]">
+                    Available size taxonomy selectable when authoring atelier silhouettes.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-[20px] font-normal text-[var(--text-primary)] font-garamond">
-                  Size Master ({masterSizes.length})
-                </h2>
-                <p className="text-[12px] text-[var(--text-secondary)]">
-                  Available size taxonomy selectable when authoring atelier silhouettes.
-                </p>
-              </div>
+              {masterSizes.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAllSizes}
+                  className="text-[11px] text-rose-400 hover:text-rose-300 hover:underline px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/20 cursor-pointer"
+                >
+                  Clear All
+                </button>
+              )}
             </div>
 
             {/* Active Sizes Badges */}
-            <div className="flex flex-wrap gap-2.5 max-h-72 overflow-y-auto pr-1">
-              {masterSizes.map((sz) => (
-                <div
-                  key={sz}
-                  className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded group"
-                >
-                  <span className="text-[13px] font-semibold text-[var(--text-primary)] font-mono">{sz}</span>
-                  <button
-                    onClick={() => handleDeleteSizeMaster(sz)}
-                    className="text-[var(--text-secondary)] hover:text-rose-500 opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    title={`Delete size ${sz}`}
+            {masterSizes.length === 0 ? (
+              <div className="py-8 text-center bg-[var(--bg-secondary)]/30 border border-dashed border-[var(--border-color)] rounded p-4">
+                <Ruler size={24} className="mx-auto text-[var(--text-muted)] mb-2 opacity-50" />
+                <p className="text-[13px] text-[var(--text-secondary)] font-medium">No custom sizes created yet</p>
+                <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Use the form below to add sizes to your catalog.</p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2.5 max-h-72 overflow-y-auto pr-1">
+                {masterSizes.map((sz) => (
+                  <div
+                    key={sz}
+                    className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded group"
                   >
-                    <X size={13} />
-                  </button>
-                </div>
-              ))}
-            </div>
+                    <span className="text-[13px] font-semibold text-[var(--text-primary)] font-mono">{sz}</span>
+                    <button
+                      onClick={() => handleDeleteSizeMaster(sz)}
+                      className="text-[var(--text-secondary)] hover:text-rose-500 opacity-60 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      title={`Delete size ${sz}`}
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Add Size Form */}
             <form onSubmit={handleAddSizeMaster} className="space-y-4 pt-4 border-t border-[var(--border-color)]">
@@ -974,23 +1041,36 @@ export function InventoryView() {
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {masterSizes.map((sz) => {
-                    const isSelected = newPiece.sizes.includes(sz);
-                    return (
+                  {masterSizes.length === 0 ? (
+                    <div className="w-full py-3 px-4 bg-[var(--bg-secondary)]/40 border border-dashed border-[var(--border-color)] rounded text-[12px] text-[var(--text-secondary)] flex items-center justify-between">
+                      <span>No sizes defined in master yet.</span>
                       <button
-                        key={sz}
                         type="button"
-                        onClick={() => handleToggleSize(sz)}
-                        className={`px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-wider border rounded transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-[var(--gold)] text-black border-[var(--gold)] shadow-sm'
-                            : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
-                        }`}
+                        onClick={() => setSubView('color_size_master')}
+                        className="text-[var(--gold)] font-medium hover:underline cursor-pointer"
                       >
-                        {sz}
+                        + Create Sizes
                       </button>
-                    );
-                  })}
+                    </div>
+                  ) : (
+                    masterSizes.map((sz) => {
+                      const isSelected = newPiece.sizes.includes(sz);
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => handleToggleSize(sz)}
+                          className={`px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-wider border rounded transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[var(--gold)] text-black border-[var(--gold)] shadow-sm'
+                              : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--gold)]'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
@@ -1016,27 +1096,40 @@ export function InventoryView() {
                   Select Colors for this Piece ({newPiece.colors.length} active)
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {masterColors.map((color) => {
-                    const isSelected = newPiece.colors.some((c) => c.name === color.name);
-                    return (
+                  {masterColors.length === 0 ? (
+                    <div className="w-full py-3 px-4 bg-[var(--bg-secondary)]/40 border border-dashed border-[var(--border-color)] rounded text-[12px] text-[var(--text-secondary)] flex items-center justify-between">
+                      <span>No colors defined in master yet.</span>
                       <button
-                        key={color.name}
                         type="button"
-                        onClick={() => handleToggleColor(color)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--text-primary)] ring-1 ring-[var(--gold)]'
-                            : 'border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] opacity-70 hover:opacity-100'
-                        }`}
+                        onClick={() => setSubView('color_size_master')}
+                        className="text-[var(--gold)] font-medium hover:underline cursor-pointer"
                       >
-                        <span
-                          className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
-                          style={{ backgroundColor: color.hex }}
-                        />
-                        <span className="text-[12px] font-medium">{color.name}</span>
+                        + Create Colors
                       </button>
-                    );
-                  })}
+                    </div>
+                  ) : (
+                    masterColors.map((color) => {
+                      const isSelected = newPiece.colors.some((c) => c.name === color.name);
+                      return (
+                        <button
+                          key={color.name}
+                          type="button"
+                          onClick={() => handleToggleColor(color)}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--text-primary)] ring-1 ring-[var(--gold)]'
+                              : 'border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] opacity-70 hover:opacity-100'
+                          }`}
+                        >
+                          <span
+                            className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                          <span className="text-[12px] font-medium">{color.name}</span>
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
