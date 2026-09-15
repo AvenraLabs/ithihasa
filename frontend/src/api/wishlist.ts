@@ -4,6 +4,17 @@ export interface WishlistItem {
   id: string;
   productId: string;
   variantId?: string | null;
+  selectedColor?: string | null;
+  selectedSize?: string | null;
+  productDeleted?: boolean;
+  availableStock?: number | null;
+  variant?: {
+    id: string;
+    sku?: string | null;
+    size?: string | null;
+    color?: string | null;
+    price?: number | null;
+  } | null;
   product: {
     id: string;
     name: string;
@@ -15,6 +26,7 @@ export interface WishlistItem {
   };
 }
 
+
 export interface WishlistProductPayload {
   id: string;
   name: string;
@@ -23,6 +35,15 @@ export interface WishlistProductPayload {
   compareAtPrice?: number | null;
   image?: string | null;
   category?: { name: string };
+  selectedColor?: string | null;
+  selectedSize?: string | null;
+  variant?: {
+    id: string;
+    sku?: string | null;
+    size?: string | null;
+    color?: string | null;
+    price?: number | null;
+  } | null;
 }
 
 const GUEST_WISHLIST_KEY = 'ithihasa_guest_wishlist';
@@ -52,7 +73,8 @@ export function isGuestWishlisted(productId: string): boolean {
 
 export function toggleGuestWishlistItem(
   product: WishlistProductPayload,
-  variantId?: string | null
+  variantId?: string | null,
+  options?: { color?: string | null; size?: string | null; variant?: any }
 ): { added: boolean; message: string; wishlist: WishlistItem[] } {
   const current = getGuestWishlist();
   const exists = current.some((it) => it.productId === product.id);
@@ -64,10 +86,19 @@ export function toggleGuestWishlistItem(
     updated = current.filter((it) => it.productId !== product.id);
     added = false;
   } else {
+    const selectedColor = options?.color || product.selectedColor || options?.variant?.color || null;
+    const selectedSize = options?.size || product.selectedSize || options?.variant?.size || null;
     const newItem: WishlistItem = {
       id: `guest_${product.id}`,
       productId: product.id,
-      variantId,
+      variantId: variantId || options?.variant?.id || null,
+      selectedColor,
+      selectedSize,
+      variant: options?.variant || (selectedColor || selectedSize ? {
+        id: variantId || '',
+        color: selectedColor,
+        size: selectedSize,
+      } : null),
       product: {
         id: product.id,
         name: product.name,
@@ -96,7 +127,12 @@ export async function fetchWishlist(): Promise<WishlistItem[]> {
     return getGuestWishlist();
   }
   try {
-    return await apiClient<WishlistItem[]>('/wishlist');
+    const serverItems = await apiClient<WishlistItem[]>('/wishlist');
+    return serverItems.map((item) => ({
+      ...item,
+      selectedColor: item.selectedColor || item.variant?.color || null,
+      selectedSize: item.selectedSize || item.variant?.size || null,
+    }));
   } catch (err) {
     console.warn('Backend wishlist fetch failed, falling back to local guest wishlist', err);
     return getGuestWishlist();
@@ -106,12 +142,13 @@ export async function fetchWishlist(): Promise<WishlistItem[]> {
 export async function toggleWishlist(
   productId: string,
   variantId?: string | null,
-  productData?: WishlistProductPayload
+  productData?: WishlistProductPayload,
+  options?: { color?: string | null; size?: string | null; variant?: any }
 ): Promise<{ added: boolean; message: string }> {
   const token = getAccessToken();
   if (!token) {
     if (productData) {
-      const res = toggleGuestWishlistItem(productData, variantId);
+      const res = toggleGuestWishlistItem(productData, variantId, options);
       return { added: res.added, message: res.message };
     }
     // If no full product payload, remove or toggle by ID
@@ -129,6 +166,57 @@ export async function toggleWishlist(
     method: 'POST',
     body: JSON.stringify({ productId, variantId }),
   });
+}
+
+export async function removeFromWishlist(productId: string): Promise<void> {
+  const token = getAccessToken();
+  if (!token) {
+    const current = getGuestWishlist();
+    const updated = current.filter((it) => it.productId !== productId);
+    saveGuestWishlist(updated);
+    return;
+  }
+  try {
+    const current = await apiClient<WishlistItem[]>('/wishlist');
+    const existing = current.find((it) => it.productId === productId);
+    if (existing) {
+      await apiClient('/wishlist/toggle', {
+        method: 'POST',
+        body: JSON.stringify({ productId, variantId: existing.variantId }),
+      });
+    }
+  } catch (err) {
+    console.error('Failed to remove from backend wishlist', err);
+  }
+}
+
+export async function addToWishlist(
+  productId: string,
+  variantId?: string | null,
+  productData?: WishlistProductPayload,
+  options?: { color?: string | null; size?: string | null; variant?: any }
+): Promise<void> {
+  const token = getAccessToken();
+  if (!token) {
+    const current = getGuestWishlist();
+    const exists = current.some((it) => it.productId === productId);
+    if (!exists && productData) {
+      toggleGuestWishlistItem(productData, variantId, options);
+    }
+    return;
+  }
+  try {
+    const current = await apiClient<WishlistItem[]>('/wishlist');
+    const exists = current.some((it) => it.productId === productId);
+    if (!exists) {
+      await apiClient('/wishlist/toggle', {
+        method: 'POST',
+        body: JSON.stringify({ productId, variantId }),
+      });
+    }
+  } catch (err) {
+    console.error('Failed to add to backend wishlist', err);
+  }
 }
 
 export async function syncGuestWishlistToBackend(): Promise<void> {

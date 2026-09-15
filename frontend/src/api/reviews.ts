@@ -7,8 +7,9 @@ export interface Review {
   userAvatar?: string | null;
   productId: string;
   rating: number;
-  title: string;
+  title?: string;
   comment: string;
+  images?: string[];
   verifiedPurchase: boolean;
   createdAt: string;
 }
@@ -17,8 +18,9 @@ export interface ReviewInput {
   productId: string;
   orderId?: string;
   rating: number;
-  title: string;
-  comment: string;
+  title?: string;
+  comment?: string;
+  images?: string[];
 }
 
 export function normalizeReview(r: any): Review {
@@ -31,6 +33,7 @@ export function normalizeReview(r: any): Review {
     rating: Number(r.rating ?? 5),
     title: r.title ?? '',
     comment: r.comment ?? '',
+    images: r.images || (r.metadata?.images ? r.metadata.images : []),
     verifiedPurchase: Boolean(r.isVerified ?? r.verified_purchase ?? true),
     createdAt: r.createdAt ?? r.created_at ?? new Date().toISOString(),
   };

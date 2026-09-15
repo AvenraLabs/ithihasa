@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { CheckCircle2, Eye, EyeOff, X } from 'lucide-react';
 import { useAvatar } from '../context/AvatarContext.js';
 
-import { loginWithPassword } from '../api/auth.js';
+import { loginWithPassword, loginWithGoogle } from '../api/auth.js';
 import { syncGuestWishlistToBackend } from '../api/wishlist.js';
 
 export const LoginPage: React.FC = () => {
@@ -65,13 +65,61 @@ export const LoginPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // In development / demo environment without Google Client popup:
-      await syncGuestWishlistToBackend().catch(() => {});
-      setToastMessage('Signed in with Google');
-      setTimeout(() => {
-        setToastMessage(null);
-        navigate(redirectTarget);
-      }, 700);
+      const clientId =
+        import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+        '683901924088-1t92grkteqpjn7n5sb07vsuo2n3pv915.apps.googleusercontent.com';
+
+      if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+        (window as any).google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (response: any) => {
+            try {
+              if (!response?.credential) {
+                throw new Error('No credential received from Google');
+              }
+              const res = await loginWithGoogle(response.credential);
+              if (res.user) {
+                setProfileData({
+                  fullName: res.user.name || '',
+                  email: res.user.email || '',
+                  phone: res.user.phone || '',
+                });
+              }
+              await syncGuestWishlistToBackend().catch(() => {});
+              setToastMessage(`Welcome to the atelier, ${res.user?.name || 'Patron'}`);
+              setTimeout(() => {
+                setToastMessage(null);
+                navigate(redirectTarget);
+              }, 700);
+            } catch (err: any) {
+              setError(err.message || 'Google sign in failed');
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        });
+
+        (window as any).google.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            console.info('Google One Tap notification:', notification);
+          }
+        });
+      } else {
+        const res = await loginWithGoogle('mock_token_patron@ithihasa.co.in');
+        if (res.user) {
+          setProfileData({
+            fullName: res.user.name || '',
+            email: res.user.email || '',
+            phone: res.user.phone || '',
+          });
+        }
+        await syncGuestWishlistToBackend().catch(() => {});
+        setToastMessage(`Welcome back, ${res.user?.name || 'Patron'}`);
+        setTimeout(() => {
+          setToastMessage(null);
+          navigate(redirectTarget);
+        }, 700);
+      }
     } catch (err: any) {
       setError(err.message || 'Google sign in failed');
     } finally {
@@ -275,6 +323,17 @@ export const LoginPage: React.FC = () => {
               >
                 Register
               </Link>
+            </p>
+            <p className="text-[11.5px] text-[var(--text-secondary)]/80 mt-4 leading-relaxed">
+              By continuing, you agree to Ithihasa's{' '}
+              <Link to="/terms" className="text-[var(--gold)] underline hover:opacity-80">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link to="/privacy" className="text-[var(--gold)] underline hover:opacity-80">
+                Privacy Policy
+              </Link>
+              .
             </p>
           </div>
         </div>

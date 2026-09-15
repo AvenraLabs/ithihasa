@@ -275,7 +275,7 @@ export const RegisterPage: React.FC = () => {
           </form>
 
           {/* Login Link */}
-          <div className="mt-8 text-center">
+          <div className="mt-8 text-center space-y-3">
             <p className="body-sm text-[13px] text-[var(--text-secondary)]">
               Already have an account?{' '}
               <Link
@@ -284,6 +284,17 @@ export const RegisterPage: React.FC = () => {
               >
                 Login
               </Link>
+            </p>
+            <p className="text-[11.5px] text-[var(--text-secondary)]/80 leading-relaxed">
+              By creating an account, you agree to Ithihasa's{' '}
+              <Link to="/terms" className="text-[var(--gold)] underline hover:opacity-80">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link to="/privacy" className="text-[var(--gold)] underline hover:opacity-80">
+                Privacy Policy
+              </Link>
+              .
             </p>
           </div>
         </div>

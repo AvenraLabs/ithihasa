@@ -17,46 +17,12 @@ import {
   Coupon,
   Address,
   Review,
+  SupportTicket,
 } from '../../database/index.js';
 import { phonePeProvider } from '../../integrations/phonepe/phonepe.provider.js';
 import { auditService } from '../audit/audit.service.js';
 import { inventoryService } from '../inventory/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '../../common/errors/index.js';
-
-// In-memory store for support & store settings if persistent table is not yet migrated
-interface SupportTicketItem {
-  id: string;
-  customer: string;
-  email: string;
-  subject: string;
-  priority: 'High' | 'Med' | 'Low';
-  status: 'OPEN' | 'PENDING' | 'RESOLVED';
-  date: string;
-  createdAt: Date;
-  messages: Array<{
-    sender: string;
-    text: string;
-    time: string;
-  }>;
-}
-
-interface ChatSessionItem {
-  id: string;
-  patronName: string;
-  tier: 'Noir' | 'Gold' | 'Silver';
-  location: string;
-  avatar: string;
-  activeOrder: string;
-  lastMessage: string;
-  time: string;
-  unread: boolean;
-  messages: Array<{
-    id: string;
-    sender: 'patron' | 'concierge';
-    text: string;
-    time: string;
-  }>;
-}
 
 let STORE_SETTINGS: any = {
   storeName: 'Ithihasa Atelier',
@@ -70,123 +36,6 @@ let STORE_SETTINGS: any = {
   phonepeEnv: 'SANDBOX',
 };
 
-let SUPPORT_TICKETS: SupportTicketItem[] = [
-  {
-    id: '#TK-4029',
-    customer: 'Eleanor Vance',
-    email: 'eleanor.v@ithihasa.com',
-    subject: 'Inquiry regarding bespoke silk tailoring measurements',
-    priority: 'High',
-    status: 'OPEN',
-    date: '10 mins ago',
-    createdAt: new Date(),
-    messages: [
-      {
-        sender: 'Eleanor Vance',
-        text: 'Hello, I wanted to confirm if the master artisan can adjust the sleeve hem on the Banarasi Brocade Sherwani before dispatch?',
-        time: '10 mins ago',
-      },
-    ],
-  },
-  {
-    id: '#TK-4028',
-    customer: 'Arthur Pendelton',
-    email: 'arthur.p@edinburgh.co.uk',
-    subject: 'Shipping delay on Fall Lookbook order',
-    priority: 'Med',
-    status: 'PENDING',
-    date: '2 hours ago',
-    createdAt: new Date(Date.now() - 7200000),
-    messages: [
-      {
-        sender: 'Arthur Pendelton',
-        text: 'Tracking indicates courier customs clearance in London. Is delivery still scheduled for Friday?',
-        time: '2 hours ago',
-      },
-    ],
-  },
-  {
-    id: '#TK-4027',
-    customer: 'Clara Bow',
-    email: 'clara.bow@mayfair.com',
-    subject: 'Care instructions for cashmere blend cardigan',
-    priority: 'Low',
-    status: 'RESOLVED',
-    date: '1 day ago',
-    createdAt: new Date(Date.now() - 86400000),
-    messages: [
-      {
-        sender: 'Clara Bow',
-        text: 'What is the recommended cleaning method for the zari bordered cardigan?',
-        time: 'Yesterday',
-      },
-      {
-        sender: 'Atelier Concierge',
-        text: 'We recommend gentle organic dry cleaning to preserve the natural lanolin in the cashmere fibers.',
-        time: 'Yesterday',
-      },
-    ],
-  },
-];
-
-let CHAT_SESSIONS: ChatSessionItem[] = [
-  {
-    id: 'chat-1',
-    patronName: 'Lady Catherine Morland',
-    tier: 'Noir',
-    location: 'London, UK',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&auto=format&fit=crop',
-    activeOrder: '#ITH-4925 (Gold Zari Dupatta)',
-    lastMessage: 'Inquiring if the Gold Zari Dupatta can be delivered in bespoke gift wrapping to South Kensington.',
-    time: 'Just now',
-    unread: true,
-    messages: [
-      {
-        id: 'm1',
-        sender: 'patron',
-        text: 'Good afternoon. I recently placed an order for the Gold Zari Dupatta.',
-        time: '14:20',
-      },
-      {
-        id: 'm2',
-        sender: 'concierge',
-        text: 'Good afternoon Lady Catherine. It is an honor to assist you today. How may the atelier accommodate your request?',
-        time: '14:21',
-      },
-      {
-        id: 'm3',
-        sender: 'patron',
-        text: 'Inquiring if the Gold Zari Dupatta can be delivered in bespoke gift wrapping with silk ribbons to South Kensington for Friday evening?',
-        time: '14:22',
-      },
-    ],
-  },
-  {
-    id: 'chat-2',
-    patronName: 'Lord Arthur Pendelton',
-    tier: 'Gold',
-    location: 'Edinburgh, UK',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=256&auto=format&fit=crop',
-    activeOrder: '#ITH-4919 (Velvet Bandhgala)',
-    lastMessage: 'Is courier delivery still scheduled for Friday afternoon?',
-    time: '18m ago',
-    unread: false,
-    messages: [
-      {
-        id: 'm1',
-        sender: 'patron',
-        text: 'Hello, tracking indicates courier clearance in London. Is delivery still scheduled for Friday?',
-        time: '13:45',
-      },
-      {
-        id: 'm2',
-        sender: 'concierge',
-        text: 'Lord Arthur, your Bandhgala passed export customs and is on express courier dispatch for Friday midday.',
-        time: '13:50',
-      },
-    ],
-  },
-];
 
 export class AdminService {
   public async getDashboardAnalytics() {
@@ -490,6 +339,41 @@ export class AdminService {
   }
 
   /**
+   * Admin retrieves a single order with complete details, user, items, status history, and payments
+   */
+  public async getOrderById(orderId: string) {
+    let order = await Order.findByPk(orderId, {
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone', 'role', 'tier', 'created_at'] },
+        { model: OrderItem, as: 'items' },
+        { model: OrderStatusHistory, as: 'status_history' },
+        { model: Payment, as: 'payments', attributes: ['id', 'status', 'provider', 'amount', 'merchant_transaction_id', 'created_at'] },
+      ],
+      order: [
+        [{ model: OrderStatusHistory, as: 'status_history' }, 'created_at', 'ASC'],
+      ],
+    });
+
+    if (!order) {
+      order = await Order.findOne({
+        where: { order_number: orderId },
+        include: [
+          { model: User, as: 'user', attributes: ['id', 'name', 'email', 'phone', 'role', 'tier', 'created_at'] },
+          { model: OrderItem, as: 'items' },
+          { model: OrderStatusHistory, as: 'status_history' },
+          { model: Payment, as: 'payments', attributes: ['id', 'status', 'provider', 'amount', 'merchant_transaction_id', 'created_at'] },
+        ],
+        order: [
+          [{ model: OrderStatusHistory, as: 'status_history' }, 'created_at', 'ASC'],
+        ],
+      });
+    }
+
+    if (!order) throw new NotFoundError('Order');
+    return order;
+  }
+
+  /**
    * Admin updates order status
    */
   public async updateOrderStatus(
@@ -499,9 +383,15 @@ export class AdminService {
     actorEmail: string,
     actorId: string
   ) {
-    const order = await Order.findByPk(orderId, {
+    let order = await Order.findByPk(orderId, {
       include: [{ model: OrderItem, as: 'items' }],
     });
+    if (!order) {
+      order = await Order.findOne({
+        where: { order_number: orderId },
+        include: [{ model: OrderItem, as: 'items' }],
+      });
+    }
     if (!order) throw new NotFoundError('Order');
 
     const fromStatus = order.status;
@@ -808,24 +698,93 @@ export class AdminService {
    * Marketing & Promotions
    */
   public async getMarketingStats() {
-    const campaignsVolume = [
-      { week: 'W1', volume: 180 },
-      { week: 'W2', volume: 220 },
-      { week: 'W3', volume: 310 },
-      { week: 'W4', volume: 290 },
-      { week: 'W5', volume: 420 },
-      { week: 'W6', volume: 510 },
-      { week: 'W7', volume: 470 },
-    ];
-
     const coupons = await Coupon.findAll({ order: [['created_at', 'DESC']] });
+
+    const couponOrders = await Order.findAll({
+      where: {
+        coupon_code: { [Op.ne]: null },
+      },
+      attributes: ['total_amount', 'discount_amount', 'status', 'coupon_code'],
+    });
+
+    const totalRevenue = couponOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+    const totalDiscounts = couponOrders.reduce((sum, o) => sum + Number(o.discount_amount || 0), 0);
+    const totalUsage = coupons.reduce((sum, c) => sum + Number(c.times_used || 0), 0);
+    const activeCoupons = coupons.filter((c) => c.status === 'ACTIVE').length;
+    const avgOrderValue = couponOrders.length > 0 ? totalRevenue / couponOrders.length : 0;
+
+    const totalOrdersCount = await Order.count();
+    const customerCount = await User.count({ where: { role: 'CUSTOMER' } });
+    const totalPatrons = customerCount > 0 ? customerCount : await User.count();
+    const vipInquiriesCount = await SupportTicket.count();
+
+    // Calculate real audience reach: registered patrons + VIP concierge inquiries + coupon usages
+    const rawReach = totalPatrons + vipInquiriesCount + totalUsage * 2;
+    const totalReachFormatted =
+      rawReach >= 1000
+        ? `${(rawReach / 1000).toFixed(1)}K`
+        : `${rawReach}`;
+
+    // Distinct patrons who placed an order
+    const orderingUsers = await Order.findAll({
+      attributes: ['user_id'],
+      where: { user_id: { [Op.ne]: null as any } } as any,
+      group: ['user_id'],
+    });
+    const orderingUsersCount = orderingUsers.length;
+
+    // Conversion rate:
+    // If campaigns with coupon redemptions exist, calculate percentage of orders that converted with campaign
+    // Else calculate patron purchase conversion rate (ordering patrons / total patrons)
+    let conversionRate = '0.0%';
+    if (couponOrders.length > 0 && totalOrdersCount > 0) {
+      conversionRate = `${((couponOrders.length / totalOrdersCount) * 100).toFixed(1)}%`;
+    } else if (totalPatrons > 0 && orderingUsersCount > 0) {
+      conversionRate = `${((orderingUsersCount / totalPatrons) * 100).toFixed(1)}%`;
+    } else if (totalOrdersCount > 0 && rawReach > 0) {
+      conversionRate = `${((totalOrdersCount / rawReach) * 100).toFixed(1)}%`;
+    }
+
+    // Weekly traffic & engagement velocity calculated over past 7 weeks
+    const now = new Date();
+    const campaignsVolume: { week: string; volume: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const start = new Date(now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
+      const end = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+      const ordersCount = await Order.count({
+        where: {
+          created_at: {
+            [Op.gte]: start,
+            [Op.lt]: end,
+          },
+        },
+      });
+      const ticketsCount = await SupportTicket.count({
+        where: {
+          created_at: {
+            [Op.gte]: start,
+            [Op.lt]: end,
+          },
+        },
+      });
+      campaignsVolume.push({
+        week: `W${7 - i}`,
+        volume: ordersCount + ticketsCount,
+      });
+    }
 
     return {
       overview: {
-        totalReach: '24.8K',
-        attributedRevenue: '$148,200',
-        activeCampaigns: 4,
-        avgEngagement: '18.4%',
+        totalReach: totalReachFormatted,
+        rawReach,
+        attributedRevenue: `₹${Math.round(totalRevenue).toLocaleString('en-IN')}`,
+        rawAttributedRevenue: totalRevenue,
+        activeCampaigns: activeCoupons,
+        totalOrders: couponOrders.length,
+        avgOrderValue: `₹${Math.round(avgOrderValue).toLocaleString('en-IN')}`,
+        conversionRate,
+        totalDiscounts: `₹${Math.round(totalDiscounts).toLocaleString('en-IN')}`,
+        totalUsage,
       },
       campaignsVolume,
       coupons,
@@ -875,77 +834,6 @@ export class AdminService {
     return { success: true };
   }
 
-  /**
-   * Support Center & Direct Chat
-   */
-  public getSupportMetrics() {
-    const openTickets = SUPPORT_TICKETS.filter((t) => t.status === 'OPEN').length;
-    return {
-      openTickets: openTickets || 24,
-      avgResponseHours: 1.2,
-      urgentEscalations: 3,
-      recentTickets: SUPPORT_TICKETS,
-    };
-  }
-
-  public getSupportTickets() {
-    return SUPPORT_TICKETS;
-  }
-
-  public createSupportTicket(data: any) {
-    const newTicket: SupportTicketItem = {
-      id: `#TK-${Math.floor(1000 + Math.random() * 9000)}`,
-      customer: data.customer,
-      email: data.email || 'concierge@ithihasa.com',
-      subject: data.subject,
-      priority: data.priority || 'High',
-      status: 'OPEN',
-      date: 'Just now',
-      createdAt: new Date(),
-      messages: [
-        {
-          sender: data.customer,
-          text: data.message || data.subject,
-          time: 'Just now',
-        },
-      ],
-    };
-    SUPPORT_TICKETS.unshift(newTicket);
-    return newTicket;
-  }
-
-  public replySupportTicket(ticketId: string, message: string, sender: string) {
-    const ticket = SUPPORT_TICKETS.find((t) => t.id === ticketId);
-    if (!ticket) throw new NotFoundError('Ticket');
-
-    ticket.messages.push({
-      sender: sender || 'Atelier Concierge',
-      text: message,
-      time: 'Just now',
-    });
-    return ticket;
-  }
-
-  public getChatSessions() {
-    return CHAT_SESSIONS;
-  }
-
-  public sendChatMessage(sessionId: string, text: string, sender: 'patron' | 'concierge') {
-    const session = CHAT_SESSIONS.find((s) => s.id === sessionId);
-    if (!session) throw new NotFoundError('Chat Session');
-
-    const newMsg = {
-      id: `m_${Date.now()}`,
-      sender,
-      text,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-    session.messages.push(newMsg);
-    session.lastMessage = text;
-    session.time = 'Just now';
-    if (sender === 'patron') session.unread = true;
-    return session;
-  }
 
   /**
    * Notifications — Dynamic database integration (Orders, Low Stock, Reviews)

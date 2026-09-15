@@ -28,6 +28,15 @@ export class AdminController {
     }
   }
 
+  public async getOrderById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const order = await adminService.getOrderById(req.params.id);
+      sendSuccess(res, order, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public async updateOrderStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { status, reason } = req.body;
@@ -107,16 +116,25 @@ export class AdminController {
     }
   }
 
-  // Settings: Color & Size Master (stored in DB, readable by storefront)
+  // Settings: Color & Size Master, Shipping Rules, and Store Configuration
   public async getSettings(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const [colorRow, sizeRow] = await Promise.all([
+      const [colorRow, sizeRow, shippingRow] = await Promise.all([
         AppSetting.findByPk('color_master'),
         AppSetting.findByPk('size_master'),
+        AppSetting.findByPk('shipping_settings'),
       ]);
+      const baseSettings = adminService.getSettings();
       sendSuccess(res, {
+        ...baseSettings,
         colors: colorRow ? colorRow.value : [],
         sizes: sizeRow ? sizeRow.value : [],
+        shipping: shippingRow ? shippingRow.value : {
+          shippingType: 'always_free',
+          freeShippingThreshold: 2500,
+          standardRate: 200,
+          flatRate: 200,
+        },
       }, 200);
     } catch (error) {
       next(error);
@@ -125,7 +143,7 @@ export class AdminController {
 
   public async updateSettings(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { colors, sizes } = req.body;
+      const { colors, sizes, shipping, ...otherSettings } = req.body;
       const updates: Promise<any>[] = [];
 
       if (colors !== undefined) {
@@ -134,15 +152,31 @@ export class AdminController {
       if (sizes !== undefined) {
         updates.push(AppSetting.upsert({ key: 'size_master', value: sizes }));
       }
+      if (shipping !== undefined) {
+        updates.push(AppSetting.upsert({ key: 'shipping_settings', value: shipping }));
+      }
       await Promise.all(updates);
 
-      const [colorRow, sizeRow] = await Promise.all([
+      if (Object.keys(otherSettings).length > 0) {
+        adminService.updateSettings(otherSettings);
+      }
+
+      const [colorRow, sizeRow, shippingRow] = await Promise.all([
         AppSetting.findByPk('color_master'),
         AppSetting.findByPk('size_master'),
+        AppSetting.findByPk('shipping_settings'),
       ]);
+      const baseSettings = adminService.getSettings();
       sendSuccess(res, {
+        ...baseSettings,
         colors: colorRow ? colorRow.value : [],
         sizes: sizeRow ? sizeRow.value : [],
+        shipping: shippingRow ? shippingRow.value : {
+          shippingType: 'always_free',
+          freeShippingThreshold: 2500,
+          standardRate: 200,
+          flatRate: 200,
+        },
       }, 200);
     } catch (error) {
       next(error);
@@ -176,68 +210,6 @@ export class AdminController {
     }
   }
 
-  // Support & Concierge Chat
-  public async getSupportMetrics(_req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const metrics = adminService.getSupportMetrics();
-      sendSuccess(res, metrics, 200);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  public async getSupportTickets(_req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const tickets = adminService.getSupportTickets();
-      sendSuccess(res, tickets, 200);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  public async createSupportTicket(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const ticket = adminService.createSupportTicket(req.body);
-      sendSuccess(res, ticket, 201);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  public async replySupportTicket(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const ticket = adminService.replySupportTicket(
-        req.params.id,
-        req.body.message,
-        req.user?.email || 'Atelier Concierge'
-      );
-      sendSuccess(res, ticket, 200);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  public async getChatSessions(_req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const sessions = adminService.getChatSessions();
-      sendSuccess(res, sessions, 200);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  public async sendChatMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const session = adminService.sendChatMessage(
-        req.params.sessionId,
-        req.body.text,
-        req.body.sender || 'concierge'
-      );
-      sendSuccess(res, session, 200);
-    } catch (error) {
-      next(error);
-    }
-  }
 
   // Notifications
   public async getNotifications(_req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -350,6 +322,15 @@ export class AdminController {
     try {
       const coupon = await couponService.updateCoupon(req.params.id, req.body);
       sendSuccess(res, coupon, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public async deleteCoupon(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      await couponService.deleteCoupon(req.params.id);
+      sendSuccess(res, { message: 'Coupon deleted successfully' }, 200);
     } catch (error) {
       next(error);
     }

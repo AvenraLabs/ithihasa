@@ -1,5 +1,6 @@
 import { env } from '../../config/env.js';
 import { Coupon, CouponRedemption } from '../../database/index.js';
+import { AppSetting } from '../../database/models/app-setting.model.js';
 import { BusinessRuleError } from '../../common/errors/index.js';
 import { PricingItem, PricingQuote } from './pricing.types.js';
 
@@ -102,14 +103,35 @@ export class PricingService {
 
     const discountedSubtotal = Math.max(0, subtotal - discountAmount);
 
-    // 3. Calculate Shipping
+    // 3. Calculate Shipping from Admin AppSetting rules
     let shippingAmount = env.DEFAULT_SHIPPING_FEE;
-    if (env.FREE_SHIPPING_THRESHOLD > 0 && discountedSubtotal >= env.FREE_SHIPPING_THRESHOLD) {
-      shippingAmount = 0;
+    try {
+      const shippingRow = await AppSetting.findByPk('shipping_settings');
+      if (shippingRow && shippingRow.value) {
+        const s: any = shippingRow.value;
+        if (s.shippingType === 'always_free') {
+          shippingAmount = 0;
+        } else if (s.shippingType === 'flat_rate') {
+          shippingAmount = Number(s.flatRate ?? s.standardRate ?? 0);
+        } else if (s.shippingType === 'free_above_amount') {
+          const threshold = Number(s.freeShippingThreshold ?? 0);
+          if (discountedSubtotal >= threshold) {
+            shippingAmount = 0;
+          } else {
+            shippingAmount = Number(s.standardRate ?? 0);
+          }
+        }
+      } else if (env.FREE_SHIPPING_THRESHOLD > 0 && discountedSubtotal >= env.FREE_SHIPPING_THRESHOLD) {
+        shippingAmount = 0;
+      }
+    } catch {
+      if (env.FREE_SHIPPING_THRESHOLD > 0 && discountedSubtotal >= env.FREE_SHIPPING_THRESHOLD) {
+        shippingAmount = 0;
+      }
     }
 
-    // 4. Calculate Tax (Indian App default: 0% / Tax-inclusive)
-    const taxAmount = Number(((discountedSubtotal * env.TAX_RATE) / 100).toFixed(2));
+    // 4. Calculate Tax: 0 / tax-inclusive (tax line removed per specifications)
+    const taxAmount = 0;
 
     // 5. Calculate Final Order Total
     const totalAmount = Number((discountedSubtotal + shippingAmount + taxAmount).toFixed(2));

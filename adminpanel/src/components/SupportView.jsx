@@ -18,17 +18,14 @@ import { toast } from 'sonner';
 import {
   fetchSupportMetrics,
   fetchSupportTickets,
-  createSupportTicket,
-  replySupportTicket
+  createSupportTicket
 } from '../api/support.js';
 
 export function SupportView() {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [metrics, setMetrics] = useState(null);
-  const [selectedTicket, setSelectedTicket] = useState(null);
-  const [replyText, setReplyText] = useState('');
-  const [isNewTicketModalOpen, setIsNewTicketModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,72 +52,18 @@ export function SupportView() {
     loadSupport();
   }, []);
 
-  // New ticket form
-  const [newCustomer, setNewCustomer] = useState('');
-  const [newSubject, setNewSubject] = useState('');
-  const [newPriority, setNewPriority] = useState('High');
+  const openTicketsCount =
+    metrics?.openTickets ??
+    tickets.filter((t) => t.status === 'OPEN' || t.status === 'PENDING').length;
+  const avgResponseTime = metrics?.avgResponseHours ?? 1.2;
+  const urgentCount =
+    metrics?.urgentEscalations ??
+    tickets.filter((t) => (t.priority === 'High' || t.priority === 'HIGH') && t.status !== 'RESOLVED').length;
 
-  const handleCreateTicket = async (e) => {
-    e.preventDefault();
-    if (!newCustomer || !newSubject) return;
-
-    try {
-      const created = await createSupportTicket({
-        customer: newCustomer,
-        subject: newSubject,
-        priority: newPriority,
-      }).catch(() => null);
-
-      if (created) {
-        setTickets((prev) => [created, ...prev]);
-      } else {
-        const fallbackTicket = {
-          id: `#TK-${Math.floor(4030 + Math.random() * 900)}`,
-          customer: newCustomer,
-          subject: newSubject,
-          priority: newPriority,
-          status: 'OPEN',
-          date: 'Just now',
-          messages: [{ sender: newCustomer, text: newSubject, time: 'Just now' }]
-        };
-        setTickets((prev) => [fallbackTicket, ...prev]);
-      }
-    } catch {}
-
-    setNewCustomer('');
-    setNewSubject('');
-    setIsNewTicketModalOpen(false);
-  };
-
-  const handleSendReply = async (e) => {
-    e.preventDefault();
-    if (!replyText.trim() || !selectedTicket) return;
-
-    const newMessage = {
-      sender: 'Atelier Concierge',
-      text: replyText.trim(),
-      time: 'Just now'
-    };
-
-    setTickets(prev =>
-      prev.map(t =>
-        t.id === selectedTicket.id
-          ? { ...t, messages: [...t.messages, newMessage] }
-          : t
-      )
-    );
-
-    setSelectedTicket(prev => ({
-      ...prev,
-      messages: [...prev.messages, newMessage]
-    }));
-
-    try {
-      await replySupportTicket(selectedTicket.id, replyText.trim()).catch(() => null);
-    } catch {}
-
-    setReplyText('');
-  };
+  const filteredTickets = tickets.filter((t) => {
+    if (statusFilter === 'ALL') return true;
+    return t.status?.toUpperCase() === statusFilter.toUpperCase();
+  });
 
   return (
     <div className="p-4 sm:p-6 md:p-10 max-w-[1440px] w-full mx-auto space-y-6 md:space-y-8 flex-1">
@@ -136,14 +79,6 @@ export function SupportView() {
             Manage customer inquiries and knowledge base resources to maintain exemplary atelier service.
           </p>
         </div>
-
-        <button
-          onClick={() => setIsNewTicketModalOpen(true)}
-          className="w-full sm:w-auto bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] label-caps text-[11px] px-6 py-3 uppercase tracking-widest hover:opacity-90 shadow-sm transition-opacity flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <Plus size={15} />
-          <span>New Ticket</span>
-        </button>
       </div>
 
       {/* Top 12-Column Grid (Quick Stats & Direct Chat) */}
@@ -153,14 +88,14 @@ export function SupportView() {
           {/* Stat 1: Open Tickets */}
           <div className="bg-[var(--bg-card)] border border-[var(--border-color)] p-5 sm:p-6 flex flex-col justify-between shadow-sm">
             <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-widest mb-3">
-              Open Tickets
+              Open Inquiries
             </span>
             <div className="flex items-baseline gap-2">
               <span className="font-garamond text-[32px] sm:text-[38px] text-[var(--text-primary)] font-normal leading-none tabular-nums">
-                24
+                {openTicketsCount}
               </span>
-              <span className="text-[12px] text-rose-500 font-semibold font-manrope">
-                ↑ 12%
+              <span className="text-[11px] label-caps text-emerald-500 font-semibold uppercase tracking-wider">
+                Active Desk
               </span>
             </div>
           </div>
@@ -172,7 +107,7 @@ export function SupportView() {
             </span>
             <div className="flex items-baseline">
               <span className="font-garamond text-[32px] sm:text-[38px] text-[var(--text-primary)] font-normal leading-none tabular-nums">
-                1.2
+                {avgResponseTime}
               </span>
               <span className="font-garamond text-[22px] sm:text-[24px] text-[var(--text-secondary)] ml-0.5">h</span>
             </div>
@@ -185,7 +120,7 @@ export function SupportView() {
             </span>
             <div>
               <span className="font-garamond text-[32px] sm:text-[38px] text-rose-600 dark:text-rose-400 font-normal leading-none tabular-nums">
-                3
+                {urgentCount}
               </span>
             </div>
           </div>
@@ -205,7 +140,7 @@ export function SupportView() {
                 Direct Chat
               </h3>
               <p className="body-sm text-[13px] text-[var(--text-secondary)] mt-1">
-                2 active sessions requiring attention.
+                {openTicketsCount} active session{openTicketsCount === 1 ? '' : 's'} requiring attention.
               </p>
             </div>
 
@@ -219,68 +154,91 @@ export function SupportView() {
 
       {/* Support Tickets Container */}
       <div className="border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm">
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/30">
-          <h2 className="font-garamond text-[20px] sm:text-[22px] font-normal text-[var(--text-primary)]">
-            Recent Tickets
-          </h2>
-          <button
-            onClick={() => toast.info('Filtering tickets: Showing all active patron inquiries.')}
-            className="label-caps text-[11px] uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--gold)] flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Filter size={14} />
-            <span>Filter</span>
-          </button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/30 gap-3">
+          <div>
+            <h2 className="font-garamond text-[20px] sm:text-[22px] font-normal text-[var(--text-primary)]">
+              Recent Inquiries & Tickets
+            </h2>
+            <p className="text-[12px] text-[var(--text-secondary)] font-manrope">
+              Click any ticket to enter its dedicated direct chat session.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)]">Status:</span>
+            <div className="flex rounded border border-[var(--border-color)] overflow-hidden text-[11px] font-manrope">
+              {['ALL', 'OPEN', 'PENDING', 'RESOLVED'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`px-3 py-1 cursor-pointer transition-colors ${
+                    statusFilter === status
+                      ? 'bg-[var(--gold)] text-black font-semibold'
+                      : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Mobile View: Ticket Cards (< 640px) */}
         <div className="block sm:hidden divide-y divide-[var(--border-color)]">
-          {tickets.map((t) => (
-            <div
-              key={t.id}
-              onClick={() => setSelectedTicket(t)}
-              className="p-4 space-y-2.5 cursor-pointer active:bg-[var(--bg-secondary)]/40 transition-colors"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[12px] font-mono text-[var(--text-secondary)]">{t.id}</span>
-                  <h4 className="font-semibold text-[14px] text-[var(--text-primary)]">{t.customer}</h4>
-                </div>
-                <span
-                  className={`px-2 py-0.5 label-caps text-[9px] uppercase tracking-wider border rounded-sm font-semibold ${
-                    t.status === 'OPEN'
-                      ? 'bg-rose-500/10 text-rose-600 border-rose-500/20'
-                      : t.status === 'PENDING'
-                      ? 'bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)]/30'
-                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)]'
-                  }`}
-                >
-                  {t.status}
-                </span>
-              </div>
-
-              <p className="text-[13px] text-[var(--text-secondary)] line-clamp-2">
-                {t.subject}
-              </p>
-
-              <div className="flex justify-between items-center pt-2 border-t border-[var(--border-color)]/60 text-[12px]">
-                <span
-                  className={`inline-flex items-center gap-1 label-caps text-[10px] uppercase font-bold ${
-                    t.priority === 'High'
-                      ? 'text-rose-500'
-                      : t.priority === 'Med'
-                      ? 'text-[var(--gold)]'
-                      : 'text-[var(--text-secondary)]'
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                  {t.priority} Priority
-                </span>
-                <span className="text-[var(--gold)] font-medium text-[11px] flex items-center gap-0.5">
-                  View <ArrowRight size={11} />
-                </span>
-              </div>
+          {filteredTickets.length === 0 ? (
+            <div className="p-8 text-center text-[var(--text-secondary)] text-[13px]">
+              No tickets match the selected status.
             </div>
-          ))}
+          ) : (
+            filteredTickets.map((t) => (
+              <div
+                key={t.id}
+                onClick={() => navigate(`/support/chat?ticketId=${t.id}`)}
+                className="p-4 space-y-2.5 cursor-pointer active:bg-[var(--bg-secondary)]/40 transition-colors"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[12px] font-mono text-[var(--text-secondary)]">{t.ticketNumber || t.id}</span>
+                    <h4 className="font-semibold text-[14px] text-[var(--text-primary)]">{t.customer}</h4>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 label-caps text-[9px] uppercase tracking-wider border rounded-sm font-semibold ${
+                      t.status === 'OPEN'
+                        ? 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                        : t.status === 'PENDING'
+                        ? 'bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)]/30'
+                        : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30'
+                    }`}
+                  >
+                    {t.status}
+                  </span>
+                </div>
+
+                <p className="text-[13px] text-[var(--text-secondary)] line-clamp-2">
+                  {t.subject}
+                </p>
+
+                <div className="flex justify-between items-center pt-2 border-t border-[var(--border-color)]/60 text-[12px]">
+                  <span
+                    className={`inline-flex items-center gap-1 label-caps text-[10px] uppercase font-bold ${
+                      t.priority === 'High' || t.priority === 'HIGH'
+                        ? 'text-rose-500'
+                        : t.priority === 'Med' || t.priority === 'MEDIUM'
+                        ? 'text-[var(--gold)]'
+                        : 'text-[var(--text-secondary)]'
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    {t.priority} Priority
+                  </span>
+                  <span className="text-[var(--gold)] font-medium text-[11px] flex items-center gap-1 hover:underline">
+                    Open Chat <ArrowRight size={12} />
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Desktop View: Table (>= 640px) */}
@@ -297,57 +255,64 @@ export function SupportView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)] font-manrope text-[14px]">
-              {tickets.map((t) => (
-                <tr
-                  key={t.id}
-                  onClick={() => setSelectedTicket(t)}
-                  className="hover:bg-[var(--bg-secondary)]/40 transition-colors cursor-pointer group"
-                >
-                  <td className="py-4 px-6 text-[var(--text-secondary)] font-mono text-[13px]">
-                    {t.id}
-                  </td>
-                  <td className="py-4 px-6 font-semibold text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors">
-                    {t.customer}
-                  </td>
-                  <td className="py-4 px-6 text-[var(--text-secondary)] truncate max-w-[240px]">
-                    {t.subject}
-                  </td>
-                  <td className="py-4 px-6">
-                    <span
-                      className={`inline-flex items-center gap-1.5 label-caps text-[10px] uppercase font-bold ${
-                        t.priority === 'High'
-                          ? 'text-rose-500'
-                          : t.priority === 'Med'
-                          ? 'text-[var(--gold)]'
-                          : 'text-[var(--text-secondary)]'
-                      }`}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                      {t.priority}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span
-                      className={`px-2.5 py-1 label-caps text-[10px] uppercase tracking-wider border rounded-sm font-semibold ${
-                        t.status === 'OPEN'
-                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
-                          : t.status === 'PENDING'
-                          ? 'bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)]/30'
-                          : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)]'
-                      }`}
-                    >
-                      {t.status}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 text-right">
-                    <button
-                      className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreHorizontal size={16} />
-                    </button>
+              {filteredTickets.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-[var(--text-secondary)]">
+                    No tickets found for this filter.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredTickets.map((t) => (
+                  <tr
+                    key={t.id}
+                    onClick={() => navigate(`/support/chat?ticketId=${t.id}`)}
+                    className="hover:bg-[var(--bg-secondary)]/40 transition-colors cursor-pointer group"
+                  >
+                    <td className="py-4 px-6 text-[var(--text-secondary)] font-mono text-[13px]">
+                      {t.ticketNumber || t.id}
+                    </td>
+                    <td className="py-4 px-6 font-semibold text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors">
+                      {t.customer}
+                    </td>
+                    <td className="py-4 px-6 text-[var(--text-secondary)] truncate max-w-[240px]">
+                      {t.subject}
+                    </td>
+                    <td className="py-4 px-6">
+                      <span
+                        className={`inline-flex items-center gap-1.5 label-caps text-[10px] uppercase font-bold ${
+                          t.priority === 'High' || t.priority === 'HIGH'
+                            ? 'text-rose-500'
+                            : t.priority === 'Med' || t.priority === 'MEDIUM'
+                            ? 'text-[var(--gold)]'
+                            : 'text-[var(--text-secondary)]'
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                        {t.priority}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span
+                        className={`px-2.5 py-1 label-caps text-[10px] uppercase tracking-wider border rounded-sm font-semibold ${
+                          t.status === 'OPEN'
+                            ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                            : t.status === 'PENDING'
+                            ? 'bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)]/30'
+                            : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30'
+                        }`}
+                      >
+                        {t.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <span className="inline-flex items-center gap-1 text-[12px] text-[var(--gold)] group-hover:underline">
+                        <span>Open Chat</span>
+                        <ArrowRight size={13} />
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -431,161 +396,8 @@ export function SupportView() {
         </div>
       </div>
 
-      {/* Ticket Details / Response Modal */}
-      {selectedTicket && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl">
-            <div className="p-4 sm:p-5 border-b border-[var(--border-color)] flex justify-between items-start bg-[var(--bg-secondary)]/30">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="label-caps text-[11px] font-mono text-[var(--gold)]">
-                    {selectedTicket.id}
-                  </span>
-                  <span className="text-[12px] text-[var(--text-secondary)]">•</span>
-                  <span className="label-caps text-[10px] text-[var(--text-secondary)] uppercase">
-                    {selectedTicket.status}
-                  </span>
-                </div>
-                <h3 className="font-garamond text-[20px] sm:text-[22px] font-normal text-[var(--text-primary)] mt-1">
-                  {selectedTicket.subject}
-                </h3>
-                <p className="body-sm text-[12.5px] sm:text-[13px] text-[var(--text-secondary)]">
-                  Customer: <span className="font-semibold text-[var(--text-primary)]">{selectedTicket.customer}</span>
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedTicket(null)}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-1"
-              >
-                <X size={20} />
-              </button>
-            </div>
 
-            {/* Conversation Log */}
-            <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-4 font-manrope text-[13.5px]">
-              {selectedTicket.messages.map((m, idx) => (
-                <div
-                  key={idx}
-                  className={`p-3.5 sm:p-4 border ${
-                    m.sender === 'Atelier Concierge'
-                      ? 'bg-[var(--bg-secondary)]/50 border-[var(--gold)]/30'
-                      : 'bg-[var(--bg-card)] border-[var(--border-color)]'
-                  }`}
-                >
-                  <div className="flex justify-between text-[11px] text-[var(--text-secondary)] mb-1">
-                    <span className="font-bold text-[var(--text-primary)]">{m.sender}</span>
-                    <span>{m.time}</span>
-                  </div>
-                  <p className="text-[var(--text-primary)] leading-relaxed">{m.text}</p>
-                </div>
-              ))}
-            </div>
 
-            {/* Reply Form */}
-            <form onSubmit={handleSendReply} className="p-3 sm:p-4 border-t border-[var(--border-color)] flex gap-2 bg-[var(--bg-secondary)]/20">
-              <input
-                type="text"
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Type response to patron..."
-                className="flex-1 bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--gold)] px-3.5 py-2.5 text-[13px] text-[var(--text-primary)] outline-none font-manrope"
-              />
-              <button
-                type="submit"
-                className="px-4 sm:px-5 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] label-caps text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 hover:opacity-90 cursor-pointer"
-              >
-                <Send size={14} />
-                <span>Reply</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* New Ticket Modal */}
-      {isNewTicketModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-8 space-y-6 shadow-2xl">
-            <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-3">
-              <div>
-                <span className="label-caps text-[10px] text-[var(--gold)] uppercase tracking-widest">
-                  ATELIER CLIENT CARE
-                </span>
-                <h3 className="font-garamond text-[24px] font-normal text-[var(--text-primary)] mt-0.5">
-                  Open New Ticket
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsNewTicketModalOpen(false)}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-1"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateTicket} className="space-y-4 font-manrope text-[13px]">
-              <div>
-                <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-1">
-                  CUSTOMER NAME *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newCustomer}
-                  onChange={(e) => setNewCustomer(e.target.value)}
-                  placeholder="e.g. Eleanor Vance"
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[var(--text-primary)] outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-1">
-                  SUBJECT / ISSUE DETAILS *
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={newSubject}
-                  onChange={(e) => setNewSubject(e.target.value)}
-                  placeholder="Describe inquiry or garment adjustment..."
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[var(--text-primary)] outline-none resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-1">
-                  PRIORITY TIER
-                </label>
-                <select
-                  value={newPriority}
-                  onChange={(e) => setNewPriority(e.target.value)}
-                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[var(--text-primary)] outline-none cursor-pointer"
-                >
-                  <option>High</option>
-                  <option>Med</option>
-                  <option>Low</option>
-                </select>
-              </div>
-
-              <div className="flex gap-3 pt-3">
-                <button
-                  type="submit"
-                  className="flex-1 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] label-caps text-[11px] uppercase tracking-wider py-3 shadow-sm hover:opacity-90"
-                >
-                  Create Ticket
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsNewTicketModalOpen(false)}
-                  className="px-5 border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--gold)] label-caps text-[11px] uppercase tracking-wider"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

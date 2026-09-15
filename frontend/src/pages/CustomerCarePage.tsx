@@ -2,101 +2,97 @@ import React, { useState } from 'react';
 import {
   PhoneCall,
   MessageSquare,
-  Clock,
   ArrowRight,
   ChevronDown,
   ChevronUp,
   X,
-  CheckCircle2,
-  Send,
-  Sparkles,
   Truck,
   RotateCcw,
-  PackageCheck
+  PackageCheck,
+  Plus
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { sendConciergeMessage, submitSupportInquiry } from '../api/support';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  fetchCustomerTickets,
+  createSupportTicket,
+  type SupportTicketItem,
+} from '../api/support.js';
+import { toast } from 'sonner';
+import { useAvatar } from '../context/AvatarContext.js';
 
 export const CustomerCarePage: React.FC = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   // Accordion open states
   const [openFaq, setOpenFaq] = useState<string | null>('care');
 
+  const { profileData } = useAvatar();
+
   // Modals & Sheets state
-  const [activeModal, setActiveModal] = useState<'chat' | 'callback' | 'order_issue' | 'returns' | 'shipping' | null>(null);
+  const [activeModal, setActiveModal] = useState<'order_issue' | 'returns' | 'shipping' | null>(null);
+  const [isStartingChat, setIsStartingChat] = useState(false);
 
-  // Chat State
-  const [chatMessages, setChatMessages] = useState([
-    {
-      sender: 'concierge',
-      text: 'Greetings. I am Priya from the Ithihasa Atelier Concierge. How may I assist you with your heritage collection today?',
-      time: 'Just now'
-    }
-  ]);
-  const [chatInput, setChatInput] = useState('');
+  // Query live tickets
+  const { data: tickets = [], isLoading: isLoadingTickets } = useQuery<SupportTicketItem[]>({
+    queryKey: ['support-tickets'],
+    queryFn: fetchCustomerTickets,
+    refetchInterval: 4000,
+  });
 
-  // Callback Form State
-  const [callbackName, setCallbackName] = useState('');
-  const [callbackPhone, setCallbackPhone] = useState('');
-  const [callbackTime, setCallbackTime] = useState('Morning (9 AM - 12 PM)');
-  const [callbackSuccess, setCallbackSuccess] = useState(false);
+  // Active ongoing ticket (not resolved/closed)
+  const activeTicket = tickets.find(
+    (t) => t.status !== 'RESOLVED' && t.status !== 'CLOSED'
+  );
 
   const toggleFaq = (id: string) => {
-    setOpenFaq(prev => (prev === id ? null : id));
+    setOpenFaq((prev) => (prev === id ? null : id));
   };
 
-  const handleSendChatMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-
-    const messageText = chatInput.trim();
-    const userMsg = {
-      sender: 'user',
-      text: messageText,
-      time: 'Just now'
-    };
-
-    setChatMessages(prev => [...prev, userMsg]);
-    setChatInput('');
-
-    // Dispatch to backend live support queue
-    try {
-      await sendConciergeMessage(messageText).catch(() => null);
-    } catch {}
-
-    // Concierge automatic realistic response
-    setTimeout(() => {
-      setChatMessages(prev => [
-        ...prev,
-        {
-          sender: 'concierge',
-          text: 'Thank you for your message. An artisan specialist has been assigned to your inquiry and will review the fabric details immediately.',
-          time: 'Just now'
-        }
-      ]);
-    }, 1000);
-  };
-
-  const handleCallbackSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!callbackName || !callbackPhone) return;
-    setCallbackSuccess(true);
+  // Instant 1-click Chat Flow: continue active ticket or start new conversation directly
+  const handleStartOrContinueChat = async () => {
+    if (activeTicket) {
+      navigate(`/care/chat/${activeTicket.id}`);
+      return;
+    }
 
     try {
-      await submitSupportInquiry({
-        customer: callbackName,
-        subject: `Private Callback Request (${callbackTime})`,
-        message: `Phone: ${callbackPhone}. Requested callback during ${callbackTime}.`,
-        priority: 'High'
-      }).catch(() => null);
-    } catch {}
+      setIsStartingChat(true);
 
-    setTimeout(() => {
-      setCallbackSuccess(false);
-      setActiveModal(null);
-      setCallbackName('');
-      setCallbackPhone('');
-    }, 2000);
+      // Read profile from localStorage as a reliable fallback —
+      // AvatarContext reactive state may still be hydrating when this runs.
+      let resolvedName = profileData?.fullName;
+      let resolvedEmail = profileData?.email;
+      let resolvedPhone = profileData?.phone;
+
+      if (!resolvedName || !resolvedPhone) {
+        try {
+          const saved = localStorage.getItem('ithihasa_user_profile');
+          if (saved) {
+            const stored = JSON.parse(saved);
+            resolvedName = resolvedName || stored.fullName;
+            resolvedEmail = resolvedEmail || stored.email;
+            resolvedPhone = resolvedPhone || stored.phone;
+          }
+        } catch (_) { /* ignore */ }
+      }
+
+      const newTicket = await createSupportTicket({
+        customerName: resolvedName || undefined,
+        email: resolvedEmail || undefined,
+        phone: resolvedPhone || undefined,
+        subject: 'Concierge Assistance',
+      });
+      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      navigate(`/care/chat/${newTicket.id}`);
+    } catch (err: any) {
+      toast.error(err.message || 'Unable to start conversation');
+    } finally {
+      setIsStartingChat(false);
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors antialiased selection:bg-[var(--gold)] selection:text-[#0A0A0A]">
@@ -117,11 +113,31 @@ export const CustomerCarePage: React.FC = () => {
           </p>
         </section>
 
-        {/* Direct Support Options (Bento 3 Cards) matching Stitch */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-          {/* Card 1: Direct Call */}
+        {/* Direct Support Options (Bento 2 Cards: Start Chat + Direct Call) */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto">
+          {/* Card 1: Start or Continue Chat */}
+          <div
+            onClick={handleStartOrContinueChat}
+            className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 flex flex-col items-center text-center hover:border-[var(--gold)] transition-all duration-300 cursor-pointer group relative overflow-hidden shadow-sm"
+          >
+            <div className="w-12 h-12 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center mb-4 text-[var(--text-primary)] group-hover:text-[var(--gold)] group-hover:bg-[var(--bg-primary)] transition-colors">
+              <MessageSquare size={22} strokeWidth={1.5} />
+            </div>
+            <h3 className="font-garamond text-[20px] font-medium text-[var(--text-primary)] mb-1 group-hover:text-[var(--gold)] transition-colors">
+              {activeTicket ? 'Continue Chat' : 'Start a Chat'}
+            </h3>
+            <p className="body-sm text-[13px] text-[var(--text-secondary)]">
+              {isStartingChat
+                ? 'Connecting to concierge...'
+                : activeTicket
+                ? `Active ticket ${activeTicket.ticketNumber} • Tap to continue`
+                : 'Dedicated concierge messaging.'}
+            </p>
+          </div>
+
+          {/* Card 2: Direct Call */}
           <a
-            href="tel:+18005550199"
+            href="tel:+918005550199"
             className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 flex flex-col items-center text-center hover:border-[var(--gold)] transition-all duration-300 cursor-pointer group shadow-sm block"
           >
             <div className="w-12 h-12 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center mb-4 text-[var(--text-primary)] group-hover:text-[var(--gold)] group-hover:bg-[var(--bg-primary)] transition-colors">
@@ -131,41 +147,116 @@ export const CustomerCarePage: React.FC = () => {
               Direct Call
             </h3>
             <p className="body-sm text-[13px] text-[var(--text-secondary)]">
-              Speak directly with an artisan.
+              Speak directly with an artisan advisor.
             </p>
           </a>
+        </section>
 
-          {/* Card 2: Start a Chat */}
-          <div
-            onClick={() => setActiveModal('chat')}
-            className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 flex flex-col items-center text-center hover:border-[var(--gold)] transition-all duration-300 cursor-pointer group relative overflow-hidden shadow-sm"
-          >
-            <div className="w-12 h-12 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center mb-4 text-[var(--text-primary)] group-hover:text-[var(--gold)] group-hover:bg-[var(--bg-primary)] transition-colors">
-              <MessageSquare size={22} strokeWidth={1.5} />
+        {/* Active & Past Concierge Inquiries */}
+        <section className="space-y-4 pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-color)] pb-3">
+            <div>
+              <h2
+                className="font-garamond text-[24px] font-normal text-[var(--text-primary)] m-0"
+                style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+              >
+                Concierge Conversations
+              </h2>
+              <p className="text-[12.5px] text-[var(--text-secondary)] mt-0.5">
+                {activeTicket
+                  ? 'You have an active ongoing concierge inquiry. Tap to continue.'
+                  : 'Connect with an artisan specialist for sizing, alterations, or bespoke orders.'}
+              </p>
             </div>
-            <h3 className="font-garamond text-[20px] font-medium text-[var(--text-primary)] mb-1 group-hover:text-[var(--gold)] transition-colors">
-              Start a Chat
-            </h3>
-            <p className="body-sm text-[13px] text-[var(--text-secondary)]">
-              Instant assistance via messaging.
-            </p>
+            {!activeTicket && tickets.length > 0 && (
+              <button
+                onClick={handleStartOrContinueChat}
+                disabled={isStartingChat}
+                className="w-fit bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] label-caps text-[10px] px-4 py-2 uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Plus size={13} />
+                <span>{isStartingChat ? 'Connecting...' : 'New Conversation'}</span>
+              </button>
+            )}
           </div>
 
-          {/* Card 3: Request Callback */}
-          <div
-            onClick={() => setActiveModal('callback')}
-            className="bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 flex flex-col items-center text-center hover:border-[var(--gold)] transition-all duration-300 cursor-pointer group shadow-sm"
-          >
-            <div className="w-12 h-12 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center mb-4 text-[var(--text-primary)] group-hover:text-[var(--gold)] group-hover:bg-[var(--bg-primary)] transition-colors">
-              <Clock size={22} strokeWidth={1.5} />
+          {isLoadingTickets ? (
+            <div className="p-8 text-center text-[var(--text-secondary)] text-[13px]">
+              Loading your inquiries...
             </div>
-            <h3 className="font-garamond text-[20px] font-medium text-[var(--text-primary)] mb-1 group-hover:text-[var(--gold)] transition-colors">
-              Request Callback
-            </h3>
-            <p className="body-sm text-[13px] text-[var(--text-secondary)]">
-              We'll call you at your convenience.
-            </p>
-          </div>
+          ) : tickets.length === 0 ? (
+            <div className="p-8 border border-dashed border-[var(--border-color)] bg-[var(--bg-card)] text-center space-y-2">
+              <MessageSquare size={28} className="mx-auto text-[var(--gold)] opacity-50" />
+              <p className="text-[13.5px] text-[var(--text-primary)] font-medium m-0">No Active Conversations</p>
+              <p className="text-[12.5px] text-[var(--text-secondary)] max-w-sm mx-auto">
+                Have questions about bespoke fabrics, order alterations, or styling advice? Start a concierge chat.
+              </p>
+              <button
+                onClick={handleStartOrContinueChat}
+                disabled={isStartingChat}
+                className="inline-flex items-center gap-1.5 border border-[var(--border-color)] hover:border-[var(--gold)] text-[var(--text-primary)] label-caps text-[10px] px-5 py-2.5 uppercase tracking-wider transition-colors cursor-pointer mt-2 disabled:opacity-50"
+              >
+                <MessageSquare size={13} />
+                <span>{isStartingChat ? 'Connecting...' : 'Start Conversation'}</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {tickets.map((t) => {
+                const isTicketResolved = t.status === 'RESOLVED' || t.status === 'CLOSED';
+                return (
+                  <div
+                    key={t.id}
+                    onClick={() => navigate(`/care/chat/${t.id}`)}
+                    className={`p-5 bg-[var(--bg-card)] border transition-all cursor-pointer group shadow-sm flex flex-col justify-between space-y-3 ${
+                      !isTicketResolved
+                        ? 'border-[var(--gold)]/60 bg-[var(--bg-secondary)]/20'
+                        : 'border-[var(--border-color)] hover:border-[var(--gold)]'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-mono text-[12px] font-bold text-[var(--gold)]">
+                            {t.ticketNumber}
+                          </span>
+                          <span
+                            className={`label-caps text-[9px] px-2 py-0.5 rounded-sm uppercase tracking-wider font-semibold ${
+                              isTicketResolved
+                                ? 'bg-black/40 text-[var(--gold)] border border-[var(--gold)]/30'
+                                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            }`}
+                          >
+                            {isTicketResolved ? 'Resolved' : 'Active'}
+                          </span>
+                        </div>
+                        <h3 className="font-garamond text-[18px] text-[var(--text-primary)] leading-tight group-hover:text-[var(--gold)] transition-colors m-0">
+                          {t.subject}
+                        </h3>
+                      </div>
+                      <span className="text-[11px] text-[var(--text-muted)] font-mono shrink-0">
+                        {t.date}
+                      </span>
+                    </div>
+
+                    <p className="text-[12.5px] text-[var(--text-secondary)] line-clamp-2 leading-relaxed m-0">
+                      {t.lastMessage}
+                    </p>
+
+                    <div className="pt-2 border-t border-[var(--border-color)] flex items-center justify-between text-[11px] text-[var(--gold)]">
+                      <span className="text-[var(--text-muted)] font-mono">
+                        {t.messagesCount} {t.messagesCount === 1 ? 'message' : 'messages'}
+                      </span>
+                      <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform font-medium">
+                        <span>{!isTicketResolved ? 'Continue Chat' : 'View History'}</span>
+                        <ArrowRight size={13} />
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* Order Assistance Section matching Stitch */}
@@ -323,169 +414,9 @@ export const CustomerCarePage: React.FC = () => {
         </section>
       </div>
 
-      {/* Live Concierge Chat Modal */}
-      {activeModal === 'chat' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] max-w-lg w-full h-[520px] max-h-[90vh] flex flex-col shadow-2xl">
-            {/* Chat Header */}
-            <div className="p-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--bg-secondary)]/40">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[var(--gold)]/20 border border-[var(--gold)]/40 flex items-center justify-center text-[var(--gold)]">
-                  <Sparkles size={16} />
-                </div>
-                <div>
-                  <h3 className="font-garamond text-[17px] font-medium text-[var(--text-primary)]">
-                    Atelier Concierge Desk
-                  </h3>
-                  <span className="flex items-center gap-1 text-[11px] text-emerald-500 font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Artisan Specialist Online
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => setActiveModal(null)}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-1"
-              >
-                <X size={20} />
-              </button>
-            </div>
 
-            {/* Chat Messages Body */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-3 font-manrope text-[13px]">
-              {chatMessages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-                >
-                  <div
-                    className={`max-w-[85%] p-3.5 rounded-sm ${
-                      msg.sender === 'user'
-                        ? 'bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] font-medium'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-primary)] border border-[var(--border-color)]'
-                    }`}
-                  >
-                    <p className="leading-relaxed">{msg.text}</p>
-                  </div>
-                  <span className="text-[10px] text-[var(--text-muted)] mt-1 px-1">{msg.time}</span>
-                </div>
-              ))}
-            </div>
 
-            {/* Chat Input */}
-            <form onSubmit={handleSendChatMessage} className="p-3 border-t border-[var(--border-color)] flex gap-2">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask about fabrics, sizing, or orders..."
-                className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] px-3 py-2 text-[13px] text-[var(--text-primary)] outline-none"
-              />
-              <button
-                type="submit"
-                className="px-4 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] flex items-center justify-center hover:opacity-90 transition-opacity"
-              >
-                <Send size={15} />
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
 
-      {/* Callback Request Modal */}
-      {activeModal === 'callback' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[var(--bg-card)] border border-[var(--border-color)] max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl">
-            <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-3">
-              <div>
-                <span className="label-caps text-[10px] text-[var(--gold)] uppercase tracking-widest">
-                  CONCIERGE SCHEDULING
-                </span>
-                <h3 className="font-garamond text-[24px] font-normal text-[var(--text-primary)] mt-0.5">
-                  Request a Callback
-                </h3>
-              </div>
-              <button
-                onClick={() => setActiveModal(null)}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-1"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {callbackSuccess ? (
-              <div className="py-8 text-center space-y-3 animate-in fade-in">
-                <CheckCircle2 size={40} className="text-emerald-500 mx-auto" />
-                <h4 className="font-garamond text-[20px] text-[var(--text-primary)]">Callback Scheduled</h4>
-                <p className="body-sm text-[13px] text-[var(--text-secondary)]">
-                  An artisan advisor will contact you at your preferred time window.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleCallbackSubmit} className="space-y-4 font-manrope text-[13px]">
-                <div>
-                  <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-1">
-                    YOUR NAME *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={callbackName}
-                    onChange={(e) => setCallbackName(e.target.value)}
-                    placeholder="Eleanor Vance"
-                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[var(--text-primary)] outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-1">
-                    PHONE NUMBER *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={callbackPhone}
-                    onChange={(e) => setCallbackPhone(e.target.value)}
-                    placeholder="+1 (555) 000-0000"
-                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[var(--text-primary)] outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-1">
-                    PREFERRED TIME WINDOW
-                  </label>
-                  <select
-                    value={callbackTime}
-                    onChange={(e) => setCallbackTime(e.target.value)}
-                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[var(--text-primary)] outline-none cursor-pointer"
-                  >
-                    <option>Morning (9 AM - 12 PM EST)</option>
-                    <option>Afternoon (12 PM - 3 PM EST)</option>
-                    <option>Evening (3 PM - 6 PM EST)</option>
-                  </select>
-                </div>
-
-                <div className="flex gap-3 pt-3">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] label-caps text-[11px] uppercase tracking-wider py-3 shadow-sm hover:opacity-90"
-                  >
-                    Confirm Callback
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal(null)}
-                    className="px-5 border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--gold)] label-caps text-[11px] uppercase tracking-wider"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Order Issue Sheet / Modal */}
       {activeModal === 'order_issue' && (

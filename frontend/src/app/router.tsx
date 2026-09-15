@@ -20,6 +20,9 @@ import { ProductDetailPage } from '../pages/ProductDetailPage.js';
 import { AtelierPage } from '../pages/AtelierPage.js';
 import { SustainabilityPage } from '../pages/SustainabilityPage.js';
 import { CustomerCarePage } from '../pages/CustomerCarePage.js';
+import { ConciergeChatPage } from '../pages/ConciergeChatPage.js';
+import { PrivacyPolicyPage } from '../pages/PrivacyPolicyPage.js';
+import { TermsPage } from '../pages/TermsPage.js';
 
 export const router = createBrowserRouter([
   {
@@ -175,6 +178,10 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: '/care/chat/:ticketId',
+    element: <ConciergeChatPage />,
+  },
+  {
     path: '/concierge',
     element: (
       <AppShell>
@@ -189,6 +196,14 @@ export const router = createBrowserRouter([
         <ProductDetailPage />
       </AppShell>
     ),
+  },
+  {
+    path: '/privacy',
+    element: <PrivacyPolicyPage />,
+  },
+  {
+    path: '/terms',
+    element: <TermsPage />,
   },
   {
     path: '*',

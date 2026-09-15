@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import {
   sequelize,
   Order,
@@ -10,6 +9,7 @@ import {
   ProductVariant,
   Product,
   ProductImage,
+  Inventory,
   Coupon,
   CouponRedemption,
   Payment,
@@ -22,6 +22,7 @@ import {
   BusinessRuleError,
   NotFoundError,
   InventoryError,
+  PaymentError,
 } from '../../common/errors/index.js';
 import { logger } from '../../common/logger/index.js';
 
@@ -97,6 +98,11 @@ export class CheckoutService {
                     },
                   ],
                 },
+                {
+                  model: Inventory,
+                  as: 'inventory',
+                  attributes: ['available'],
+                },
               ],
             },
           ],
@@ -107,6 +113,21 @@ export class CheckoutService {
     const cartItems = (cart as any)?.items;
     if (!cart || !cartItems || cartItems.length === 0) {
       throw new BusinessRuleError('Your bag is empty. Please add items to checkout.');
+    }
+
+    // 3b. Pre-flight stock check — reject checkout if any item is out of stock
+    const oosItems: string[] = [];
+    for (const ci of cartItems) {
+      const available: number = ci.variant?.inventory?.available ?? 0;
+      const productName: string = ci.variant?.product?.name ?? 'Unknown item';
+      if (available < ci.quantity) {
+        oosItems.push(`${productName} (only ${available} available)`);
+      }
+    }
+    if (oosItems.length > 0) {
+      throw new InventoryError(
+        `Some items in your bag are out of stock or have insufficient stock: ${oosItems.join(', ')}. Please remove them before proceeding.`
+      );
     }
 
     // 4. Build Pricing Items
@@ -227,14 +248,11 @@ export class CheckoutService {
         { transaction: t }
       );
 
-      // G. Empty User Cart
-      await CartItem.destroy({
-        where: { cart_id: cart.id },
-        transaction: t,
-      });
+      // G. Cart will be cleared only upon successful payment webhook (preserving bag on failure)
 
       return {
         order,
+        cartId: cart.id,
       };
     });
 
@@ -270,7 +288,10 @@ export class CheckoutService {
         quantity: pi.quantity,
       }));
       await inventoryService.releaseStock(reservationItems, result.order.order_number);
-      throw error;
+      throw new PaymentError((error as any)?.message || 'Payment initiation failed', {
+        orderId: result.order.id,
+        orderNumber: result.order.order_number,
+      });
     }
   }
 }

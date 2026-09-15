@@ -11,6 +11,15 @@ node_modules/
 .env.production.local
 *.env
 !*.env.example
+oauth*
+*oauth*
+outh*
+*outh*
+*secrets*
+*secret*
+*.pem
+*.key
+*.cert
 
 # Build outputs
 dist/
@@ -72,3 +81,11 @@ tmp/
 temp/
 scratch/
 .system_generated/
+
+# Uploads & Media Storage (Dynamic runtime uploads)
+uploads/*
+!uploads/.gitkeep
+!uploads/*/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/uploads/*/.gitkeep

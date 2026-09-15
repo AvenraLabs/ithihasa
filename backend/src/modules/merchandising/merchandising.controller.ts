@@ -38,14 +38,14 @@ const CONFIG_FILE = path.join(process.cwd(), 'uploads', 'storefront_config.json'
 
 const DEFAULT_CONFIG: StorefrontConfig = {
   hero: {
-    title: 'The Heritage Collection',
-    subtitle: 'Wear Your Legacy.',
-    description: 'Quiet luxury handcrafted for timeless dignity.',
+    title: '',
+    subtitle: '',
+    description: '',
     imageUrl: '',
-    ctaText: 'EXPLORE COLLECTION',
+    ctaText: '',
     ctaLink: '/shop'
   },
-  showHighlighted: true,
+  showHighlighted: false,
   highlightedItems: [],
   trendingCollections: [],
   quickQueryTags: []
@@ -90,12 +90,12 @@ export class MerchandisingController {
   }
 
   // Admin-protected endpoint for CMS management
-  public updateStorefront(req: Request, res: Response, next: NextFunction): void {
+  public async updateStorefront(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { hero, showHighlighted, highlightedItems, trendingCollections, quickQueryTags } = req.body;
       if (hero) {
         if (hero.imageUrl && activeStorefrontConfig.hero.imageUrl && hero.imageUrl !== activeStorefrontConfig.hero.imageUrl) {
-          cleanupUploadedFile(activeStorefrontConfig.hero.imageUrl);
+          await cleanupUploadedFile(activeStorefrontConfig.hero.imageUrl);
         }
         activeStorefrontConfig.hero = {
           ...activeStorefrontConfig.hero,

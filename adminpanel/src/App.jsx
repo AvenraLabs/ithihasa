@@ -272,7 +272,7 @@ export default function App() {
       </aside>
 
       {/* Main Content Canvas */}
-      <main className="flex-1 md:ml-64 min-h-screen flex flex-col min-w-0 w-full overflow-x-hidden">
+      <main className="flex-1 md:ml-64 h-screen flex flex-col min-w-0 w-full overflow-hidden">
         {/* Top App Bar Header */}
         <header className="sticky top-0 z-40 bg-[var(--bg-header)] backdrop-blur-md border-b border-[var(--border-color)] h-16 flex items-center justify-between px-4 sm:px-6 md:px-10 transition-colors">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -340,34 +340,36 @@ export default function App() {
         </header>
 
         {/* Dynamic Route Pages (Protected behind valid Admin Session) */}
-        <Routes>
-          <Route path="/" element={<ProtectedRoute><DashboardView /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><DashboardView /></ProtectedRoute>} />
-          <Route
-            path="/orders"
-            element={
-              <ProtectedRoute>
-                <OrdersView onSelectOrder={(order) => navigate(`/orders/${order.id}`)} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/orders/:orderId"
-            element={
-              <ProtectedRoute>
-                <OrderDetailView onBack={() => navigate('/orders')} />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/inventory" element={<ProtectedRoute><InventoryView /></ProtectedRoute>} />
-          <Route path="/storefront" element={<ProtectedRoute><StorefrontCMSView /></ProtectedRoute>} />
-          <Route path="/customers" element={<ProtectedRoute><CustomersView /></ProtectedRoute>} />
-          <Route path="/marketing" element={<ProtectedRoute><MarketingView /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><SettingsView /></ProtectedRoute>} />
-          <Route path="/support" element={<ProtectedRoute><SupportView /></ProtectedRoute>} />
-          <Route path="/support/chat" element={<ProtectedRoute><DirectChatView /></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <div className="flex-1 min-h-0 overflow-auto">
+          <Routes>
+            <Route path="/" element={<ProtectedRoute><DashboardView /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardView /></ProtectedRoute>} />
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute>
+                  <OrdersView onSelectOrder={(order) => navigate(`/orders/${order.id}`)} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders/:orderId"
+              element={
+                <ProtectedRoute>
+                  <OrderDetailView onBack={() => navigate('/orders')} />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/inventory" element={<ProtectedRoute><InventoryView /></ProtectedRoute>} />
+            <Route path="/storefront" element={<ProtectedRoute><StorefrontCMSView /></ProtectedRoute>} />
+            <Route path="/customers" element={<ProtectedRoute><CustomersView /></ProtectedRoute>} />
+            <Route path="/marketing" element={<ProtectedRoute><MarketingView /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><SettingsView /></ProtectedRoute>} />
+            <Route path="/support" element={<ProtectedRoute><SupportView /></ProtectedRoute>} />
+            <Route path="/support/chat" element={<ProtectedRoute><DirectChatView /></ProtectedRoute>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </main>
       <Toaster position="top-right" theme={theme} closeButton />
     </div>

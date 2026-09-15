@@ -12,7 +12,8 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Smartphone
+  Smartphone,
+  Truck
 } from 'lucide-react';
 import {
   fetchSettings,
@@ -32,6 +33,12 @@ export function SettingsView() {
   const [storeTagline, setStoreTagline] = useState('Wear Your Legacy');
   const [contactEmail, setContactEmail] = useState('concierge@ithihasa.com');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+
+  // Shipping Settings State
+  const [shippingType, setShippingType] = useState('always_free'); // 'always_free' | 'free_above_amount' | 'flat_rate'
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(2500);
+  const [standardRate, setStandardRate] = useState(200);
+  const [flatRate, setFlatRate] = useState(200);
 
   // PhonePe Payment Gateway State
   const [phonepeMerchantId, setPhonepeMerchantId] = useState('PGTESTPAYUAT');
@@ -61,6 +68,12 @@ export function SettingsView() {
           if (settingsData.phonepeSaltKey) setPhonepeSaltKey(settingsData.phonepeSaltKey);
           if (settingsData.phonepeSaltIndex) setPhonepeSaltIndex(settingsData.phonepeSaltIndex);
           if (settingsData.phonepeEnv) setPhonepeEnv(settingsData.phonepeEnv);
+          if (settingsData.shipping) {
+            if (settingsData.shipping.shippingType) setShippingType(settingsData.shipping.shippingType);
+            if (settingsData.shipping.freeShippingThreshold !== undefined) setFreeShippingThreshold(settingsData.shipping.freeShippingThreshold);
+            if (settingsData.shipping.standardRate !== undefined) setStandardRate(settingsData.shipping.standardRate);
+            if (settingsData.shipping.flatRate !== undefined) setFlatRate(settingsData.shipping.flatRate);
+          }
         }
         if (teamData && Array.isArray(teamData)) {
           setTeam(teamData);
@@ -75,7 +88,7 @@ export function SettingsView() {
   }, []);
 
   const handleSave = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setIsSaved(true);
     try {
       await updateSettings({
@@ -88,6 +101,12 @@ export function SettingsView() {
         phonepeSaltKey,
         phonepeSaltIndex,
         phonepeEnv,
+        shipping: {
+          shippingType,
+          freeShippingThreshold: Number(freeShippingThreshold) || 0,
+          standardRate: Number(standardRate) || 0,
+          flatRate: Number(flatRate) || 0,
+        },
       });
       toast.success('Boutique settings saved successfully.');
     } catch (err) {
@@ -149,6 +168,18 @@ export function SettingsView() {
         >
           <Store size={15} />
           <span>General Settings</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSection('shipping')}
+          className={`pb-2.5 sm:pb-3 transition-colors border-b-2 flex items-center gap-2 cursor-pointer ${
+            activeSection === 'shipping'
+              ? 'text-[var(--text-primary)] border-[var(--gold)] font-bold'
+              : 'text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)] font-medium'
+          }`}
+        >
+          <Truck size={15} />
+          <span>Shipping & Delivery</span>
         </button>
 
         <button
@@ -248,6 +279,190 @@ export function SettingsView() {
                   }`}
                 />
               </button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* SECTION: Shipping & Delivery Rules */}
+      {activeSection === 'shipping' && (
+        <form onSubmit={handleSave} className="space-y-6 max-w-3xl">
+          <div className="border border-[var(--border-color)] bg-[var(--bg-card)] p-4 sm:p-7 shadow-sm space-y-5 sm:space-y-6">
+            <div className="border-b border-[var(--border-color)] pb-3">
+              <h3 className="font-garamond text-[20px] sm:text-[22px] font-normal text-[var(--text-primary)]">
+                Shipping & Delivery Rules
+              </h3>
+              <p className="text-[12px] text-[var(--text-secondary)] mt-0.5">
+                Define the shipping fee logic applied to orders in the storefront checkout.
+              </p>
+            </div>
+
+            {/* Shipping Policy Radio Options */}
+            <div className="space-y-3 font-manrope text-[13px]">
+              <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-2 font-semibold">
+                SHIPPING PRICING MODEL
+              </label>
+
+              {/* 1. Always Free */}
+              <label
+                onClick={() => setShippingType('always_free')}
+                className={`flex items-start gap-3.5 p-4 border transition-all cursor-pointer rounded-sm ${
+                  shippingType === 'always_free'
+                    ? 'border-[var(--gold)] bg-[var(--gold)]/[0.05]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-secondary)] hover:border-[var(--gold)]/40'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="admin_shipping_type"
+                  checked={shippingType === 'always_free'}
+                  onChange={() => setShippingType('always_free')}
+                  className="mt-1 accent-[var(--gold)] w-4 h-4 cursor-pointer"
+                />
+                <div>
+                  <span className="block font-semibold text-[13.5px] text-[var(--text-primary)]">
+                    Always Free Shipping
+                  </span>
+                  <span className="block text-[12px] text-[var(--text-secondary)] mt-0.5">
+                    Complimentary white-glove delivery on all orders, regardless of total cart value.
+                  </span>
+                </div>
+              </label>
+
+              {/* 2. Free Above Amount */}
+              <label
+                onClick={() => setShippingType('free_above_amount')}
+                className={`flex items-start gap-3.5 p-4 border transition-all cursor-pointer rounded-sm ${
+                  shippingType === 'free_above_amount'
+                    ? 'border-[var(--gold)] bg-[var(--gold)]/[0.05]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-secondary)] hover:border-[var(--gold)]/40'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="admin_shipping_type"
+                  checked={shippingType === 'free_above_amount'}
+                  onChange={() => setShippingType('free_above_amount')}
+                  className="mt-1 accent-[var(--gold)] w-4 h-4 cursor-pointer"
+                />
+                <div>
+                  <span className="block font-semibold text-[13.5px] text-[var(--text-primary)]">
+                    Free Above Order Amount (Conditional)
+                  </span>
+                  <span className="block text-[12px] text-[var(--text-secondary)] mt-0.5">
+                    Free shipping when order subtotal meets or exceeds a threshold; otherwise a standard delivery fee is charged.
+                  </span>
+                </div>
+              </label>
+
+              {/* 3. Flat Rate */}
+              <label
+                onClick={() => setShippingType('flat_rate')}
+                className={`flex items-start gap-3.5 p-4 border transition-all cursor-pointer rounded-sm ${
+                  shippingType === 'flat_rate'
+                    ? 'border-[var(--gold)] bg-[var(--gold)]/[0.05]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-secondary)] hover:border-[var(--gold)]/40'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="admin_shipping_type"
+                  checked={shippingType === 'flat_rate'}
+                  onChange={() => setShippingType('flat_rate')}
+                  className="mt-1 accent-[var(--gold)] w-4 h-4 cursor-pointer"
+                />
+                <div>
+                  <span className="block font-semibold text-[13.5px] text-[var(--text-primary)]">
+                    Flat Specific Shipping Charge
+                  </span>
+                  <span className="block text-[12px] text-[var(--text-secondary)] mt-0.5">
+                    A fixed uniform shipping fee charged on every order across the board.
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            {/* Conditional Inputs based on Selected Rule */}
+            {shippingType === 'free_above_amount' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[var(--border-color)] animate-in fade-in duration-200">
+                <div>
+                  <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-1.5 font-semibold">
+                    FREE SHIPPING THRESHOLD (₹)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={freeShippingThreshold}
+                    onChange={(e) => setFreeShippingThreshold(e.target.value)}
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[var(--text-primary)] font-mono outline-none"
+                    placeholder="2500"
+                  />
+                  <p className="text-[11.5px] text-[var(--text-secondary)] mt-1">
+                    Orders with subtotal at or above this amount qualify for ₹0 free shipping.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-1.5 font-semibold">
+                    STANDARD SHIPPING CHARGE (₹)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={standardRate}
+                    onChange={(e) => setStandardRate(e.target.value)}
+                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[var(--text-primary)] font-mono outline-none"
+                    placeholder="200"
+                  />
+                  <p className="text-[11.5px] text-[var(--text-secondary)] mt-1">
+                    Applied when order subtotal is below the threshold.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {shippingType === 'flat_rate' && (
+              <div className="pt-2 border-t border-[var(--border-color)] animate-in fade-in duration-200 max-w-sm">
+                <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-1.5 font-semibold">
+                  FLAT SHIPPING CHARGE (₹)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={flatRate}
+                  onChange={(e) => setFlatRate(e.target.value)}
+                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[var(--text-primary)] font-mono outline-none"
+                  placeholder="250"
+                />
+                <p className="text-[11.5px] text-[var(--text-secondary)] mt-1">
+                  Charged on all orders regardless of cart total.
+                </p>
+              </div>
+            )}
+
+            {/* Live Storefront Preview Callout */}
+            <div className="p-4 bg-[var(--bg-secondary)] border border-[var(--gold)]/30 rounded-sm flex items-start gap-3">
+              <Truck size={18} className="text-[var(--gold)] shrink-0 mt-0.5" />
+              <div>
+                <span className="block text-[12px] uppercase font-bold text-[var(--gold)] tracking-wider mb-0.5">
+                  Storefront Checkout Preview
+                </span>
+                <p className="text-[12.5px] text-[var(--text-primary)] leading-relaxed">
+                  {shippingType === 'always_free' && (
+                    <>All customer orders receive <strong>Free Complimentary Shipping</strong> (₹0) in checkout.</>
+                  )}
+                  {shippingType === 'free_above_amount' && (
+                    <>
+                      Orders of <strong>₹{Number(freeShippingThreshold).toLocaleString('en-IN')}</strong> or more qualify for <strong>FREE Shipping</strong>. Orders below that amount incur a <strong>₹{Number(standardRate).toLocaleString('en-IN')}</strong> delivery charge.
+                    </>
+                  )}
+                  {shippingType === 'flat_rate' && (
+                    <>
+                      Every customer order will incur a flat shipping fee of <strong>₹{Number(flatRate).toLocaleString('en-IN')}</strong> in checkout.
+                    </>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
         </form>

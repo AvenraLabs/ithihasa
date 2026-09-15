@@ -3,7 +3,7 @@ import { sequelize } from '../../config/database.js';
 
 export interface UserOtpAttributes {
   id: string;
-  user_id: string;
+  user_id?: string | null;
   phone: string;
   otp_hash: string;
   purpose: 'PHONE_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET';
@@ -14,14 +14,14 @@ export interface UserOtpAttributes {
   updated_at?: Date;
 }
 
-export type UserOtpCreationAttributes = Optional<UserOtpAttributes, 'id' | 'attempts' | 'verified_at'>;
+export type UserOtpCreationAttributes = Optional<UserOtpAttributes, 'id' | 'user_id' | 'attempts' | 'verified_at'>;
 
 export class UserOtp
   extends Model<UserOtpAttributes, UserOtpCreationAttributes>
   implements UserOtpAttributes
 {
   declare public id: string;
-  declare public user_id: string;
+  declare public user_id: string | null;
   declare public phone: string;
   declare public otp_hash: string;
   declare public purpose: 'PHONE_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET';
@@ -42,7 +42,7 @@ UserOtp.init(
     },
     user_id: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
     },
     phone: {
       type: DataTypes.STRING,

@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchProductBySlug, fetchProducts, type Product } from '../api/products.js';
 import { addToCart } from '../api/cart.js';
@@ -16,27 +16,30 @@ import {
   Heart,
   Share2,
   Ruler,
+  Camera,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedSizeLabel, setSelectedSizeLabel] = useState<string>('Select Size');
   const [isSizeSheetOpen, setIsSizeSheetOpen] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [newRating, setNewRating] = useState(5);
-  const [reviewTitle, setReviewTitle] = useState('');
   const [reviewComment, setReviewComment] = useState('');
+  const [reviewImages, setReviewImages] = useState<string[]>([]);
+  const [reviewPage, setReviewPage] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [addedFeedback, setAddedFeedback] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [colorErrorHighlight, setColorErrorHighlight] = useState(false);
+  const [sizeErrorHighlight, setSizeErrorHighlight] = useState(false);
 
   const galleryRef = useRef<HTMLDivElement>(null);
 
@@ -83,6 +86,49 @@ export const ProductDetailPage: React.FC = () => {
     queryFn: fetchWishlist,
   });
 
+  // Auto-select color and size from query parameters (e.g. from wishlist)
+  useEffect(() => {
+    if (!product) return;
+    const urlColor = searchParams.get('color');
+    const urlSize = searchParams.get('size');
+
+    let matchedColorName: string | null = null;
+    let matchedSizeName: string | null = null;
+
+    if (urlColor) {
+      const matchedColor = availableColors.find(
+        (c) => c.name.toLowerCase() === urlColor.toLowerCase()
+      );
+      if (matchedColor) {
+        matchedColorName = matchedColor.name;
+        setSelectedColor(matchedColor.name);
+      }
+    }
+
+    if (urlSize) {
+      const matchedSize = availableSizes.find(
+        (s) => s.toLowerCase() === urlSize.toLowerCase()
+      );
+      if (matchedSize) {
+        matchedSizeName = matchedSize;
+        setSelectedSize(matchedSize);
+      }
+    }
+
+    if (matchedColorName || matchedSizeName || urlColor || urlSize) {
+      const matchingVariant = (product.variants || []).find((v) => {
+        const colorMatch = !urlColor || v.color?.toLowerCase() === urlColor.toLowerCase();
+        const sizeMatch = !urlSize || v.size?.toLowerCase() === urlSize.toLowerCase();
+        return colorMatch && sizeMatch;
+      });
+      if (matchingVariant) {
+        setSelectedVariantId(matchingVariant.id);
+        if (!matchedColorName && matchingVariant.color) setSelectedColor(matchingVariant.color);
+        if (!matchedSizeName && matchingVariant.size) setSelectedSize(matchingVariant.size);
+      }
+    }
+  }, [product, searchParams, availableColors.length, availableSizes.length]);
+
   const isWishlisted = product
     ? wishlist.some((item) => item.productId === product.id || item.product?.id === product.id)
     : false;
@@ -90,22 +136,43 @@ export const ProductDetailPage: React.FC = () => {
   const wishlistMutation = useMutation({
     mutationFn: () => {
       if (!product) return Promise.resolve({ added: false, message: '' });
-      return toggleWishlist(product.id, selectedVariantId, {
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        basePrice: product.basePrice,
-        compareAtPrice: null,
-        image: product.images?.[0]?.url,
-        category: product.category,
-      });
+      const matchingVariant = (product.variants || []).find(
+        (v) => (!selectedColor || v.color === selectedColor) && (!selectedSize || v.size === selectedSize)
+      ) || (selectedColor ? (product.variants || []).find((v) => v.color === selectedColor) : null)
+        || (selectedSize ? (product.variants || []).find((v) => v.size === selectedSize) : null);
+
+      const targetVariantId = matchingVariant?.id || selectedVariantId || null;
+
+      return toggleWishlist(
+        product.id,
+        targetVariantId,
+        {
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          basePrice: matchingVariant?.price || product.basePrice,
+          compareAtPrice: null,
+          image: images[0]?.url || product.images?.[0]?.url,
+          category: product.category,
+          selectedColor: selectedColor || matchingVariant?.color || null,
+          selectedSize: selectedSize || matchingVariant?.size || null,
+          variant: matchingVariant ? {
+            id: matchingVariant.id,
+            color: matchingVariant.color,
+            size: matchingVariant.size,
+            price: matchingVariant.price,
+          } : undefined,
+        },
+        {
+          color: selectedColor || matchingVariant?.color || null,
+          size: selectedSize || matchingVariant?.size || null,
+          variant: matchingVariant,
+        }
+      );
     },
-    onSuccess: (res: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-      if (res?.message) {
-        setToastMessage(res.message);
-        setTimeout(() => setToastMessage(null), 2500);
-      }
+      // Wishlist toast removed per user request (bad UX, covers navigation)
     },
   });
 
@@ -130,16 +197,34 @@ export const ProductDetailPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reviews', product?.id] });
       setIsReviewModalOpen(false);
-      setReviewTitle('');
       setReviewComment('');
-      setToastMessage('Review submitted for verification');
-      setTimeout(() => setToastMessage(null), 3000);
+      setReviewImages([]);
+      toast.success('Review submitted successfully');
     },
     onError: (err: any) => {
-      setToastMessage(err.message || 'Unable to submit review');
-      setTimeout(() => setToastMessage(null), 3000);
+      toast.error(err.message || 'Unable to submit review');
     },
   });
+
+  const handleReviewImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (reviewImages.length >= 2) {
+      toast.error('You can upload at most 2 images');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setReviewImages((prev) => [...prev, reader.result as string].slice(0, 2));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const REVIEWS_PER_PAGE = 3;
+  const totalReviewPages = Math.ceil(reviews.length / REVIEWS_PER_PAGE) || 1;
+  const paginatedReviews = reviews.slice((reviewPage - 1) * REVIEWS_PER_PAGE, reviewPage * REVIEWS_PER_PAGE);
 
   // Handle mobile gallery swipe index
   const handleGalleryScroll = () => {
@@ -202,15 +287,22 @@ export const ProductDetailPage: React.FC = () => {
   };
 
   const handleAddToCart = () => {
+    let hasError = false;
     if (availableColors.length > 0 && !selectedColor) {
+      setColorErrorHighlight(true);
       toast.error('Please select a color before adding to bag');
-      return;
+      document.getElementById('color-selector-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      hasError = true;
     }
     if (availableSizes.length > 0 && (!selectedSize || selectedSize === 'Select Size')) {
+      setSizeErrorHighlight(true);
       toast.error('Please select a size before adding to bag');
-      setIsSizeSheetOpen(true);
-      return;
+      if (!hasError) {
+        document.getElementById('size-selector-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      hasError = true;
     }
+    if (hasError) return;
 
     const matchingVariant = (product?.variants || []).find(
       (v) => (!selectedColor || v.color === selectedColor) && (!selectedSize || v.size === selectedSize)
@@ -224,22 +316,12 @@ export const ProductDetailPage: React.FC = () => {
   };
 
   const handleToggleWishlist = () => {
-    if (availableColors.length > 0 && !selectedColor) {
-      toast.error('Please select a color before adding to wishlist');
-      return;
-    }
-    if (availableSizes.length > 0 && (!selectedSize || selectedSize === 'Select Size')) {
-      toast.error('Please select a size before adding to wishlist');
-      setIsSizeSheetOpen(true);
-      return;
-    }
     wishlistMutation.mutate();
   };
 
   const handleSelectSize = (variantId: string, sizeName: string) => {
     setSelectedVariantId(variantId);
     setSelectedSize(sizeName);
-    setSelectedSizeLabel(sizeName);
     setIsSizeSheetOpen(false);
   };
 
@@ -268,15 +350,15 @@ export const ProductDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors pb-24 md:pb-16 relative">
-      {/* Stitch Toast Notification */}
-      {(addedFeedback || toastMessage) && (
+      {/* Added to Bag Feedback Notification */}
+      {addedFeedback && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[70] bg-[var(--bg-card)] border border-[var(--border-color)] px-6 py-3.5 shadow-2xl flex items-center gap-3 whitespace-nowrap max-w-[90vw] transition-all duration-300 animate-in fade-in slide-in-from-top-2">
           <CheckCircle2 size={18} className="text-[var(--gold)] shrink-0" />
           <span
             className="text-[17px] tracking-wide text-[var(--gold)] font-medium"
             style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
           >
-            {toastMessage || 'Added to Bag'}
+            Added to Bag
           </span>
         </div>
       )}
@@ -368,16 +450,22 @@ export const ProductDetailPage: React.FC = () => {
 
           {/* Color Rounds / Swatches Selector */}
           {availableColors.length > 0 && (
-            <div className="mb-6 border-b border-[var(--border-color)] pb-5">
+            <div
+              id="color-selector-section"
+              className={`mb-6 border-b border-[var(--border-color)] pb-5 transition-all ${
+                colorErrorHighlight
+                  ? 'p-3 rounded border-amber-500/60 bg-amber-500/5 ring-1 ring-amber-500/30'
+                  : ''
+              }`}
+            >
               <div className="flex justify-between items-center mb-3">
                 <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">
-                  Color: <span className="text-[var(--gold)] font-bold">{selectedColor || 'Please select a color'}</span>
+                  COLOR: {selectedColor ? (
+                    <span className="text-[var(--gold)] font-bold">{selectedColor}</span>
+                  ) : (
+                    <span className="text-amber-500/90 font-medium">(PLEASE SELECT A COLOR)</span>
+                  )}
                 </span>
-                {!selectedColor && (
-                  <span className="text-[10px] text-amber-500 font-semibold tracking-wider uppercase bg-amber-500/10 px-2 py-0.5 rounded">
-                    Select Color
-                  </span>
-                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -389,14 +477,15 @@ export const ProductDetailPage: React.FC = () => {
                       type="button"
                       onClick={() => {
                         setSelectedColor(color.name);
+                        setColorErrorHighlight(false);
                         setActiveImageIndex(0);
                         if (galleryRef.current) {
                           galleryRef.current.scrollTo({ left: 0, behavior: 'smooth' });
                         }
                       }}
-                      className={`group flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                      className={`group flex items-center gap-2 px-3.5 py-2 rounded-full border transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-[var(--gold)] ring-2 ring-[var(--gold)]/40 bg-[var(--gold)]/10 text-[var(--text-primary)]'
+                          ? 'border-[var(--gold)] ring-2 ring-[var(--gold)]/40 bg-[var(--gold)]/15 text-[var(--text-primary)]'
                           : 'border-[var(--border-color)] hover:border-[var(--gold)]/60 bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
                       }`}
                       title={color.name}
@@ -413,52 +502,90 @@ export const ProductDetailPage: React.FC = () => {
                           />
                         )}
                       </span>
-                      <span className={`text-[12px] font-medium ${isSelected ? 'text-[var(--gold)] font-semibold' : 'text-[var(--text-primary)]'}`}>
+                      <span className={`text-[12px] font-medium uppercase tracking-wider ${isSelected ? 'text-[var(--gold)] font-bold' : 'text-[var(--text-primary)]'}`}>
                         {color.name}
                       </span>
                     </button>
                   );
                 })}
               </div>
+
+              {colorErrorHighlight && (
+                <p className="text-[11px] text-amber-500 font-medium mt-2.5">
+                  Please select a color to continue
+                </p>
+              )}
             </div>
           )}
 
           {/* Size Selector & Size Guide */}
-          <div className="mb-6 border-b border-[var(--border-color)] pb-3">
-            <div className="flex justify-between items-center mb-1">
+          <div
+            id="size-selector-section"
+            className={`mb-6 border-b border-[var(--border-color)] pb-5 transition-all ${
+              sizeErrorHighlight
+                ? 'p-3 rounded border-amber-500/60 bg-amber-500/5 ring-1 ring-amber-500/30'
+                : ''
+            }`}
+          >
+            {/* Header: Label on Left, Size Guide on Right with clean alignment */}
+            <div className="flex justify-between items-center mb-3">
               <div className="flex items-center gap-2">
                 <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">
-                  Size: <span className="text-[var(--gold)] font-bold">{selectedSize ? selectedSizeLabel : 'Please select a size'}</span>
+                  SIZE: {selectedSize ? (
+                    <span className="text-[var(--gold)] font-bold">{selectedSize}</span>
+                  ) : (
+                    <span className="text-amber-500/90 font-medium">(PLEASE SELECT A SIZE)</span>
+                  )}
                 </span>
-                {(!selectedSize || selectedSize === 'Select Size') && (
-                  <span className="text-[10px] text-amber-500 font-semibold tracking-wider uppercase bg-amber-500/10 px-2 py-0.5 rounded">
-                    Select Size
-                  </span>
-                )}
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsSizeGuideOpen(true)}
-                className="flex items-center gap-1.5 text-[11px] text-[var(--gold)] hover:underline uppercase tracking-wider label-caps cursor-pointer active:scale-95 py-1 px-2 rounded hover:bg-[var(--gold)]/10 transition-all"
+                className="flex items-center gap-1.5 text-[11px] text-[var(--gold)] hover:underline uppercase tracking-wider label-caps cursor-pointer active:scale-95 py-1 px-2 rounded hover:bg-[var(--gold)]/10 transition-all ml-auto shrink-0"
               >
-                <Ruler size={13} />
+                <Ruler size={13} className="text-[var(--gold)]" />
                 <span>Size Guide</span>
               </button>
             </div>
 
-            <button
-              onClick={() => setIsSizeSheetOpen(true)}
-              className="w-full py-2 flex justify-between items-center group text-left cursor-pointer"
-            >
-              <span className={`title-sm text-[15px] font-medium ${selectedSize ? 'text-[var(--text-primary)] font-semibold' : 'text-[var(--text-secondary)]'}`}>
-                {selectedSizeLabel}
-              </span>
-              <ChevronDown
-                size={18}
-                className="text-[var(--text-secondary)] group-hover:text-[var(--gold)] transition-colors"
-              />
-            </button>
+            {/* Direct selectable size chips / tiles right on the page */}
+            {availableSizes.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2.5">
+                {availableSizes.map((sz) => {
+                  const isSelected = selectedSize === sz;
+                  const matchingVariant = (product.variants || []).find(
+                    (v) => (!selectedColor || v.color === selectedColor) && v.size === sz
+                  ) || (product.variants || []).find((v) => v.size === sz);
+
+                  return (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => {
+                        handleSelectSize(matchingVariant?.id || '', sz);
+                        setSizeErrorHighlight(false);
+                      }}
+                      className={`min-w-[52px] h-11 px-4 flex items-center justify-center border text-[13px] font-semibold tracking-wider uppercase transition-all cursor-pointer select-none rounded ${
+                        isSelected
+                          ? 'border-[var(--gold)] bg-[var(--gold)] text-[#0A0A0A] font-bold shadow-md ring-2 ring-[var(--gold)]/40 scale-105'
+                          : 'border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:border-[var(--gold)] hover:text-[var(--gold)] active:scale-95'
+                      }`}
+                    >
+                      {sz}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-[12px] text-[var(--text-secondary)] italic">Free Size / Standard Fit</p>
+            )}
+
+            {sizeErrorHighlight && (
+              <p className="text-[11px] text-amber-500 font-medium mt-2.5 flex items-center gap-1">
+                <span>Please select a size to continue</span>
+              </p>
+            )}
           </div>
 
           {/* Desktop Add to Bag & Wishlist Actions */}
@@ -466,7 +593,7 @@ export const ProductDetailPage: React.FC = () => {
             <button
               onClick={handleAddToCart}
               disabled={addToCartMutation.isPending}
-              className={`flex-1 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] hover:bg-[var(--gold)] hover:text-[#0A0A0A] label-caps py-4 tracking-[0.2em] uppercase items-center justify-center space-x-2 transition-colors duration-300 ${
+              className={`flex flex-1 items-center justify-center gap-2 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] hover:bg-[var(--gold)] hover:text-[#0A0A0A] label-caps py-4 tracking-[0.2em] uppercase transition-colors duration-300 ${
                 addedFeedback ? 'bg-[var(--gold)] text-[#0A0A0A]' : ''
               }`}
             >
@@ -513,40 +640,9 @@ export const ProductDetailPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Accordions for Details matching Stitch PDP */}
-          <div className="border-t border-[var(--border-color)] divide-y divide-[var(--border-color)]">
+          {/* Customer Reviews (Default Open with Pagination) */}
+          <div className="border-t border-[var(--border-color)]">
             <details className="group py-4" open>
-              <summary className="flex justify-between items-center cursor-pointer list-none text-[15px] font-semibold text-[var(--text-primary)] tracking-wide">
-                <span>Fabric & Heritage</span>
-                <ChevronDown size={18} className="text-[var(--text-secondary)] group-open:rotate-180 transition-transform duration-300" />
-              </summary>
-              <div className="pt-3 font-body-sm text-[13px] text-[var(--text-secondary)] leading-relaxed">
-                Handcrafted from 100% pure Mulberry silk and pashmina wool, hand-spun on traditional looms by master artisans. Features authentic antique brushed gold zari borders and bespoke tailoring.
-              </div>
-            </details>
-
-            <details className="group py-4">
-              <summary className="flex justify-between items-center cursor-pointer list-none text-[15px] font-semibold text-[var(--text-primary)] tracking-wide">
-                <span>Care Instructions</span>
-                <ChevronDown size={18} className="text-[var(--text-secondary)] group-open:rotate-180 transition-transform duration-300" />
-              </summary>
-              <div className="pt-3 font-body-sm text-[13px] text-[var(--text-secondary)] leading-relaxed">
-                Strictly dry clean only. Store folded in a breathable cotton muslin pouch provided with your garment. Protect from direct moisture and harsh sunlight.
-              </div>
-            </details>
-
-            <details className="group py-4">
-              <summary className="flex justify-between items-center cursor-pointer list-none text-[15px] font-semibold text-[var(--text-primary)] tracking-wide">
-                <span>Sustainability</span>
-                <ChevronDown size={18} className="text-[var(--text-secondary)] group-open:rotate-180 transition-transform duration-300" />
-              </summary>
-              <div className="pt-3 font-body-sm text-[13px] text-[var(--text-secondary)] leading-relaxed">
-                Every silhouette supports generational artisan families with direct fair wages. Woven with organic vegetable dyes in zero-waste closed-loop ateliers.
-              </div>
-            </details>
-
-            {/* Customer Reviews Accordion */}
-            <details className="group py-4">
               <summary className="flex justify-between items-center cursor-pointer list-none text-[15px] font-semibold text-[var(--text-primary)] tracking-wide">
                 <div className="flex items-center gap-2">
                   <span>Customer Reviews</span>
@@ -559,18 +655,28 @@ export const ProductDetailPage: React.FC = () => {
 
               <div className="pt-4 space-y-4">
                 <div className="flex justify-between items-center pb-2 border-b border-[var(--border-color)]/60">
-                  <div className="flex items-center gap-1 text-[var(--gold)]">
+                  <div className="flex items-center gap-1.5 text-[var(--gold)]">
                     {[1, 2, 3, 4, 5].map((s) => (
                       <Star key={s} size={14} fill="currentColor" />
                     ))}
                     <span className="body-sm text-[12px] text-[var(--text-primary)] ml-1 font-semibold">
-                      5.0 • Verified Heritage
+                      {reviews.length > 0
+                        ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+                        : '5.0'}
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setIsReviewModalOpen(true)}
-                    className="label-caps text-[10px] text-[var(--gold)] uppercase tracking-wider underline hover:opacity-80"
+                    onClick={() => {
+                      const token = localStorage.getItem('ithihasa_access_token');
+                      if (!token) {
+                        toast.error('Please sign in to write a review');
+                        navigate(`/login?redirect=/products/${slug}`);
+                        return;
+                      }
+                      setIsReviewModalOpen(true);
+                    }}
+                    className="label-caps text-[10px] text-[var(--gold)] uppercase tracking-wider underline hover:opacity-80 cursor-pointer"
                   >
                     Write a Review
                   </button>
@@ -581,28 +687,66 @@ export const ProductDetailPage: React.FC = () => {
                     Be the first connoisseur to review this masterpiece.
                   </p>
                 ) : (
-                  <div className="space-y-3">
-                    {reviews.map((rev) => (
-                      <div key={rev.id} className="bg-[var(--bg-secondary)] p-3 rounded space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[13px] font-semibold text-[var(--text-primary)]">
-                            {rev.userName}
-                          </span>
-                          <div className="flex text-[var(--gold)]">
-                            {Array.from({ length: rev.rating }).map((_, i) => (
-                              <Star key={i} size={11} fill="currentColor" />
-                            ))}
+                  <>
+                    <div className="space-y-3">
+                      {paginatedReviews.map((rev) => (
+                        <div key={rev.id} className="bg-[var(--bg-secondary)] p-3 rounded space-y-1.5">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[13px] font-semibold text-[var(--text-primary)]">
+                              {rev.userName}
+                            </span>
+                            <div className="flex text-[var(--gold)]">
+                              {Array.from({ length: rev.rating }).map((_, i) => (
+                                <Star key={i} size={11} fill="currentColor" />
+                              ))}
+                            </div>
                           </div>
+                          <p className="body-sm text-[13px] text-[var(--text-secondary)] leading-relaxed">
+                            {rev.comment}
+                          </p>
+
+                          {rev.images && rev.images.length > 0 && (
+                            <div className="flex items-center gap-2 pt-1">
+                              {rev.images.map((imgUrl, idx) => (
+                                <a key={idx} href={imgUrl} target="_blank" rel="noopener noreferrer">
+                                  <img
+                                    src={imgUrl}
+                                    alt={`Review photo ${idx + 1}`}
+                                    className="w-14 h-14 object-cover rounded border border-[var(--border-color)] hover:opacity-90"
+                                  />
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <h4 className="text-[13px] text-[var(--text-primary)] font-medium">
-                          {rev.title}
-                        </h4>
-                        <p className="body-sm text-[12px] text-[var(--text-secondary)]">
-                          {rev.comment}
-                        </p>
+                      ))}
+                    </div>
+
+                    {/* Reviews Pagination Controls */}
+                    {totalReviewPages > 1 && (
+                      <div className="flex items-center justify-between pt-2 border-t border-[var(--border-color)]/60 text-[11px] label-caps">
+                        <button
+                          type="button"
+                          disabled={reviewPage === 1}
+                          onClick={() => setReviewPage((p) => Math.max(1, p - 1))}
+                          className="text-[var(--gold)] hover:underline disabled:opacity-30 disabled:no-underline cursor-pointer"
+                        >
+                          Previous
+                        </button>
+                        <span className="text-[var(--text-secondary)]">
+                          Page {reviewPage} of {totalReviewPages}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={reviewPage === totalReviewPages}
+                          onClick={() => setReviewPage((p) => Math.min(totalReviewPages, p + 1))}
+                          className="text-[var(--gold)] hover:underline disabled:opacity-30 disabled:no-underline cursor-pointer"
+                        >
+                          Next
+                        </button>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 )}
               </div>
             </details>
@@ -763,7 +907,7 @@ export const ProductDetailPage: React.FC = () => {
                   <button
                     key={sz}
                     onClick={() => {
-                      setSelectedSizeLabel(sz);
+                      setSelectedSize(sz);
                       setIsSizeSheetOpen(false);
                     }}
                     className="w-full flex justify-between items-center py-3.5 px-4 border border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-colors text-left"
@@ -825,8 +969,8 @@ export const ProductDetailPage: React.FC = () => {
                   submitReviewMutation.mutate({
                     productId: product.id,
                     rating: newRating,
-                    title: reviewTitle,
                     comment: reviewComment,
+                    images: reviewImages,
                   });
                 }
               }}
@@ -842,7 +986,7 @@ export const ProductDetailPage: React.FC = () => {
                       key={star}
                       type="button"
                       onClick={() => setNewRating(star)}
-                      className="p-1 hover:scale-110 transition-transform"
+                      className="p-1 hover:scale-110 transition-transform cursor-pointer"
                     >
                       <Star
                         size={22}
@@ -858,45 +1002,58 @@ export const ProductDetailPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
-                  Review Headline *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={reviewTitle}
-                  onChange={(e) => setReviewTitle(e.target.value)}
-                  placeholder="Exquisite craftsmanship & majestic drape"
-                  className="w-full bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] py-2 text-[15px] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="label-caps text-[10px] uppercase tracking-widest text-[var(--text-secondary)] block mb-1">
-                  Detailed Experience *
-                </label>
                 <textarea
-                  required
                   rows={4}
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
-                  placeholder="Share details about the texture, sizing, and weave..."
+                  placeholder="Share your experience — texture, sizing, craftsmanship... (optional)"
                   className="w-full bg-transparent border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[14px] focus:outline-none rounded"
                 />
+              </div>
+
+              {/* Photo Upload: 2 images at most */}
+              <div>
+                <div className="flex items-center gap-3">
+                  {reviewImages.map((img, idx) => (
+                    <div key={idx} className="relative w-16 h-16 rounded border border-[var(--border-color)] overflow-hidden">
+                      <img src={img} alt={`Review photo ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setReviewImages(reviewImages.filter((_, i) => i !== idx))}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/80 text-white flex items-center justify-center hover:bg-rose-600 transition-colors cursor-pointer"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+
+                  {reviewImages.length < 2 && (
+                    <label className="w-16 h-16 rounded border border-dashed border-[var(--border-color)] hover:border-[var(--gold)] flex flex-col items-center justify-center text-[var(--text-secondary)] hover:text-[var(--gold)] cursor-pointer transition-colors bg-[var(--bg-secondary)]/30">
+                      <Camera size={18} />
+                      <span className="text-[9px] label-caps mt-1">Upload</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleReviewImageUpload}
+                      />
+                    </label>
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-[var(--border-color)]">
                 <button
                   type="button"
                   onClick={() => setIsReviewModalOpen(false)}
-                  className="px-5 py-2.5 label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)]"
+                  className="px-5 py-2.5 label-caps text-[11px] uppercase tracking-wider text-[var(--text-secondary)] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitReviewMutation.isPending}
-                  className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-6 py-2.5 label-caps text-[11px] uppercase tracking-[0.15em] hover:bg-[var(--gold)] hover:text-[#0A0A0A] transition-colors font-semibold"
+                  className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] px-6 py-2.5 label-caps text-[11px] uppercase tracking-[0.15em] hover:bg-[var(--gold)] hover:text-[#0A0A0A] transition-colors font-semibold cursor-pointer"
                 >
                   {submitReviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
                 </button>

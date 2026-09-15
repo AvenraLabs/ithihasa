@@ -14,3 +14,10 @@ export async function createCoupon(couponData) {
     body: couponData,
   });
 }
+
+export async function deleteCoupon(id) {
+  return apiClient(`/admin/coupons/${id}`, {
+    method: 'DELETE',
+  });
+}
+

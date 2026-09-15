@@ -36,7 +36,7 @@ export class ReviewService {
       user_id: userId,
       rating: data.rating,
       title: data.title || null,
-      comment: data.comment,
+      comment: data.comment || '',
       is_verified_purchase: Boolean(verifiedPurchase),
       status: 'APPROVED',
     });

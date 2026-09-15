@@ -22,19 +22,29 @@ export class CouponService {
     const existing = await Coupon.findOne({ where: { code: cleanCode } });
     if (existing) throw new ConflictError(`Coupon with code '${cleanCode}' already exists`);
 
+    const rawType = (data.type || '').toUpperCase();
+    const type = rawType === 'FLAT' ? 'FIXED' : rawType;
+
     return Coupon.create({
       code: cleanCode,
       description: data.description || null,
-      type: data.type,
-      value: data.value,
-      min_order_value: data.minOrderValue || 0,
-      max_discount: data.maxDiscount || null,
-      start_at: data.startAt ? new Date(data.startAt) : null,
-      expires_at: data.expiresAt ? new Date(data.expiresAt) : null,
-      usage_limit: data.usageLimit || null,
-      per_user_limit: data.perUserLimit || 1,
+      type: type,
+      value: Number(data.value),
+      min_order_value: Number(data.minOrderValue ?? data.min_order_value ?? 0),
+      max_discount: (data.maxDiscount || data.max_discount) ? Number(data.maxDiscount ?? data.max_discount) : null,
+      start_at: data.startAt || data.valid_from ? new Date(data.startAt || data.valid_from) : null,
+      expires_at: data.expiresAt || data.valid_until ? new Date(data.expiresAt || data.valid_until) : null,
+      usage_limit: (data.usageLimit || data.usage_limit) ? Number(data.usageLimit ?? data.usage_limit) : null,
+      per_user_limit: Number(data.perUserLimit ?? data.per_user_limit ?? 1),
       status: data.status || 'ACTIVE',
     });
+  }
+
+  public async deleteCoupon(id: string) {
+    const coupon = await Coupon.findByPk(id);
+    if (!coupon) throw new NotFoundError('Coupon');
+    await coupon.destroy();
+    return true;
   }
 
   public async updateCoupon(id: string, data: any) {

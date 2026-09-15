@@ -11,6 +11,8 @@ export const OrderDetailPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const { data: order, isLoading } = useQuery<OrderData>({
     queryKey: ['order', orderId],
@@ -26,6 +28,8 @@ export const OrderDetailPage: React.FC = () => {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      setIsCancelModalOpen(false);
+      setCancelReason('');
       setToastMessage('Order cancelled successfully');
       setTimeout(() => setToastMessage(null), 3000);
     },
@@ -155,7 +159,7 @@ export const OrderDetailPage: React.FC = () => {
                 </div>
 
                 <span className="body-md text-[15px] font-semibold text-[var(--text-primary)] tabular-nums shrink-0">
-                  ₹{item.total.toLocaleString()}
+                  ₹{Number(item.total ?? 0).toLocaleString('en-IN')}
                 </span>
               </div>
             ))}
@@ -166,25 +170,27 @@ export const OrderDetailPage: React.FC = () => {
         <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-6 space-y-2.5">
           <div className="flex justify-between text-[14px] text-[var(--text-secondary)]">
             <span>Subtotal</span>
-            <span className="tabular-nums">₹{order.subtotal.toLocaleString()}</span>
+            <span className="tabular-nums">₹{Number(order.subtotal ?? 0).toLocaleString('en-IN')}</span>
           </div>
-          {order.discountAmount > 0 && (
+          {(order.discountAmount || 0) > 0 && (
             <div className="flex justify-between text-[14px] text-[var(--gold)]">
               <span>Coupon Discount ({order.couponCode})</span>
-              <span className="tabular-nums">-₹{order.discountAmount.toLocaleString()}</span>
+              <span className="tabular-nums">-₹{Number(order.discountAmount ?? 0).toLocaleString('en-IN')}</span>
             </div>
           )}
           <div className="flex justify-between text-[14px] text-[var(--text-secondary)]">
             <span>Shipping</span>
-            <span className="tabular-nums">{order.shippingAmount === 0 ? 'Free' : `₹${order.shippingAmount}`}</span>
+            <span className="tabular-nums">{(order.shippingAmount ?? 0) === 0 ? 'Free' : `₹${Number(order.shippingAmount ?? 0).toLocaleString('en-IN')}`}</span>
           </div>
-          <div className="flex justify-between text-[14px] text-[var(--text-secondary)]">
-            <span>Estimated Taxes</span>
-            <span className="tabular-nums">₹{order.taxAmount.toLocaleString()}</span>
-          </div>
+          {(order.taxAmount || 0) > 0 && (
+            <div className="flex justify-between text-[14px] text-[var(--text-secondary)]">
+              <span>Estimated Taxes</span>
+              <span className="tabular-nums">₹{Number(order.taxAmount ?? 0).toLocaleString('en-IN')}</span>
+            </div>
+          )}
           <div className="pt-3 border-t border-[var(--border-color)] flex justify-between text-[18px] font-semibold text-[var(--text-primary)]">
             <span>Total Amount</span>
-            <span className="text-[var(--gold)] tabular-nums">₹{order.totalAmount.toLocaleString()}</span>
+            <span className="text-[var(--gold)] tabular-nums">₹{Number(order.totalAmount ?? 0).toLocaleString('en-IN')}</span>
           </div>
         </div>
 
@@ -192,20 +198,76 @@ export const OrderDetailPage: React.FC = () => {
         {canCancel && (
           <div className="text-center pt-2">
             <button
-              onClick={() => {
-                const reason = window.prompt('Please enter a cancellation reason:');
-                if (reason) {
-                  cancelMutation.mutate(reason);
-                }
-              }}
+              onClick={() => setIsCancelModalOpen(true)}
               disabled={cancelMutation.isPending}
-              className="label-caps text-[11px] uppercase tracking-widest text-[var(--error)] border border-[var(--error)]/40 hover:bg-[var(--error)]/10 px-6 py-2.5 rounded transition-colors"
+              className="label-caps text-[11px] uppercase tracking-widest text-[var(--error)] border border-[var(--error)]/40 hover:bg-[var(--error)]/10 px-6 py-2.5 rounded transition-colors cursor-pointer"
             >
-              {cancelMutation.isPending ? 'Cancelling...' : 'Cancel Order'}
+              Cancel Order
             </button>
           </div>
         )}
       </main>
+
+      {/* Custom Order Cancellation Modal */}
+      {isCancelModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div
+            className="bg-[var(--bg-card)] border border-[var(--border-color)] max-w-md w-full shadow-2xl p-6 sm:p-7 space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-1">
+              <span className="label-caps text-[10px] text-rose-400 uppercase tracking-widest font-semibold">
+                Order Cancellation
+              </span>
+              <h3 className="font-garamond text-[22px] font-normal text-[var(--text-primary)] leading-tight m-0">
+                Cancel Order #{order.orderNumber}?
+              </h3>
+              <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed pt-1">
+                Please provide a brief reason for cancelling your order. Reserved items will be released back to the boutique.
+              </p>
+            </div>
+
+            <div>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Reason for cancellation (e.g., changed mind, ordered incorrect size)..."
+                rows={3}
+                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[13px] text-[var(--text-primary)] outline-none resize-none font-manrope"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--border-color)]">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCancelModalOpen(false);
+                  setCancelReason('');
+                }}
+                disabled={cancelMutation.isPending}
+                className="px-4 py-2.5 border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--gold)] label-caps text-[11px] uppercase tracking-wider cursor-pointer"
+              >
+                Keep Order
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!cancelReason.trim()) {
+                    setToastMessage('Please enter a cancellation reason');
+                    setTimeout(() => setToastMessage(null), 3000);
+                    return;
+                  }
+                  cancelMutation.mutate(cancelReason.trim());
+                }}
+                disabled={cancelMutation.isPending}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white label-caps text-[11px] uppercase tracking-wider cursor-pointer shadow-sm disabled:opacity-50 font-semibold"
+              >
+                {cancelMutation.isPending ? 'Cancelling...' : 'Confirm Cancellation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

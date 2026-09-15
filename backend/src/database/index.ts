@@ -25,6 +25,8 @@ import { Refund } from './models/refund.model.js';
 import { Review } from './models/review.model.js';
 import { AuditLog } from './models/audit-log.model.js';
 import { AppSetting } from './models/app-setting.model.js';
+import { SupportTicket } from './models/support-ticket.model.js';
+import { SupportMessage } from './models/support-message.model.js';
 
 let associationsInitialized = false;
 
@@ -120,6 +122,16 @@ export function setupModelAssociations(): void {
 
   CouponRedemption.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
   CouponRedemption.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+  // Support Associations
+  User.hasMany(SupportTicket, { foreignKey: 'user_id', as: 'support_tickets' });
+  SupportTicket.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+  SupportTicket.hasMany(SupportMessage, { foreignKey: 'ticket_id', as: 'messages' });
+  SupportMessage.belongsTo(SupportTicket, { foreignKey: 'ticket_id', as: 'ticket' });
+
+  Order.hasMany(SupportTicket, { foreignKey: 'order_id', as: 'support_tickets' });
+  SupportTicket.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 }
 
 // Call associations initialization
@@ -152,4 +164,6 @@ export {
   Review,
   AuditLog,
   AppSetting,
+  SupportTicket,
+  SupportMessage,
 };

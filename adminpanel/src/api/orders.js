@@ -11,6 +11,10 @@ export async function fetchOrders(filters = {}) {
   return apiClient(`/admin/orders${queryStr ? `?${queryStr}` : ''}`);
 }
 
+export async function fetchOrderById(orderId) {
+  return apiClient(`/admin/orders/${orderId}`);
+}
+
 export async function updateOrderStatus(orderId, status, reason) {
   return apiClient(`/admin/orders/${orderId}/status`, {
     method: 'PATCH',

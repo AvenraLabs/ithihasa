@@ -66,9 +66,9 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
     return {
-      fullName: 'Atelier Patron',
-      email: 'patron@ithihasa.com',
-      phone: '+91 98765 43210',
+      fullName: '',
+      email: '',
+      phone: '',
       tier: 'Novice',
     };
   });
@@ -81,11 +81,11 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       try {
         const user = await fetchUserProfile();
-        if (user && user.name) {
+        if (user) {
           const updated = {
-            fullName: user.name,
-            email: user.email,
-            phone: user.phone || '+91 98765 43210',
+            fullName: user.name || '',
+            email: user.email || '',
+            phone: user.phone || '',
             tier: user.tier || 'Novice',
           };
           setProfileDataState(updated);
@@ -143,12 +143,13 @@ export const useAvatar = (): AvatarContextType => {
       setAvatar: () => {},
       avatarOptions: AVATAR_OPTIONS,
       profileData: {
-        fullName: 'Eleanor Vance',
-        email: 'eleanor.v@example.com',
-        phone: '+1 (555) 123-4567',
+        fullName: '',
+        email: '',
+        phone: '',
       },
       setProfileData: () => {},
     };
   }
   return context;
 };
+

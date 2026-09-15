@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchProducts, type Product } from '../../api/products.js';
 import { fetchWishlist, toggleWishlist } from '../../api/wishlist.js';
-import { fetchStorefrontData } from '../../api/merchandising.js';
+import { fetchStorefrontData, getCachedStorefrontData } from '../../api/merchandising.js';
 import { resolveMediaUrl } from '../../api/client.js';
 import { Heart, ArrowRight } from 'lucide-react';
 
@@ -13,8 +13,17 @@ export const FeaturedSilhouettes: React.FC = () => {
   const { data: cms } = useQuery({
     queryKey: ['storefront'],
     queryFn: fetchStorefrontData,
+    initialData: getCachedStorefrontData,
     staleTime: 1000 * 60 * 5,
   });
+
+  // If highlighted section is disabled or empty in CMS, do not render
+  if (cms?.showHighlighted === false) {
+    return null;
+  }
+  if (cms?.highlightedItems && Array.isArray(cms.highlightedItems) && cms.highlightedItems.length === 0) {
+    return null;
+  }
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ['products', 'featured'],
@@ -42,12 +51,7 @@ export const FeaturedSilhouettes: React.FC = () => {
     }).format(amount);
   };
 
-  // If highlightedItems is empty array in CMS or no items exist, do not render this section on live app
-  if (cms?.highlightedItems && Array.isArray(cms.highlightedItems) && cms.highlightedItems.length === 0) {
-    return null;
-  }
-
-  // 2 Highlighted Items from CMS if available, else products from catalog
+  // Highlighted Items from CMS if available, else products from catalog
   const displayItems = cms?.highlightedItems && cms.highlightedItems.length > 0
     ? cms.highlightedItems
     : products.slice(0, 2).map((p) => ({

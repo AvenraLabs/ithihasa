@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Share, PlusSquare, X, Smartphone, Sparkles, Check } from 'lucide-react';
+import { Download, Share, PlusSquare, X, Check } from 'lucide-react';
 
 export const PWAInstallBanner: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -89,18 +89,19 @@ export const PWAInstallBanner: React.FC = () => {
         <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-3">
           {/* Brand & Value Proposition */}
           <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#C9A24B]/15 border border-[#C9A24B]/40 text-[#C9A24B] flex items-center justify-center shrink-0 shadow-inner">
-              <Sparkles size={16} />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#141210] border border-[#C9A24B]/40 flex items-center justify-center shrink-0 shadow-inner overflow-hidden p-0.5 sm:p-1">
+              <img
+                src="/ithihasa.png"
+                alt="Ithihasa Logo"
+                className="w-full h-full object-contain rounded-full"
+              />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-serif text-[13.5px] sm:text-[15px] font-normal tracking-wide text-[#F4EFE6] truncate" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>
-                  Ithihasa Mobile Atelier
+                  Ithihasa Mobile 
                 </span>
-                <span className="hidden sm:inline-block label-caps text-[9px] uppercase bg-[#C9A24B]/20 text-[#C9A24B] border border-[#C9A24B]/30 px-1.5 py-0.5 tracking-wider font-semibold">
-                  Official PWA
-                </span>
-              </div>
+                </div>
               <p className="text-[11px] sm:text-[12px] text-[#B8B0A2] truncate leading-tight mt-0.5">
                 {isIOS
                   ? 'Install to your Home Screen for faster access & seamless experience.'
@@ -152,8 +153,12 @@ export const PWAInstallBanner: React.FC = () => {
             {/* Header */}
             <div className="flex items-start justify-between border-b border-[#262220] pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#C9A24B]/15 border border-[#C9A24B]/40 text-[#C9A24B] flex items-center justify-center">
-                  <Smartphone size={20} />
+                <div className="w-10 h-10 rounded-full bg-[#141210] border border-[#C9A24B]/40 flex items-center justify-center shrink-0 shadow-inner overflow-hidden p-1">
+                  <img
+                    src="/ithihasa.png"
+                    alt="Ithihasa Logo"
+                    className="w-full h-full object-contain rounded-full"
+                  />
                 </div>
                 <div>
                   <h3 className="font-serif text-[20px] text-[#F4EFE6] font-normal leading-tight" style={{ fontFamily: "'EB Garamond', Georgia, serif" }}>

@@ -4,6 +4,8 @@ import {
   Order,
   OrderItem,
   OrderStatusHistory,
+  Cart,
+  CartItem,
 } from '../../database/index.js';
 import { phonePeProvider } from '../../integrations/phonepe/phonepe.provider.js';
 import { inventoryService } from '../inventory/inventory.service.js';
@@ -94,6 +96,19 @@ export class PaymentService {
             quantity: it.quantity,
           }));
           await inventoryService.commitSale(saleItems, order.order_number, t);
+        }
+
+        // Clear the user's active cart — only done on confirmed payment success
+        const userCart = await Cart.findOne({
+          where: { user_id: order.user_id, status: 'ACTIVE' },
+          transaction: t,
+        });
+        if (userCart) {
+          await CartItem.destroy({
+            where: { cart_id: userCart.id },
+            transaction: t,
+          });
+          logger.info({ orderId: order.id, cartId: userCart.id }, 'Cart cleared after successful payment');
         }
       } else if (state === 'FAILED') {
         payment.status = 'FAILED';

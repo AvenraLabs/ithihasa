@@ -13,6 +13,7 @@ adminRouter.get('/dashboard', adminController.getDashboard);
 
 // Order Management
 adminRouter.get('/orders', adminController.getOrders);
+adminRouter.get('/orders/:id', adminController.getOrderById);
 adminRouter.patch('/orders/:id/status', adminController.updateOrderStatus);
 
 // Inventory & Stock
@@ -35,12 +36,16 @@ adminRouter.post('/team', adminController.inviteTeamMember);
 adminRouter.delete('/team/:id', adminController.removeTeamMember);
 
 // Support & Concierge Chat
-adminRouter.get('/support/metrics', adminController.getSupportMetrics);
-adminRouter.get('/support/tickets', adminController.getSupportTickets);
-adminRouter.post('/support/tickets', adminController.createSupportTicket);
-adminRouter.post('/support/tickets/:id/reply', adminController.replySupportTicket);
-adminRouter.get('/support/chat/sessions', adminController.getChatSessions);
-adminRouter.post('/support/chat/:sessionId/messages', adminController.sendChatMessage);
+import { supportController } from '../support/support.controller.js';
+adminRouter.get('/support/metrics', supportController.getMetrics);
+adminRouter.get('/support/tickets', supportController.listAdminTickets);
+adminRouter.get('/support/tickets/:id', supportController.getTicket);
+adminRouter.post('/support/tickets', supportController.createTicket);
+adminRouter.post('/support/tickets/:id/reply', supportController.replyTicket);
+adminRouter.post('/support/tickets/:id/messages', supportController.replyTicket);
+adminRouter.patch('/support/tickets/:id/status', supportController.updateStatus);
+adminRouter.get('/support/chat/sessions', supportController.getChatSessions);
+adminRouter.post('/support/chat/:sessionId/messages', supportController.sendChatMessage);
 
 // Notifications
 adminRouter.get('/notifications', adminController.getNotifications);
@@ -63,6 +68,7 @@ adminRouter.delete('/categories/:id', adminController.deleteCategory);
 adminRouter.get('/coupons', adminController.listCoupons);
 adminRouter.post('/coupons', adminController.createCoupon);
 adminRouter.patch('/coupons/:id', adminController.updateCoupon);
+adminRouter.delete('/coupons/:id', adminController.deleteCoupon);
 
 // Merchandising & Storefront CMS
 import { merchandisingController } from '../merchandising/index.js';

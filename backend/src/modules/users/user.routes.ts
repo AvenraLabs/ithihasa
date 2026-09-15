@@ -10,3 +10,5 @@ userRouter.use(authenticate);
 
 userRouter.get('/profile', userController.getProfile);
 userRouter.patch('/profile', validateRequest({ body: updateProfileSchema }), userController.updateProfile);
+userRouter.post('/password', userController.updatePassword);
+

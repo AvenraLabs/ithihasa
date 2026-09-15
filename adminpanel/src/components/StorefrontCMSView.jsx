@@ -106,11 +106,11 @@ export function StorefrontCMSView() {
   const handleAddHighlighted = () => {
     const newItem = {
       id: `h-${Date.now()}`,
-      title: 'New Highlighted Silhouette',
-      categoryTag: 'Heritage Piece',
-      price: 25000,
+      title: '',
+      categoryTag: '',
+      price: '',
       imageUrl: '',
-      slug: 'new-piece'
+      slug: ''
     };
     setHighlightedItems([...highlightedItems, newItem]);
   };
@@ -127,10 +127,10 @@ export function StorefrontCMSView() {
 
   const handleAddCollectionTag = () => {
     const newTag = {
-      name: 'New Heritage Collection',
-      slug: 'new-collection',
-      itemCount: 4,
-      imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80'
+      name: '',
+      slug: '',
+      itemCount: '',
+      imageUrl: ''
     };
     setTrendingCollections([...trendingCollections, newTag]);
   };
@@ -511,12 +511,20 @@ export function StorefrontCMSView() {
                     <input
                       type="text"
                       value={col.name}
+                      placeholder="e.g. Royal Silk, Summer Atelier..."
                       onChange={(e) => {
                         const updated = [...trendingCollections];
-                        updated[idx] = { ...updated[idx], name: e.target.value };
+                        const newName = e.target.value;
+                        const prevAutoSlug = (col.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                        const shouldSyncSlug = !col.slug || col.slug === prevAutoSlug;
+                        updated[idx] = {
+                          ...updated[idx],
+                          name: newName,
+                          ...(shouldSyncSlug ? { slug: newName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') } : {})
+                        };
                         setTrendingCollections(updated);
                       }}
-                      className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-2 py-1 text-[13px] font-semibold text-[var(--text-primary)] outline-none rounded"
+                      className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-2.5 py-1.5 text-[13px] font-semibold text-[var(--text-primary)] outline-none rounded"
                     />
                   </div>
 
@@ -527,12 +535,13 @@ export function StorefrontCMSView() {
                     <input
                       type="text"
                       value={col.slug}
+                      placeholder="e.g. royal-silk"
                       onChange={(e) => {
                         const updated = [...trendingCollections];
                         updated[idx] = { ...updated[idx], slug: e.target.value };
                         setTrendingCollections(updated);
                       }}
-                      className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-2 py-1 text-[12px] font-mono text-[var(--text-primary)] outline-none rounded"
+                      className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] px-2.5 py-1.5 text-[12px] font-mono text-[var(--text-primary)] outline-none rounded"
                     />
                   </div>
 
@@ -546,7 +555,7 @@ export function StorefrontCMSView() {
                       }}
                       folder="storefront"
                       label="Thumbnail"
-                      helperText="Collection thumbnail"
+                      helperText="Click or drop to upload collection thumbnail"
                     />
                   </div>
                 </div>
@@ -576,7 +585,7 @@ export function StorefrontCMSView() {
 
               <button
                 type="button"
-                onClick={() => setQuickQueryTags([...quickQueryTags, { label: 'New Tag', query: 'tag' }])}
+                onClick={() => setQuickQueryTags([...quickQueryTags, { label: '', query: '' }])}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] hover:border-[var(--gold)] text-[var(--text-primary)] label-caps text-[11px] tracking-wider uppercase rounded cursor-pointer"
               >
                 <Plus size={14} />

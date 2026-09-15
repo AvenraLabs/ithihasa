@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, CreditCard, ShieldCheck, Lock } from 'lucide-react';
+import { ArrowLeft, Lock, Plus, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCart } from '../api/cart.js';
 import { fetchAddresses, createAddress, type Address } from '../api/addresses.js';
+import { fetchUserProfile, type UserSession } from '../api/auth.js';
+import { fetchStorefrontSettings, calculateShippingFee, type StorefrontSettings } from '../api/settings.js';
 import { initiateCheckout } from '../api/orders.js';
 import { validateCoupon } from '../api/coupons.js';
 
@@ -22,38 +24,98 @@ export const CheckoutPage: React.FC = () => {
     queryFn: () => fetchCart(),
   });
 
+  const { data: userProfile } = useQuery<UserSession>({
+    queryKey: ['user-profile'],
+    queryFn: fetchUserProfile,
+  });
+
+  const { data: storefrontSettings } = useQuery<StorefrontSettings>({
+    queryKey: ['storefront-settings'],
+    queryFn: fetchStorefrontSettings,
+  });
+
   const { data: savedAddresses = [] } = useQuery<Address[]>({
     queryKey: ['addresses'],
     queryFn: fetchAddresses,
   });
 
-  // Selected saved address ID or custom
+  // Selected saved address ID or 'new'
   const [selectedAddressId, setSelectedAddressId] = useState<string>('new');
 
-  // Form State
-  const [firstName, setFirstName] = useState('Eleanor');
-  const [lastName, setLastName] = useState('Vance');
-  const [address, setAddress] = useState('124 Atelier Avenue');
-  const [apartment, setApartment] = useState('Apt 4B');
-  const [city, setCity] = useState('Mumbai');
-  const [stateVal, setStateVal] = useState('Maharashtra');
-  const [zipCode, setZipCode] = useState('400001');
+  // Form State (no hardcoded sample data)
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [apartment, setApartment] = useState('');
+  const [city, setCity] = useState('');
+  const [stateVal, setStateVal] = useState('');
+  const [zipCode, setZipCode] = useState('');
+
+  // Synchronize form fields with an address
+  const applyAddressToForm = (addr: Address) => {
+    const parts = (addr.name || '').trim().split(/\s+/);
+    setFirstName(parts[0] || '');
+    setLastName(parts.slice(1).join(' ') || '');
+    setPhone(addr.phone || '');
+    setAddress(addr.line1 || '');
+    setApartment(addr.line2 || '');
+    setCity(addr.city || '');
+    setStateVal(addr.state || '');
+    setZipCode(addr.postalCode || '');
+  };
+
+  // Auto-select default or first address if available from profile
+  React.useEffect(() => {
+    if (savedAddresses.length > 0) {
+      const defaultAddr = savedAddresses.find((a) => a.isDefaultShipping) || savedAddresses[0];
+      if (defaultAddr && (selectedAddressId === 'new' || !savedAddresses.some((a) => a.id === selectedAddressId))) {
+        setSelectedAddressId(defaultAddr.id);
+        applyAddressToForm(defaultAddr);
+      }
+    }
+  }, [savedAddresses]);
+
+  // Pre-fill user profile name/phone if entering new address and empty
+  React.useEffect(() => {
+    if (userProfile?.name && selectedAddressId === 'new' && !firstName && !lastName) {
+      const parts = userProfile.name.trim().split(/\s+/);
+      setFirstName(parts[0] || '');
+      setLastName(parts.slice(1).join(' ') || '');
+    }
+    if (userProfile?.phone && selectedAddressId === 'new' && !phone) {
+      setPhone(userProfile.phone);
+    }
+  }, [userProfile]);
+
+  const handleSelectSavedAddress = (addr: Address) => {
+    setSelectedAddressId(addr.id);
+    applyAddressToForm(addr);
+  };
+
+  const handleSelectNewAddress = () => {
+    setSelectedAddressId('new');
+    setAddress('');
+    setApartment('');
+    setCity('');
+    setStateVal('');
+    setZipCode('');
+    if (userProfile?.name) {
+      const parts = userProfile.name.trim().split(/\s+/);
+      setFirstName(parts[0] || '');
+      setLastName(parts.slice(1).join(' ') || '');
+    } else {
+      setFirstName('');
+      setLastName('');
+    }
+    setPhone(userProfile?.phone || '');
+  };
 
   // Coupon state
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
-
-  // Shipping Method
-  const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
-
-  // Payment State
-  const [paymentMode, setPaymentMode] = useState<'card' | 'upi'>('card');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardName, setCardName] = useState('Eleanor Vance');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [upiId, setUpiId] = useState('');
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   // Processing & Toast State
   const [isProcessing, setIsProcessing] = useState(false);
@@ -66,10 +128,13 @@ export const CheckoutPage: React.FC = () => {
     : 34500;
 
   const discountAmount = appliedCoupon ? appliedCoupon.discount : (cart?.summary?.discountAmount || 0);
-  const shippingCost = shippingMethod === 'express' ? 1500 : 0;
-  const taxRate = 0.05;
-  const taxes = Math.round(Math.max(0, subtotal - discountAmount) * taxRate);
-  const totalAmount = Math.max(0, subtotal - discountAmount) + shippingCost + taxes;
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+
+  // Dynamic Shipping calculation based on Admin Panel Settings
+  const shippingCost = calculateShippingFee(discountedSubtotal, storefrontSettings?.shipping);
+
+  // Total Amount (tax removed per instructions)
+  const totalAmount = discountedSubtotal + shippingCost;
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -79,32 +144,27 @@ export const CheckoutPage: React.FC = () => {
     }).format(amount);
   };
 
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, '').substring(0, 16);
-    val = val.match(/.{1,4}/g)?.join(' ') || val;
-    setCardNumber(val);
-  };
-
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, '').substring(0, 4);
-    if (val.length >= 3) {
-      val = `${val.substring(0, 2)}/${val.substring(2)}`;
-    }
-    setExpiry(val);
-  };
-
-  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, '').substring(0, 4);
-    setCvv(val);
-  };
-
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponInput.trim()) return;
     setCouponError(null);
     try {
       const c = await validateCoupon(couponInput);
-      setAppliedCoupon({ code: c.code, discount: c.discountValue });
+      if (c.minimumOrderAmount > 0 && subtotal < c.minimumOrderAmount) {
+        setCouponError(`Minimum order value of ₹${c.minimumOrderAmount.toLocaleString('en-IN')} required for this coupon.`);
+        return;
+      }
+      let calculatedDiscount = 0;
+      if (c.discountType === 'PERCENTAGE') {
+        calculatedDiscount = (subtotal * c.discountValue) / 100;
+        if (c.maxDiscountAmount && calculatedDiscount > c.maxDiscountAmount) {
+          calculatedDiscount = c.maxDiscountAmount;
+        }
+      } else {
+        calculatedDiscount = Math.min(subtotal, c.discountValue);
+      }
+      calculatedDiscount = Math.round(calculatedDiscount);
+      setAppliedCoupon({ code: c.code, discount: calculatedDiscount });
     } catch (err: any) {
       setCouponError(err.message || 'Invalid coupon code');
     }
@@ -113,37 +173,51 @@ export const CheckoutPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
+    setCheckoutError(null);
 
     try {
       let addressId = selectedAddressId;
       if (addressId === 'new' || !addressId) {
+        if (!firstName.trim() || !address.trim() || !city.trim() || !stateVal.trim() || !zipCode.trim()) {
+          setCheckoutError('Please fill in all required shipping address fields.');
+          setIsProcessing(false);
+          return;
+        }
+
+        const fullName = `${firstName} ${lastName}`.trim() || userProfile?.name || 'Valued Client';
+        const contactPhone = phone.trim() || userProfile?.phone || '+91 98765 43210';
         const created = await createAddress({
-          name: `${firstName} ${lastName}`.trim(),
-          phone: '+91 98765 43210',
+          name: fullName,
+          phone: contactPhone,
           line1: address,
           line2: apartment || null,
           city,
           state: stateVal,
           postalCode: zipCode,
           country: 'India',
-        }).catch(() => null);
+        });
         addressId = created?.id || 'addr_default';
       }
 
       const res = await initiateCheckout({
         shippingAddressId: addressId,
         couponCode: appliedCoupon?.code || null,
-      }).catch(() => ({
-        orderId: 'ord_' + Math.random().toString(36).substring(2, 10),
-        orderNumber: 'ITH-' + Math.floor(1000 + Math.random() * 9000),
-        totalAmount: 1135,
-        currency: 'INR',
-        redirectUrl: null,
-      }));
+      });
+
+      if (res.redirectUrl) {
+        window.location.href = res.redirectUrl;
+        return;
+      }
 
       navigate(`/orders/${res.orderId}/confirmed`);
     } catch (err: any) {
       setIsProcessing(false);
+      const failedOrderId = err.details?.orderId || err.orderId;
+      if (failedOrderId) {
+        navigate(`/orders/${failedOrderId}/confirmed?status=failed`);
+      } else {
+        setCheckoutError(err.message || 'Payment initiation failed. Please verify your details and try again.');
+      }
     }
   };
 
@@ -185,10 +259,18 @@ export const CheckoutPage: React.FC = () => {
             >
               Checkout
             </h1>
-            <p className="body-sm text-[13px] md:text-[14px] text-[var(--text-secondary)]">
-              Please complete the details below to finalize your order.
-            </p>
           </div>
+
+          {/* Checkout Error Notification */}
+          {checkoutError && (
+            <div className="bg-red-950/40 border border-red-800/60 text-red-200 p-4 rounded-lg flex items-start gap-3 animate-in fade-in">
+              <AlertCircle size={20} className="text-red-400 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="text-[14px] font-semibold text-red-300">Checkout Notice</h4>
+                <p className="text-[13px] text-red-400 mt-0.5">{checkoutError}</p>
+              </div>
+            </div>
+          )}
 
           {/* Step 1: Shipping Address */}
           <section className="flex flex-col gap-6">
@@ -201,372 +283,219 @@ export const CheckoutPage: React.FC = () => {
               </h2>
             </div>
 
-            {/* Saved Address Pills if available */}
+            {/* Saved Addresses Radio Selection */}
             {savedAddresses.length > 0 && (
-              <div className="flex flex-wrap gap-2 pb-2">
-                {savedAddresses.map((addr) => (
-                  <button
-                    key={addr.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedAddressId(addr.id);
-                      setAddress(addr.line1);
-                      setApartment(addr.line2 || '');
-                      setCity(addr.city);
-                      setStateVal(addr.state);
-                      setZipCode(addr.postalCode);
-                    }}
-                    className={`px-3 py-1.5 label-caps text-[10px] uppercase tracking-wider rounded border transition-colors ${
-                      selectedAddressId === addr.id
-                        ? 'border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)] font-semibold'
-                        : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              <div className="flex flex-col gap-3">
+                <span className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase font-medium">
+                  Select Delivery Address
+                </span>
+                <div className="grid grid-cols-1 gap-3">
+                  {savedAddresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr.id;
+                    return (
+                      <label
+                        key={addr.id}
+                        onClick={() => handleSelectSavedAddress(addr)}
+                        className={`group relative flex items-start gap-3.5 p-4 border transition-all cursor-pointer rounded-sm ${
+                          isSelected
+                            ? 'border-[var(--gold)] bg-[var(--gold)]/[0.04] shadow-sm'
+                            : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--gold)]/40'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="shipping_address"
+                          checked={isSelected}
+                          onChange={() => handleSelectSavedAddress(addr)}
+                          className="mt-1 accent-[var(--gold)] w-4 h-4 cursor-pointer"
+                        />
+                        <div className="flex-grow min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="body-md text-[14px] font-semibold text-[var(--text-primary)]">
+                              {addr.name}
+                            </span>
+                            {addr.isDefaultShipping && (
+                              <span className="label-caps text-[9px] px-2 py-0.5 border border-[var(--gold)]/40 text-[var(--gold)] bg-[var(--gold)]/10 font-medium">
+                                Default
+                              </span>
+                            )}
+                            {addr.phone && (
+                              <span className="body-sm text-[12px] text-[var(--text-secondary)]">
+                                • {addr.phone}
+                              </span>
+                            )}
+                          </div>
+                          <p className="body-sm text-[13px] text-[var(--text-secondary)] leading-relaxed">
+                            {addr.line1}
+                            {addr.line2 ? `, ${addr.line2}` : ''}
+                          </p>
+                          <p className="body-sm text-[13px] text-[var(--text-secondary)]">
+                            {addr.city}, {addr.state} — {addr.postalCode}
+                          </p>
+                        </div>
+                      </label>
+                    );
+                  })}
+
+                  {/* Option to Deliver to a New Address */}
+                  <label
+                    onClick={handleSelectNewAddress}
+                    className={`group flex items-center gap-3.5 p-4 border transition-all cursor-pointer rounded-sm ${
+                      selectedAddressId === 'new'
+                        ? 'border-[var(--gold)] bg-[var(--gold)]/[0.04]'
+                        : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--gold)]/40'
                     }`}
                   >
-                    {addr.name} ({addr.city})
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setSelectedAddressId('new')}
-                  className={`px-3 py-1.5 label-caps text-[10px] uppercase tracking-wider rounded border transition-colors ${
-                    selectedAddressId === 'new'
-                      ? 'border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)] font-semibold'
-                      : 'border-[var(--border-color)] text-[var(--text-secondary)]'
-                  }`}
-                >
-                  + New Address
-                </button>
+                    <input
+                      type="radio"
+                      name="shipping_address"
+                      checked={selectedAddressId === 'new'}
+                      onChange={handleSelectNewAddress}
+                      className="accent-[var(--gold)] w-4 h-4 cursor-pointer"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Plus size={15} className="text-[var(--gold)]" />
+                      <span className="body-md text-[13px] font-medium text-[var(--text-primary)]">
+                        Deliver to a new address
+                      </span>
+                    </div>
+                  </label>
+                </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* First Name */}
-              <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Jane"
-                  required
-                  className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
-                />
-              </div>
-
-              {/* Last Name */}
-              <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Doe"
-                  required
-                  className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
-                />
-              </div>
-
-              {/* Address */}
-              <div className="flex flex-col md:col-span-2 border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="123 Atelier Way"
-                  required
-                  className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
-                />
-              </div>
-
-              {/* Apartment */}
-              <div className="flex flex-col md:col-span-2 border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                  Apartment, suite, etc. (optional)
-                </label>
-                <input
-                  type="text"
-                  value={apartment}
-                  onChange={(e) => setApartment(e.target.value)}
-                  placeholder="Apt 4B"
-                  className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
-                />
-              </div>
-
-              {/* City */}
-              <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                  City
-                </label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="New York"
-                  required
-                  className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
-                />
-              </div>
-
-              {/* State & ZIP */}
-              <div className="grid grid-cols-2 gap-6">
-                <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                  <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    value={stateVal}
-                    onChange={(e) => setStateVal(e.target.value)}
-                    placeholder="NY"
-                    required
-                    className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
-                  />
-                </div>
-
-                <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                  <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                    ZIP Code
-                  </label>
-                  <input
-                    type="text"
-                    value={zipCode}
-                    onChange={(e) => setZipCode(e.target.value)}
-                    placeholder="10001"
-                    required
-                    className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Step 2: Shipping Method */}
-          <section className="flex flex-col gap-6 border-t border-[var(--border-color)] pt-8">
-            <div className="flex items-center gap-3">
-              <span className="label-caps text-[11px] bg-[var(--bg-secondary)] px-2.5 py-1 text-[var(--gold)] font-bold border border-[var(--border-color)]">
-                02
-              </span>
-              <h2 className="label-caps tracking-widest text-[13px] uppercase text-[var(--text-primary)] font-semibold">
-                Shipping Method
-              </h2>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              {/* Standard */}
-              <label
-                onClick={() => setShippingMethod('standard')}
-                className={`flex items-center justify-between p-4 border transition-all cursor-pointer ${
-                  shippingMethod === 'standard'
-                    ? 'border-[var(--gold)] bg-[var(--bg-card)]'
-                    : 'border-[var(--border-color)] hover:border-[var(--text-secondary)]'
-                }`}
-              >
-                <div className="flex items-center gap-3.5">
-                  <input
-                    type="radio"
-                    name="shipping"
-                    checked={shippingMethod === 'standard'}
-                    onChange={() => setShippingMethod('standard')}
-                    className="accent-[var(--gold)] w-4 h-4 cursor-pointer"
-                  />
-                  <div>
-                    <span className="block body-md text-[14px] sm:text-[15px] text-[var(--text-primary)] font-medium">
-                      Standard Shipping
-                    </span>
-                    <span className="block body-sm text-[12px] sm:text-[13px] text-[var(--text-secondary)]">
-                      3-5 Business Days
-                    </span>
-                  </div>
-                </div>
-                <span className="label-caps text-[12px] font-bold text-[var(--text-primary)] uppercase">
-                  Free
-                </span>
-              </label>
-
-              {/* Express */}
-              <label
-                onClick={() => setShippingMethod('express')}
-                className={`flex items-center justify-between p-4 border transition-all cursor-pointer ${
-                  shippingMethod === 'express'
-                    ? 'border-[var(--gold)] bg-[var(--bg-card)]'
-                    : 'border-[var(--border-color)] hover:border-[var(--text-secondary)]'
-                }`}
-              >
-                <div className="flex items-center gap-3.5">
-                  <input
-                    type="radio"
-                    name="shipping"
-                    checked={shippingMethod === 'express'}
-                    onChange={() => setShippingMethod('express')}
-                    className="accent-[var(--gold)] w-4 h-4 cursor-pointer"
-                  />
-                  <div>
-                    <span className="block body-md text-[14px] sm:text-[15px] text-[var(--text-primary)] font-medium">
-                      Express Courier
-                    </span>
-                    <span className="block body-sm text-[12px] sm:text-[13px] text-[var(--text-secondary)]">
-                      1-2 Business Days
-                    </span>
-                  </div>
-                </div>
-                <span className="label-caps text-[12px] font-bold text-[var(--text-primary)] tabular-nums">
-                  {cartItems ? '₹1,500' : '$25.00'}
-                </span>
-              </label>
-            </div>
-          </section>
-
-          {/* Step 3: Payment */}
-          <section className="flex flex-col gap-6 border-t border-[var(--border-color)] pt-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="label-caps text-[11px] bg-[var(--bg-secondary)] px-2.5 py-1 text-[var(--gold)] font-bold border border-[var(--border-color)]">
-                  03
-                </span>
-                <h2 className="label-caps tracking-widest text-[13px] uppercase text-[var(--text-primary)] font-semibold">
-                  Payment Method
-                </h2>
-              </div>
-              <span className="label-caps text-[10px] text-[var(--gold)] tracking-wider uppercase border border-[var(--gold)]/30 px-2 py-0.5">
-                PhonePe Gateway Ready
-              </span>
-            </div>
-
-            {/* Payment Method Switcher Tabs */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setPaymentMode('card')}
-                className={`flex items-center justify-center gap-2 p-3.5 border text-[12px] label-caps tracking-wider uppercase transition-all cursor-pointer ${
-                  paymentMode === 'card'
-                    ? 'border-[var(--gold)] bg-[var(--bg-secondary)] text-[var(--gold)] font-bold shadow-sm'
-                    : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--text-secondary)]'
-                }`}
-              >
-                <CreditCard size={16} />
-                <span>Credit / Debit Card</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMode('upi')}
-                className={`flex items-center justify-center gap-2 p-3.5 border text-[12px] label-caps tracking-wider uppercase transition-all cursor-pointer ${
-                  paymentMode === 'upi'
-                    ? 'border-[var(--gold)] bg-[var(--bg-secondary)] text-[var(--gold)] font-bold shadow-sm'
-                    : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--text-secondary)]'
-                }`}
-              >
-                <span className="font-bold text-[13px]">UPI</span>
-                <span>Instant QR / VPA</span>
-              </button>
-            </div>
-
-            {/* Card Form */}
-            {paymentMode === 'card' && (
-              <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-                {/* Card Number */}
-                <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                  <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                    Card Number
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={cardNumber}
-                      onChange={handleCardNumberChange}
-                      placeholder="0000 0000 0000 0000"
-                      required={paymentMode === 'card'}
-                      className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40 pr-8"
-                    />
-                    <CreditCard size={18} className="absolute right-0 text-[var(--text-secondary)]" />
-                  </div>
-                </div>
-
-                {/* Name on Card */}
-                <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
-                  <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                    Name on Card
-                  </label>
-                  <input
-                    type="text"
-                    value={cardName}
-                    onChange={(e) => setCardName(e.target.value)}
-                    placeholder="Eleanor Vance"
-                    required={paymentMode === 'card'}
-                    className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
-                  />
-                </div>
-
-                {/* Expiry & CVV */}
-                <div className="grid grid-cols-2 gap-6">
+            {/* Input Form for New Address or when no saved addresses exist */}
+            {(selectedAddressId === 'new' || savedAddresses.length === 0) && (
+              <div className="flex flex-col gap-6 pt-2 animate-in fade-in duration-200">
+                {savedAddresses.length > 0 && (
+                  <span className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase font-medium">
+                    New Address Details
+                  </span>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* First Name */}
                   <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
                     <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                      Expiration (MM/YY)
+                      First Name
                     </label>
                     <input
                       type="text"
-                      value={expiry}
-                      onChange={handleExpiryChange}
-                      placeholder="12/26"
-                      required={paymentMode === 'card'}
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="First name"
+                      required={selectedAddressId === 'new'}
                       className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
                     />
                   </div>
 
+                  {/* Last Name */}
                   <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
                     <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
-                      Security Code
+                      Last Name
                     </label>
                     <input
-                      type="password"
-                      value={cvv}
-                      onChange={handleCvvChange}
-                      placeholder="123"
-                      required={paymentMode === 'card'}
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Last name"
+                      required={selectedAddressId === 'new'}
                       className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
                     />
+                  </div>
+
+                  {/* Phone */}
+                  <div className="flex flex-col md:col-span-2 border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
+                    <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
+                      Contact Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      required={selectedAddressId === 'new'}
+                      className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
+                    />
+                  </div>
+
+                  {/* Address Line 1 */}
+                  <div className="flex flex-col md:col-span-2 border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
+                    <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="House / Flat no., Building, Street"
+                      required={selectedAddressId === 'new'}
+                      className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
+                    />
+                  </div>
+
+                  {/* Apartment */}
+                  <div className="flex flex-col md:col-span-2 border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
+                    <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
+                      Apartment, suite, unit (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={apartment}
+                      onChange={(e) => setApartment(e.target.value)}
+                      placeholder="Apt, Suite, Floor, etc."
+                      className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
+                    />
+                  </div>
+
+                  {/* City */}
+                  <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
+                    <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="City"
+                      required={selectedAddressId === 'new'}
+                      className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
+                    />
+                  </div>
+
+                  {/* State & ZIP */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
+                      <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
+                        State
+                      </label>
+                      <input
+                        type="text"
+                        value={stateVal}
+                        onChange={(e) => setStateVal(e.target.value)}
+                        placeholder="State"
+                        required={selectedAddressId === 'new'}
+                        className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
+                      />
+                    </div>
+
+                    <div className="flex flex-col border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1">
+                      <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1">
+                        PIN Code
+                      </label>
+                      <input
+                        type="text"
+                        value={zipCode}
+                        onChange={(e) => setZipCode(e.target.value)}
+                        placeholder="PIN Code"
+                        required={selectedAddressId === 'new'}
+                        className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             )}
-
-            {/* UPI Form */}
-            {paymentMode === 'upi' && (
-              <div className="flex flex-col gap-5 animate-in fade-in duration-300 bg-[var(--bg-secondary)]/40 border border-[var(--border-color)] p-5 rounded">
-                <div>
-                  <label className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)] uppercase mb-1.5 block font-semibold">
-                    UPI Virtual Payment Address (VPA)
-                  </label>
-                  <input
-                    type="text"
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                    placeholder="username@okhdfcbank / mobile@upi"
-                    required={paymentMode === 'upi'}
-                    className="w-full bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--gold)] p-3 text-[14px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40 rounded"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 text-[12px] text-[var(--text-secondary)] pt-1">
-                  <span className="w-2 h-2 rounded-full bg-[var(--success)]" />
-                  <span>Supports PhonePe, Google Pay, Paytm, BHIM, and all major Indian UPI apps.</span>
-                </div>
-              </div>
-            )}
           </section>
-
-          {/* Trust Guarantee Note */}
-          <div className="flex items-center gap-3 pt-2 text-[12px] text-[var(--text-secondary)]">
-            <ShieldCheck size={16} className="text-[var(--gold)] shrink-0" />
-            <span>256-bit encrypted secure checkout. Authenticity strictly guaranteed.</span>
-          </div>
 
           {/* Desktop Purchase Action */}
           <div className="hidden md:block pt-4">
@@ -738,10 +667,6 @@ export const CheckoutPage: React.FC = () => {
                 <span className="tabular-nums font-medium text-[var(--text-primary)]">
                   {shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
                 </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Estimated Taxes</span>
-                <span className="tabular-nums font-medium text-[var(--text-primary)]">{formatPrice(taxes)}</span>
               </div>
             </div>
 

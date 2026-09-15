@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Grid,
   List,
@@ -60,6 +60,8 @@ const DEFAULT_COLORS = [
 export function InventoryView() {
   const [inventory, setInventory] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [deletePieceTarget, setDeletePieceTarget] = useState(null);
+  const [isDeletingPiece, setIsDeletingPiece] = useState(false);
 
   // Masters
   const [masterSizes, setMasterSizes] = useState(() => {
@@ -107,17 +109,10 @@ export function InventoryView() {
     material: '',
     price: '',
     collectionTag: '',
-    sizes: ['38', '40', '42', 'Free Size'],
-    colors: [
-      { name: 'Midnight Noir', hex: '#0A0A0A', images: [] }
-    ],
+    sizes: [],
+    colors: [],
     // Map of `${colorName}___${size}` -> stock number
-    variantStocks: {
-      'Midnight Noir___38': 5,
-      'Midnight Noir___40': 5,
-      'Midnight Noir___42': 5,
-      'Midnight Noir___Free Size': 5
-    }
+    variantStocks: {}
   });
 
   const [bulkStockVal, setBulkStockVal] = useState(10);
@@ -150,9 +145,6 @@ export function InventoryView() {
 
       if (categoriesData && Array.isArray(categoriesData)) {
         setCategories(categoriesData);
-        if (categoriesData.length > 0 && !newPiece.collectionTag) {
-          setNewPiece((prev) => ({ ...prev, collectionTag: categoriesData[0].name }));
-        }
       } else {
         setCategories([]);
       }
@@ -285,8 +277,11 @@ export function InventoryView() {
     }
   };
 
-  const handleDeletePiece = async (pieceId) => {
-    const pieceToDelete = inventory.find((p) => p.id === pieceId);
+  const confirmDeletePiece = async () => {
+    if (!deletePieceTarget) return;
+    setIsDeletingPiece(true);
+    const pieceId = deletePieceTarget.id;
+    const title = deletePieceTarget.title;
     try {
       await deleteProduct(pieceId);
       setInventory((prev) => prev.filter((item) => item.id !== pieceId));
@@ -294,11 +289,19 @@ export function InventoryView() {
         setSelectedPiece(null);
         setSubView('list');
       }
-      toast.success(`Removed ${pieceToDelete?.title || 'piece'} from inventory`);
+      toast.success(`Removed ${title || 'piece'} from inventory`);
+      setDeletePieceTarget(null);
     } catch (err) {
       console.error('Delete product error:', err);
       toast.error(err.message || 'Failed to remove piece');
+    } finally {
+      setIsDeletingPiece(false);
     }
+  };
+
+  const handleDeletePiece = (pieceId) => {
+    const pieceToDelete = inventory.find((p) => p.id === pieceId);
+    setDeletePieceTarget({ id: pieceId, title: pieceToDelete?.title || 'piece' });
   };
 
   const handleAddCategory = async (e) => {
@@ -426,10 +429,6 @@ export function InventoryView() {
   const handleToggleColor = (colorObj) => {
     const exists = newPiece.colors.some((c) => c.name === colorObj.name);
     if (exists) {
-      if (newPiece.colors.length === 1) {
-        toast.error('At least one color must be selected for the piece.');
-        return;
-      }
       setNewPiece({
         ...newPiece,
         colors: newPiece.colors.filter((c) => c.name !== colorObj.name)
@@ -451,10 +450,6 @@ export function InventoryView() {
   // Toggle Size Selection on Piece Form
   const handleToggleSize = (sz) => {
     const isSelected = newPiece.sizes.includes(sz);
-    if (isSelected && newPiece.sizes.length === 1) {
-      toast.error('At least one size must be selected');
-      return;
-    }
     const nextSizes = isSelected ? newPiece.sizes.filter((s) => s !== sz) : [...newPiece.sizes, sz];
     const nextStocks = { ...newPiece.variantStocks };
     if (!isSelected) {
@@ -508,6 +503,10 @@ export function InventoryView() {
       toast.error('Please enter piece title and base price');
       return;
     }
+    if (!newPiece.collectionTag) {
+      toast.error('Please select a collection (category) for the piece');
+      return;
+    }
     if (newPiece.colors.length === 0) {
       toast.error('Please select at least one color for the piece');
       return;
@@ -523,12 +522,13 @@ export function InventoryView() {
 
       // Generate all (Color x Size) variants with exact individual stock
       const variantsPayload = [];
+      const skuBase = newPiece.sku?.trim() || `SKU-${newPiece.title.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'IH'}`;
       newPiece.colors.forEach((color) => {
         newPiece.sizes.forEach((sz) => {
           const key = `${color.name}___${sz}`;
           const stockForVariant = Math.max(0, parseInt(newPiece.variantStocks[key], 10) || 0);
           variantsPayload.push({
-            sku: `${newPiece.sku}-${color.name.slice(0, 3).toUpperCase()}-${sz.replace(/\s+/g, '')}`,
+            sku: `${skuBase}-${color.name.slice(0, 3).toUpperCase()}-${sz.replace(/\s+/g, '')}`,
             size: sz,
             color: color.name,
             price: priceVal,
@@ -564,7 +564,9 @@ export function InventoryView() {
         slug: newPiece.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
         description: newPiece.material || 'Handcrafted Heritage Masterpiece',
         basePrice: priceVal,
+        categoryId: selectedCat?.id,
         categorySlug: selectedCat?.slug || 'heritage-saree',
+        categoryName: selectedCat?.name,
         images: imagesPayload,
         variants: variantsPayload,
         metadata: metadataPayload
@@ -577,15 +579,10 @@ export function InventoryView() {
         sku: `SKU-IH-${Math.floor(1000 + Math.random() * 9000)}`,
         material: '',
         price: '',
-        collectionTag: categories[0]?.name || '',
-        sizes: ['38', '40', '42', 'Free Size'],
-        colors: [{ name: 'Midnight Noir', hex: '#0A0A0A', images: [] }],
-        variantStocks: {
-          'Midnight Noir___38': 5,
-          'Midnight Noir___40': 5,
-          'Midnight Noir___42': 5,
-          'Midnight Noir___Free Size': 5
-        }
+        collectionTag: '',
+        sizes: [],
+        colors: [],
+        variantStocks: {}
       });
       loadData();
     } catch (err) {
@@ -629,9 +626,6 @@ export function InventoryView() {
               <ArrowLeft size={18} />
             </button>
             <div>
-              <span className="label-caps text-[10px] sm:text-[11px] text-[var(--gold)] tracking-widest uppercase">
-                ATELIER CONFIGURATION
-              </span>
               <h1 className="font-garamond text-[26px] sm:text-[34px] text-[var(--text-primary)] font-normal tracking-tight">
                 Color & Size Master
               </h1>
@@ -818,9 +812,6 @@ export function InventoryView() {
               <ArrowLeft size={18} />
             </button>
             <div>
-              <span className="label-caps text-[10px] sm:text-[11px] text-[var(--gold)] tracking-widest uppercase">
-                ATELIER CATALOGUE
-              </span>
               <h1 className="font-garamond text-[26px] sm:text-[34px] text-[var(--text-primary)] font-normal tracking-tight">
                 Add New Heritage Piece
               </h1>
@@ -877,7 +868,7 @@ export function InventoryView() {
 
                 <div>
                   <label className="block label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold mb-1.5">
-                    Fabric / Material Composition
+                    Material
                   </label>
                   <input
                     type="text"
@@ -910,7 +901,7 @@ export function InventoryView() {
                 <div className="relative">
                   <div className="flex justify-between items-center mb-1.5">
                     <label className="label-caps text-[11px] uppercase text-[var(--text-secondary)] font-semibold">
-                      Collection (Category) *
+                      Collection *
                     </label>
                     <button
                       type="button"
@@ -1051,49 +1042,56 @@ export function InventoryView() {
 
               {/* Per-Color Image Upload Panels */}
               <div className="space-y-4 pt-2">
-                {newPiece.colors.map((color, colorIdx) => (
-                  <div key={color.name} className="border border-[var(--border-color)] bg-[var(--bg-secondary)]/30 p-4 rounded space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: color.hex }} />
-                        <span className="text-[13px] font-semibold text-[var(--text-primary)]">{color.name}</span>
-                      </div>
-                      <span className="text-[11px] text-[var(--text-secondary)] font-mono">{color.images.length}/3 Photos</span>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      {color.images.map((imgUrl, imgIdx) => (
-                        <div key={imgIdx} className="relative aspect-[3/4] bg-[var(--bg-secondary)] border border-[var(--border-color)] group overflow-hidden">
-                          <img src={imgUrl} alt={`${color.name} view ${imgIdx + 1}`} className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveColorImage(colorIdx, imgIdx)}
-                            className="absolute top-1 right-1 p-1 bg-black/80 text-white hover:text-rose-400 rounded-full transition-colors opacity-90 hover:opacity-100 cursor-pointer"
-                            title="Remove image"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
-                      ))}
-
-                      {color.images.length < 3 && (
-                        <label className="relative aspect-[3/4] border-2 border-dashed border-[var(--border-color)] hover:border-[var(--gold)] bg-[var(--bg-secondary)]/40 flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center p-2 transition-colors">
-                          <Upload size={16} className="text-[var(--text-secondary)]" />
-                          <span className="label-caps text-[9px] uppercase tracking-wider text-[var(--text-secondary)]">Upload</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleColorImageUpload(colorIdx, file);
-                            }}
-                            className="hidden"
-                          />
-                        </label>
-                      )}
-                    </div>
+                {newPiece.colors.length === 0 ? (
+                  <div className="border border-dashed border-[var(--border-color)] p-6 text-center rounded bg-[var(--bg-secondary)]/20 space-y-1">
+                    <p className="text-[13px] text-[var(--text-secondary)]">No color variants active</p>
+                    <p className="text-[11px] text-[var(--gold)]">Select one or more color swatches above to enable photo uploads.</p>
                   </div>
-                ))}
+                ) : (
+                  newPiece.colors.map((color, colorIdx) => (
+                    <div key={color.name} className="border border-[var(--border-color)] bg-[var(--bg-secondary)]/30 p-4 rounded space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: color.hex }} />
+                          <span className="text-[13px] font-semibold text-[var(--text-primary)]">{color.name}</span>
+                        </div>
+                        <span className="text-[11px] text-[var(--text-secondary)] font-mono">{color.images.length}/3 Photos</span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {color.images.map((imgUrl, imgIdx) => (
+                          <div key={imgIdx} className="relative aspect-[3/4] bg-[var(--bg-secondary)] border border-[var(--border-color)] group overflow-hidden">
+                            <img src={imgUrl} alt={`${color.name} view ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveColorImage(colorIdx, imgIdx)}
+                              className="absolute top-1 right-1 p-1 bg-black/80 text-white hover:text-rose-400 rounded-full transition-colors opacity-90 hover:opacity-100 cursor-pointer"
+                              title="Remove image"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+
+                        {color.images.length < 3 && (
+                          <label className="relative aspect-[3/4] border-2 border-dashed border-[var(--border-color)] hover:border-[var(--gold)] bg-[var(--bg-secondary)]/40 flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center p-2 transition-colors">
+                            <Upload size={16} className="text-[var(--text-secondary)]" />
+                            <span className="label-caps text-[9px] uppercase tracking-wider text-[var(--text-secondary)]">Upload</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleColorImageUpload(colorIdx, file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -1105,9 +1103,6 @@ export function InventoryView() {
                 <h2 className="label-caps text-[13px] font-bold text-[var(--gold)] tracking-widest uppercase">
                   3. Color & Size Stock Matrix (Flexible Variant Quantities)
                 </h2>
-                <p className="text-[12px] text-[var(--text-secondary)] mt-0.5">
-                  Set independent initial stock units for each specific color and size combination.
-                </p>
               </div>
 
               {/* Quick Bulk Stock Fill Tool */}
@@ -1131,79 +1126,88 @@ export function InventoryView() {
             </div>
 
             {/* Matrix Table */}
-            <div className="overflow-x-auto border border-[var(--border-color)] bg-[var(--bg-secondary)]/10">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="bg-[var(--bg-secondary)]/50 border-b border-[var(--border-color)] text-[11px] label-caps uppercase tracking-wider text-[var(--text-secondary)]">
-                    <th className="p-3.5 min-w-[160px]">Color Variant</th>
-                    {newPiece.sizes.map((sz) => (
-                      <th key={sz} className="p-3.5 text-center min-w-[90px]">
-                        Size {sz}
-                      </th>
-                    ))}
-                    <th className="p-3.5 text-right min-w-[100px]">Color Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border-color)] text-[13px]">
-                  {newPiece.colors.map((color) => {
-                    const colorTotal = newPiece.sizes.reduce((sum, sz) => {
-                      const key = `${color.name}___${sz}`;
-                      return sum + (newPiece.variantStocks[key] ?? 5);
-                    }, 0);
-
-                    return (
-                      <tr key={color.name} className="hover:bg-[var(--bg-secondary)]/30 transition-colors">
-                        <td className="p-3.5 flex items-center gap-2.5 font-medium text-[var(--text-primary)]">
-                          <span className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0" style={{ backgroundColor: color.hex }} />
-                          <span>{color.name}</span>
-                        </td>
-
-                        {newPiece.sizes.map((sz) => {
-                          const key = `${color.name}___${sz}`;
-                          const stockCount = newPiece.variantStocks[key] ?? 5;
-
-                          return (
-                            <td key={sz} className="p-2.5 text-center">
-                              <input
-                                type="number"
-                                min="0"
-                                required
-                                value={stockCount}
-                                onChange={(e) => handleMatrixStockChange(color.name, sz, e.target.value)}
-                                className="w-20 mx-auto bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--gold)] p-2 text-center text-[14px] font-bold text-[var(--text-primary)] outline-none rounded transition-all shadow-inner"
-                              />
-                            </td>
-                          );
-                        })}
-
-                        <td className="p-3.5 text-right font-bold text-[var(--gold)] tabular-nums">
-                          {colorTotal} units
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot>
-                  <tr className="bg-[var(--bg-secondary)]/70 border-t border-[var(--border-color)] text-[13px] font-bold">
-                    <td className="p-3.5 text-[var(--text-primary)]">Grand Total (All Variants)</td>
-                    {newPiece.sizes.map((sz) => {
-                      const sizeTotal = newPiece.colors.reduce((sum, color) => {
+            {newPiece.colors.length === 0 || newPiece.sizes.length === 0 ? (
+              <div className="border border-dashed border-[var(--border-color)] p-8 text-center rounded bg-[var(--bg-secondary)]/20 space-y-1.5">
+                <p className="text-[14px] font-medium text-[var(--text-primary)]">Variant Stock Matrix Pending</p>
+                <p className="text-[12px] text-[var(--text-secondary)]">
+                  Please select at least one available size and one color variant above to configure variant stock quantities.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto border border-[var(--border-color)] bg-[var(--bg-secondary)]/10">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="bg-[var(--bg-secondary)]/50 border-b border-[var(--border-color)] text-[11px] label-caps uppercase tracking-wider text-[var(--text-secondary)]">
+                      <th className="p-3.5 min-w-[160px]">Color Variant</th>
+                      {newPiece.sizes.map((sz) => (
+                        <th key={sz} className="p-3.5 text-center min-w-[90px]">
+                          Size {sz}
+                        </th>
+                      ))}
+                      <th className="p-3.5 text-right min-w-[100px]">Color Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border-color)] text-[13px]">
+                    {newPiece.colors.map((color) => {
+                      const colorTotal = newPiece.sizes.reduce((sum, sz) => {
                         const key = `${color.name}___${sz}`;
                         return sum + (newPiece.variantStocks[key] ?? 5);
                       }, 0);
+
                       return (
-                        <td key={sz} className="p-3.5 text-center text-[var(--text-primary)] tabular-nums">
-                          {sizeTotal}
-                        </td>
+                        <tr key={color.name} className="hover:bg-[var(--bg-secondary)]/30 transition-colors">
+                          <td className="p-3.5 flex items-center gap-2.5 font-medium text-[var(--text-primary)]">
+                            <span className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0" style={{ backgroundColor: color.hex }} />
+                            <span>{color.name}</span>
+                          </td>
+
+                          {newPiece.sizes.map((sz) => {
+                            const key = `${color.name}___${sz}`;
+                            const stockCount = newPiece.variantStocks[key] ?? 5;
+
+                            return (
+                              <td key={sz} className="p-2.5 text-center">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  required
+                                  value={stockCount}
+                                  onChange={(e) => handleMatrixStockChange(color.name, sz, e.target.value)}
+                                  className="w-20 mx-auto bg-[var(--bg-card)] border border-[var(--border-color)] focus:border-[var(--gold)] p-2 text-center text-[14px] font-bold text-[var(--text-primary)] outline-none rounded transition-all shadow-inner"
+                                />
+                              </td>
+                            );
+                          })}
+
+                          <td className="p-3.5 text-right font-bold text-[var(--gold)] tabular-nums">
+                            {colorTotal} units
+                          </td>
+                        </tr>
                       );
                     })}
-                    <td className="p-3.5 text-right text-[15px] text-[var(--gold)] tabular-nums">
-                      {totalCalculatedInitialStock} units
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-[var(--bg-secondary)]/70 border-t border-[var(--border-color)] text-[13px] font-bold">
+                      <td className="p-3.5 text-[var(--text-primary)]">Grand Total (All Variants)</td>
+                      {newPiece.sizes.map((sz) => {
+                        const sizeTotal = newPiece.colors.reduce((sum, color) => {
+                          const key = `${color.name}___${sz}`;
+                          return sum + (newPiece.variantStocks[key] ?? 5);
+                        }, 0);
+                        return (
+                          <td key={sz} className="p-3.5 text-center text-[var(--text-primary)] tabular-nums">
+                            {sizeTotal}
+                          </td>
+                        );
+                      })}
+                      <td className="p-3.5 text-right text-[15px] text-[var(--gold)] tabular-nums">
+                        {totalCalculatedInitialStock} units
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
 
             {/* Bottom Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[var(--border-color)]">
@@ -1253,9 +1257,6 @@ export function InventoryView() {
               <ArrowLeft size={18} />
             </button>
             <div>
-              <span className="label-caps text-[10px] sm:text-[11px] text-[var(--gold)] tracking-widest uppercase">
-                CURATION TAXONOMY
-              </span>
               <h1 className="font-garamond text-[26px] sm:text-[34px] text-[var(--text-primary)] font-normal tracking-tight">
                 Collection Master
               </h1>
@@ -1380,14 +1381,13 @@ export function InventoryView() {
               <ArrowLeft size={18} />
             </button>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="label-caps text-[10px] sm:text-[11px] text-[var(--gold)] tracking-widest uppercase">
-                  PIECE SPECIFICATIONS & VAULT MATRIX
-                </span>
-                <span className="label-caps text-[9.5px] px-2 py-0.5 bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/30">
-                  {selectedPiece.collectionTag}
-                </span>
-              </div>
+              {selectedPiece.collectionTag && (
+                <div className="mb-1">
+                  <span className="label-caps text-[9.5px] px-2 py-0.5 bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/30">
+                    {selectedPiece.collectionTag}
+                  </span>
+                </div>
+              )}
               <h1 className="font-garamond text-[26px] sm:text-[34px] text-[var(--text-primary)] font-normal tracking-tight">
                 {selectedPiece.title}
               </h1>
@@ -1603,13 +1603,9 @@ export function InventoryView() {
       {/* Header & Page Action Buttons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-5 border-b border-[var(--border-color)] pb-4">
         <div>
-          <span className="label-caps text-[10px] sm:text-[11px] text-[var(--gold)] tracking-widest uppercase">
-            ATELIER CATALOGUE & STOCK
-          </span>
           <h1 className="font-garamond text-[28px] sm:text-[34px] md:text-[44px] text-[var(--text-primary)] font-normal tracking-tight leading-tight m-0">
             Inventory
           </h1>
-
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
@@ -1935,6 +1931,53 @@ export function InventoryView() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Delete Piece Luxury Modal */}
+      {deletePieceTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div
+            className="bg-[var(--bg-card)] border border-[var(--border-color)] max-w-md w-full shadow-2xl p-6 sm:p-7 space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shrink-0">
+                <Trash2 size={18} />
+              </div>
+              <div className="space-y-1">
+                <span className="label-caps text-[10px] text-rose-400 uppercase tracking-widest font-semibold">
+                  Remove Piece from Atelier
+                </span>
+                <h3 className="font-garamond text-[22px] font-normal text-[var(--text-primary)] leading-tight m-0">
+                  Delete Piece?
+                </h3>
+                <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed pt-1">
+                  Are you sure you want to remove{' '}
+                  <strong className="text-[var(--text-primary)]">{deletePieceTarget.title}</strong> from inventory? Patrons will no longer be able to discover or order this piece.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--border-color)]">
+              <button
+                type="button"
+                onClick={() => setDeletePieceTarget(null)}
+                disabled={isDeletingPiece}
+                className="px-4 py-2.5 border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--gold)] label-caps text-[11px] uppercase tracking-wider cursor-pointer"
+              >
+                Keep Piece
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeletePiece}
+                disabled={isDeletingPiece}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white label-caps text-[11px] uppercase tracking-wider cursor-pointer shadow-sm disabled:opacity-50 font-semibold"
+              >
+                {isDeletingPiece ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

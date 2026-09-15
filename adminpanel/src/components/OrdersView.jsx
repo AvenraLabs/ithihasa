@@ -15,7 +15,7 @@ import {
   Filter
 } from 'lucide-react';
 import { fetchOrders } from '../api/orders.js';
-
+import { CustomSelect } from './CustomSelect.jsx';
 import { toast } from 'sonner';
 
 export function OrdersView({ onSelectOrder }) {
@@ -37,19 +37,37 @@ export function OrdersView({ onSelectOrder }) {
           search: searchQuery || undefined,
         });
         if (data && Array.isArray(data)) {
-          const formatted = data.map((o) => ({
-            id: o.id,
-            orderNumber: o.order_number || `#ITH-${o.id.slice(0, 4)}`,
-            customerName: o.user?.name || 'Patron',
-            customerEmail: o.user?.email || 'patron@example.com',
-            date: new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            status: (o.status || 'processing').toLowerCase(),
-            total: Number(o.total_amount || 0),
-            itemsCount: o.items?.length || 1,
-            items: o.items || [],
-            shippingAddress: 'Mayfair, London',
-            paymentMethod: o.payment_method || 'Online Payment',
-          }));
+          const formatted = data.map((o) => {
+            const addr =
+              typeof o.shipping_address === 'string'
+                ? (() => {
+                    try {
+                      return JSON.parse(o.shipping_address);
+                    } catch {
+                      return {};
+                    }
+                  })()
+                : o.shipping_address || {};
+
+            return {
+              id: o.id,
+              orderNumber: o.order_number || `#ITH-${o.id.slice(0, 4)}`,
+              customerName: o.user?.name || addr.name || 'Atelier Patron',
+              customerEmail: o.user?.email || addr.email || '—',
+              date: new Date(o.created_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              }),
+              status: (o.status || 'processing').toLowerCase(),
+              total: Number(o.total_amount || 0),
+              itemsCount: o.items?.length || 1,
+              items: o.items || [],
+              shippingAddress:
+                [addr.city, addr.state].filter(Boolean).join(', ') || addr.country || 'India',
+              paymentMethod: o.payment_method || 'PhonePe Verified',
+            };
+          });
           setOrders(formatted);
         } else {
           setOrders([]);
@@ -141,20 +159,20 @@ export function OrdersView({ onSelectOrder }) {
             <label className="block label-caps text-[10px] uppercase text-[var(--text-secondary)] mb-1">
               STATUS
             </label>
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="appearance-none bg-transparent border-b border-[var(--border-color)] focus:border-[var(--gold)] text-[var(--text-primary)] font-manrope text-[14px] py-1.5 pr-8 pl-0 outline-none w-full sm:w-44 transition-colors cursor-pointer rounded-none"
-              >
-                <option value="all" className="bg-[var(--bg-card)] text-[var(--text-primary)]">All Statuses</option>
-                <option value="processing" className="bg-[var(--bg-card)] text-[var(--text-primary)]">Processing</option>
-                <option value="shipped" className="bg-[var(--bg-card)] text-[var(--text-primary)]">Shipped</option>
-                <option value="delivered" className="bg-[var(--bg-card)] text-[var(--text-primary)]">Delivered</option>
-                <option value="cancelled" className="bg-[var(--bg-card)] text-[var(--text-primary)]">Cancelled</option>
-              </select>
-              <ChevronDown size={15} className="absolute right-0 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none" />
-            </div>
+            <CustomSelect
+              variant="underline"
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val)}
+              options={[
+                { value: 'all', label: 'All Statuses' },
+                { value: 'processing', label: 'Processing' },
+                { value: 'shipped', label: 'Shipped' },
+                { value: 'delivered', label: 'Delivered' },
+                { value: 'cancelled', label: 'Cancelled' },
+              ]}
+              className="w-full sm:w-44"
+              buttonClassName="w-full"
+            />
           </div>
 
           {/* Date Range */}

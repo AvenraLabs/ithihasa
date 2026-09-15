@@ -18,18 +18,210 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface ShopProductCardProps {
+  product: Product;
+  isWishlisted: boolean;
+  onToggleWishlist: (payload: {
+    productId: string;
+    variantId?: string;
+    product: any;
+    selectedColor?: string;
+    selectedSize?: string;
+    variant?: any;
+  }) => void;
+  onOpenQuickSelect: (product: Product, initialColor?: string) => void;
+  formatPrice: (amount: number) => string;
+}
+
+const ShopProductCard: React.FC<ShopProductCardProps> = ({
+  product,
+  isWishlisted,
+  onToggleWishlist,
+  onOpenQuickSelect,
+  formatPrice,
+}) => {
+  const colorSwatches = product.metadata?.colorSwatches || [];
+  const variantColors = Array.from(
+    new Set((product.variants || []).map((v) => v.color).filter(Boolean))
+  ) as string[];
+
+  const availableColors = colorSwatches.length > 0
+    ? colorSwatches
+    : variantColors.map((c) => ({
+        name: c,
+        hex: c.toLowerCase().includes('gold') ? '#C9A24B'
+           : c.toLowerCase().includes('noir') || c.toLowerCase().includes('black') ? '#0A0A0A'
+           : c.toLowerCase().includes('crimson') || c.toLowerCase().includes('red') ? '#7A1C22'
+           : c.toLowerCase().includes('ivory') || c.toLowerCase().includes('white') ? '#F4EFE6'
+           : c.toLowerCase().includes('emerald') || c.toLowerCase().includes('green') ? '#1B4D3E'
+           : c.toLowerCase().includes('sapphire') || c.toLowerCase().includes('blue') ? '#1A2A44'
+           : '#4A3E3D',
+        images: []
+      }));
+
+  const [selectedColor, setSelectedColor] = useState<string | null>(availableColors[0]?.name || null);
+
+  const activeColorObj = availableColors.find((c) => c.name === selectedColor);
+  const colorImg = activeColorObj?.images?.[0] || product.images?.find((img) => img.altText === selectedColor)?.url;
+  const primaryImage = colorImg || product.images?.find((img) => img.isPrimary)?.url || product.images?.[0]?.url || '';
+  const secondaryImage = product.images?.find((img) => !img.isPrimary && img.url !== primaryImage)?.url || primaryImage;
+
+  // Product is out of stock if all variants have 0 available stock (and inventory data is present)
+  const isOutOfStock = (product.variants || []).length > 0 &&
+    (product.variants || []).every((v) => v.availableStock === 0);
+
+  return (
+    <article className="group cursor-pointer flex flex-col min-w-0">
+      <div className="relative aspect-[3/4] mb-2.5 overflow-hidden bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+        <Link to={`/products/${product.slug}`} className="block w-full h-full">
+          <img
+            src={primaryImage}
+            alt={product.name}
+            className="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0 absolute inset-0 z-10 img-hover-fade"
+            loading="lazy"
+          />
+          <img
+            src={secondaryImage}
+            alt={`${product.name} craftsmanship`}
+            className="w-full h-full object-cover z-0 scale-100 group-hover:scale-105 transition-transform duration-700 absolute inset-0"
+            loading="lazy"
+          />
+        </Link>
+
+        {/* Wishlist Heart Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const activeColor = selectedColor || availableColors[0]?.name;
+            const matchingVariant = (product.variants || []).find((v) => !activeColor || v.color === activeColor) || product.variants?.[0];
+            onToggleWishlist({
+              productId: product.id,
+              variantId: matchingVariant?.id,
+              selectedColor: activeColor,
+              selectedSize: matchingVariant?.size,
+              variant: matchingVariant,
+              product: {
+                id: product.id,
+                name: product.name,
+                slug: product.slug,
+                basePrice: matchingVariant?.price || product.basePrice,
+                compareAtPrice: product.compareAtPrice,
+                image: primaryImage,
+                category: product.category,
+                selectedColor: activeColor,
+                selectedSize: matchingVariant?.size,
+              },
+            });
+          }}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          className="absolute top-2.5 right-2.5 z-20 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/80 backdrop-blur-sm rounded-full transition-all duration-300 text-white cursor-pointer active:scale-90"
+        >
+          <Heart
+            size={15}
+            strokeWidth={2}
+            className={isWishlisted ? "text-[var(--gold)] fill-current" : "text-white"}
+          />
+        </button>
+
+        {/* Quick Add Button -> Opens Size & Color Selection */}
+        {!isOutOfStock && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenQuickSelect(product, selectedColor || undefined);
+            }}
+            aria-label="Quick select size and add to bag"
+            className="absolute bottom-2.5 right-2.5 z-20 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-[var(--gold)] hover:text-[#0A0A0A] backdrop-blur-sm rounded-full transition-all duration-300 text-white opacity-0 group-hover:opacity-100 cursor-pointer active:scale-90"
+            title="Select Size & Add to Bag"
+          >
+            <ShoppingBag size={14} strokeWidth={2} />
+          </button>
+        )}
+
+        {/* Out of Stock Badge */}
+        {isOutOfStock && (
+          <div className="absolute bottom-0 left-0 right-0 bg-[var(--bg-primary)]/90 backdrop-blur-sm py-1.5 text-center border-t border-[var(--border-color)] z-20">
+            <span className="label-caps text-[9px] tracking-widest uppercase text-[var(--text-secondary)]">
+              Out of Stock
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Product Details */}
+      <div className="flex flex-col flex-1 justify-between">
+        <div>
+          {/* Available Colors in Circles */}
+          {availableColors.length > 0 && (
+            <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+              {availableColors.map((color) => {
+                const isColorActive = (selectedColor || availableColors[0]?.name) === color.name;
+                return (
+                  <button
+                    key={color.name}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedColor(color.name);
+                    }}
+                    aria-label={`Select ${color.name}`}
+                    className={`w-3.5 h-3.5 rounded-full border transition-all cursor-pointer ${
+                      isColorActive
+                        ? 'border-[var(--gold)] ring-2 ring-[var(--gold)]/50 scale-110 shadow-sm'
+                        : 'border-white/30 hover:scale-110 opacity-75 hover:opacity-100'
+                    }`}
+                    style={{ backgroundColor: color.hex }}
+                    title={color.name}
+                  />
+                );
+              })}
+            </div>
+          )}
+
+          <h3 className="body-md text-[14px] text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors leading-snug line-clamp-1">
+            <Link to={`/products/${product.slug}`}>{product.name}</Link>
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-2 mt-1">
+          <span className="body-sm text-[13px] tabular-nums font-semibold text-[var(--text-primary)]">
+            {formatPrice(product.basePrice)}
+          </span>
+          {product.compareAtPrice && product.compareAtPrice > product.basePrice && (
+            <span className="body-sm text-[11px] tabular-nums text-[var(--text-secondary)] line-through">
+              {formatPrice(product.compareAtPrice)}
+            </span>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+};
+
 export const ShopPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
   const currentCategory = searchParams.get('category') || '';
-  const currentSort = (searchParams.get('sort') as any) || 'newest';
+  const currentSort = (searchParams.get('sort') as any) || 'price_asc';
   const currentSize = searchParams.get('size') || '';
   const currentColor = searchParams.get('color') || '';
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+
+  // Quick Select Size & Color state
+  const [quickSelectProduct, setQuickSelectProduct] = useState<Product | null>(null);
+  const [quickSelectedColor, setQuickSelectedColor] = useState<string | null>(null);
+  const [quickSelectedSize, setQuickSelectedSize] = useState<string | null>(null);
+  const [quickColorError, setQuickColorError] = useState(false);
+  const [quickSizeError, setQuickSizeError] = useState(false);
 
   // Draft filter state for drawer
   const [selectedCat, setSelectedCat] = useState<string>(currentCategory);
@@ -112,7 +304,7 @@ export const ShopPage: React.FC = () => {
     currentCategory,
     currentSize,
     currentColor,
-    currentSort && currentSort !== 'newest' ? currentSort : null,
+    currentSort && currentSort !== 'price_asc' ? currentSort : null,
   ].filter(Boolean);
   const activeFilterCount = activeFilters.length;
 
@@ -123,11 +315,28 @@ export const ShopPage: React.FC = () => {
   });
 
   const wishlistMutation = useMutation({
-    mutationFn: ({ productId, product }: { productId: string; product?: any }) =>
-      toggleWishlist(productId, undefined, product),
-    onSuccess: (res) => {
+    mutationFn: ({
+      productId,
+      variantId,
+      product,
+      selectedColor,
+      selectedSize,
+      variant,
+    }: {
+      productId: string;
+      variantId?: string;
+      product?: any;
+      selectedColor?: string;
+      selectedSize?: string;
+      variant?: any;
+    }) =>
+      toggleWishlist(productId, variantId, product, {
+        color: selectedColor,
+        size: selectedSize,
+        variant,
+      }),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-      toast.success(res.message || 'Saved to Wishlist');
     },
   });
 
@@ -162,7 +371,7 @@ export const ShopPage: React.FC = () => {
     setSelectedCat('');
     setSelectedSize('');
     setSelectedColor('');
-    setSelectedSort('newest');
+    setSelectedSort('price_asc');
     setSearchParams({});
     setIsFilterOpen(false);
     toast.success('All filters reset');
@@ -180,8 +389,81 @@ export const ShopPage: React.FC = () => {
     setIsSortOpen(false);
   };
 
+  const handleOpenQuickSelect = (product: Product, initialColor?: string) => {
+    setQuickSelectProduct(product);
+    setQuickSelectedColor(initialColor || null);
+    setQuickSelectedSize(null);
+    setQuickColorError(false);
+    setQuickSizeError(false);
+  };
+
+  const handleConfirmQuickAdd = () => {
+    if (!quickSelectProduct) return;
+
+    const colorSwatches = quickSelectProduct.metadata?.colorSwatches || [];
+    const variantColors = Array.from(
+      new Set((quickSelectProduct.variants || []).map((v) => v.color).filter(Boolean))
+    );
+    const hasColors = colorSwatches.length > 0 || variantColors.length > 0;
+
+    const availableSizes = Array.from(
+      new Set((quickSelectProduct.variants || []).map((v) => v.size).filter(Boolean))
+    );
+    const hasSizes = availableSizes.length > 0;
+
+    let hasError = false;
+    if (hasColors && !quickSelectedColor) {
+      setQuickColorError(true);
+      toast.error('Please select a color');
+      hasError = true;
+    }
+    if (hasSizes && !quickSelectedSize) {
+      setQuickSizeError(true);
+      toast.error('Please select a size');
+      hasError = true;
+    }
+    if (hasError) return;
+
+    const matchingVariant = (quickSelectProduct.variants || []).find(
+      (v) => (!quickSelectedColor || v.color === quickSelectedColor) && (!quickSelectedSize || v.size === quickSelectedSize)
+    ) || (quickSelectProduct.variants || []).find((v) => !quickSelectedSize || v.size === quickSelectedSize) || quickSelectProduct.variants?.[0];
+
+    if (matchingVariant) {
+      quickAddToCartMutation.mutate({ variantId: matchingVariant.id });
+      setQuickSelectProduct(null);
+    } else {
+      toast.error('This combination is currently unavailable');
+    }
+  };
+
+  const quickColors = quickSelectProduct
+    ? (quickSelectProduct.metadata?.colorSwatches && quickSelectProduct.metadata.colorSwatches.length > 0
+        ? quickSelectProduct.metadata.colorSwatches
+        : Array.from(new Set((quickSelectProduct.variants || []).map((v) => v.color).filter((c): c is string => Boolean(c)))).map((c) => ({
+            name: c,
+            hex: c.toLowerCase().includes('gold') ? '#C9A24B'
+               : c.toLowerCase().includes('noir') || c.toLowerCase().includes('black') ? '#0A0A0A'
+               : c.toLowerCase().includes('crimson') || c.toLowerCase().includes('red') ? '#7A1C22'
+               : c.toLowerCase().includes('ivory') || c.toLowerCase().includes('white') ? '#F4EFE6'
+               : c.toLowerCase().includes('emerald') || c.toLowerCase().includes('green') ? '#1B4D3E'
+               : c.toLowerCase().includes('sapphire') || c.toLowerCase().includes('blue') ? '#1A2A44'
+               : '#4A3E3D',
+            images: []
+          })))
+    : [];
+
+  const quickSizes = quickSelectProduct
+    ? Array.from(new Set((quickSelectProduct.variants || []).map((v) => v.size).filter((s): s is string => Boolean(s))))
+    : [];
+
+  const ITEMS_PER_PAGE = 12;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE) || 1;
+  const paginatedProducts = products.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   const getPageTitle = () => {
-    if (!currentCategory) return 'The Collection';
+    if (!currentCategory) return '';
     const match = categories.find((c) => c.slug === currentCategory);
     return match ? match.name : currentCategory.replace(/-/g, ' ');
   };
@@ -207,12 +489,14 @@ export const ShopPage: React.FC = () => {
               )}
             </nav>
 
-            <h1
-              className="text-[28px] md:text-[44px] leading-tight text-[var(--text-primary)] font-normal uppercase tracking-wide"
-              style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
-            >
-              {getPageTitle()}
-            </h1>
+            {getPageTitle() ? (
+              <h1
+                className="text-[28px] md:text-[44px] leading-tight text-[var(--text-primary)] font-normal uppercase tracking-wide"
+                style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+              >
+                {getPageTitle()}
+              </h1>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-3 sm:gap-4 border-t md:border-t-0 border-[var(--border-color)] pt-3 md:pt-0">
@@ -254,8 +538,6 @@ export const ShopPage: React.FC = () => {
                   />
                   <div className="absolute right-0 top-full mt-2 w-52 bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl z-40 py-2 rounded">
                     {[
-                      { label: 'Newest Arrivals', val: 'newest' },
-                      { label: 'Featured First', val: 'featured' },
                       { label: 'Price: Low to High', val: 'price_asc' },
                       { label: 'Price: High to Low', val: 'price_desc' },
                     ].map((item) => (
@@ -369,103 +651,204 @@ export const ShopPage: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-12">
-            {products.map((product) => {
-              const primaryImage = product.images.find((img) => img.isPrimary)?.url || product.images[0]?.url;
-              const secondaryImage = product.images.find((img) => !img.isPrimary)?.url || primaryImage;
-              const firstVariant = product.variants?.[0];
-              const isWishlisted = wishlist.some(
-                (item) => item.productId === product.id || item.product?.id === product.id
-              );
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8 md:gap-x-6 md:gap-y-12">
+              {paginatedProducts.map((product) => {
+                const isWishlisted = wishlist.some(
+                  (item) => item.productId === product.id || item.product?.id === product.id
+                );
 
-              return (
-                <article key={product.id} className="group cursor-pointer flex flex-col min-w-0">
-                  <div className="relative aspect-[3/4] mb-3 overflow-hidden bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-                    <Link to={`/products/${product.slug}`} className="block w-full h-full">
-                      <img
-                        src={primaryImage}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0 absolute inset-0 z-10 img-hover-fade"
-                        loading="lazy"
-                      />
-                      <img
-                        src={secondaryImage}
-                        alt={`${product.name} craftsmanship`}
-                        className="w-full h-full object-cover z-0 scale-100 group-hover:scale-105 transition-transform duration-700 absolute inset-0"
-                        loading="lazy"
-                      />
-                    </Link>
+                return (
+                  <ShopProductCard
+                    key={product.id}
+                    product={product}
+                    isWishlisted={isWishlisted}
+                    onToggleWishlist={wishlistMutation.mutate}
+                    onOpenQuickSelect={handleOpenQuickSelect}
+                    formatPrice={formatPrice}
+                  />
+                );
+              })}
+            </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        wishlistMutation.mutate({
-                          productId: product.id,
-                          product: {
-                            id: product.id,
-                            name: product.name,
-                            slug: product.slug,
-                            basePrice: product.basePrice,
-                            compareAtPrice: product.compareAtPrice,
-                            image: primaryImage,
-                            category: product.category,
-                          },
-                        });
-                      }}
-                      aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                      className="absolute top-2.5 right-2.5 z-20 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-black/80 backdrop-blur-sm rounded-full transition-all duration-300 text-white cursor-pointer active:scale-90"
-                    >
-                      <Heart
-                        size={15}
-                        strokeWidth={2}
-                        className={isWishlisted ? "text-[var(--gold)] fill-current" : "text-white"}
-                      />
-                    </button>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-12 pt-8 border-t border-[var(--border-color)] flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => {
+                    setCurrentPage((p) => Math.max(1, p - 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="border border-[var(--border-color)] px-4 py-2 text-[12px] label-caps uppercase tracking-wider text-[var(--text-primary)] hover:border-[var(--gold)] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
+                >
+                  Previous
+                </button>
 
-                    {firstVariant && (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          quickAddToCartMutation.mutate({ variantId: firstVariant.id });
-                        }}
-                        aria-label="Quick add to bag"
-                        className="absolute bottom-2.5 right-2.5 z-20 w-8 h-8 flex items-center justify-center bg-black/40 hover:bg-[var(--gold)] hover:text-[#0A0A0A] backdrop-blur-sm rounded-full transition-all duration-300 text-white opacity-0 group-hover:opacity-100 cursor-pointer active:scale-90"
-                        title="Quick Add"
-                      >
-                        <ShoppingBag size={14} strokeWidth={2} />
-                      </button>
-                    )}
-                  </div>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                  <button
+                    key={pg}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage(pg);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`w-9 h-9 flex items-center justify-center border text-[13px] font-semibold transition-all cursor-pointer ${
+                      currentPage === pg
+                        ? 'border-[var(--gold)] bg-[var(--gold)] text-[#0A0A0A] font-bold shadow-md'
+                        : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--gold)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    {pg}
+                  </button>
+                ))}
 
-                  <div className="flex flex-col flex-1 justify-between">
-                    <div>
-                      {product.category?.name && (
-                        <span className="label-caps text-[10px] tracking-widest text-[var(--gold)] block mb-1">
-                          {product.category.name}
-                        </span>
-                      )}
-                      <h3 className="body-md text-[14px] text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors leading-snug line-clamp-1">
-                        <Link to={`/products/${product.slug}`}>{product.name}</Link>
-                      </h3>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="body-sm text-[13px] tabular-nums font-semibold text-[var(--text-primary)]">
-                        {formatPrice(product.basePrice)}
-                      </span>
-                      {product.compareAtPrice && product.compareAtPrice > product.basePrice && (
-                        <span className="body-sm text-[11px] tabular-nums text-[var(--text-secondary)] line-through">
-                          {formatPrice(product.compareAtPrice)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => {
+                    setCurrentPage((p) => Math.min(totalPages, p + 1));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="border border-[var(--border-color)] px-4 py-2 text-[12px] label-caps uppercase tracking-wider text-[var(--text-primary)] hover:border-[var(--gold)] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
+
+      {/* Quick Select Size & Color Bottom Sheet / Modal */}
+      {quickSelectProduct && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setQuickSelectProduct(null)}
+          />
+
+          <div className="relative w-full sm:max-w-md bg-[var(--bg-primary)] border border-[var(--border-color)] sm:rounded-lg p-6 z-10 shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start border-b border-[var(--border-color)] pb-3">
+              <div>
+                <span className="label-caps text-[10px] text-[var(--gold)] uppercase tracking-wider block">
+                  Quick Select
+                </span>
+                <h3 className="text-[20px] font-normal text-[var(--text-primary)] font-garamond">
+                  {quickSelectProduct.name}
+                </h3>
+                <p className="text-[14px] font-semibold text-[var(--text-primary)] tabular-nums mt-0.5">
+                  {formatPrice(quickSelectProduct.basePrice)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuickSelectProduct(null)}
+                className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Colors in Quick Select */}
+            {quickColors.length > 0 && (
+              <div className={`space-y-2 p-2.5 rounded border transition-all ${quickColorError ? 'border-amber-500/60 bg-amber-500/5' : 'border-transparent'}`}>
+                <div className="flex justify-between items-center">
+                  <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">
+                    Color: {quickSelectedColor ? <span className="text-[var(--gold)] font-bold">{quickSelectedColor}</span> : <span className="text-amber-500/90 font-medium">(Required)</span>}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {quickColors.map((color) => {
+                    const isSelected = quickSelectedColor === color.name;
+                    return (
+                      <button
+                        key={color.name}
+                        type="button"
+                        onClick={() => {
+                          setQuickSelectedColor(color.name);
+                          setQuickColorError(false);
+                        }}
+                        className={`group flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-[var(--gold)] ring-2 ring-[var(--gold)]/40 bg-[var(--gold)]/15 text-[var(--text-primary)]'
+                            : 'border-[var(--border-color)] hover:border-[var(--gold)]/60 bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
+                        }`}
+                      >
+                        <span
+                          className="w-4 h-4 rounded-full border border-white/20 shadow-sm shrink-0"
+                          style={{ backgroundColor: color.hex }}
+                        />
+                        <span className="text-[12px] font-medium">{color.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {quickColorError && (
+                  <p className="text-[11px] text-amber-500 font-medium">Please select a color</p>
+                )}
+              </div>
+            )}
+
+            {/* Sizes in Quick Select */}
+            {quickSizes.length > 0 && (
+              <div className={`space-y-2 p-2.5 rounded border transition-all ${quickSizeError ? 'border-amber-500/60 bg-amber-500/5' : 'border-transparent'}`}>
+                <div className="flex justify-between items-center">
+                  <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-wider">
+                    Size: {quickSelectedSize ? <span className="text-[var(--gold)] font-bold">{quickSelectedSize}</span> : <span className="text-amber-500/90 font-medium">(Required)</span>}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {quickSizes.map((sz) => {
+                    const isSelected = quickSelectedSize === sz;
+                    return (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => {
+                          setQuickSelectedSize(sz);
+                          setQuickSizeError(false);
+                        }}
+                        className={`min-w-[48px] h-11 px-3.5 flex items-center justify-center border text-[13px] font-semibold tracking-wider uppercase transition-all cursor-pointer select-none rounded ${
+                          isSelected
+                            ? 'border-[var(--gold)] bg-[var(--gold)] text-[#0A0A0A] font-bold shadow-md ring-2 ring-[var(--gold)]/40'
+                            : 'border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:border-[var(--gold)]'
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    );
+                  })}
+                </div>
+                {quickSizeError && (
+                  <p className="text-[11px] text-amber-500 font-medium">Please select a size</p>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-2 flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={handleConfirmQuickAdd}
+                disabled={quickAddToCartMutation.isPending}
+                className="w-full bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] hover:bg-[var(--gold)] hover:text-[#0A0A0A] label-caps py-3.5 tracking-widest uppercase transition-all font-semibold flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+              >
+                <ShoppingBag size={16} />
+                <span>{quickAddToCartMutation.isPending ? 'Adding to Bag...' : 'Add to Bag'}</span>
+              </button>
+              <Link
+                to={`/products/${quickSelectProduct.slug}`}
+                onClick={() => setQuickSelectProduct(null)}
+                className="text-center text-[12px] text-[var(--gold)] hover:underline label-caps tracking-wider uppercase py-1"
+              >
+                View Full Silhouette Details →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filter Drawer */}
       {isFilterOpen && (
@@ -645,8 +1028,6 @@ export const ShopPage: React.FC = () => {
                 </h3>
                 <div className="space-y-2.5">
                   {[
-                    { label: 'Newest Arrivals', val: 'newest' },
-                    { label: 'Featured Masterpieces', val: 'featured' },
                     { label: 'Price: Low to High', val: 'price_asc' },
                     { label: 'Price: High to Low', val: 'price_desc' },
                   ].map((item) => (

@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchCart } from '../../api/cart.js';
 import { fetchWishlist } from '../../api/wishlist.js';
 import { fetchCategories, type Category } from '../../api/categories.js';
+import { useAvatar } from '../../context/AvatarContext.js';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { profileData } = useAvatar();
   const isPDP = location.pathname.startsWith('/products/');
 
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -131,8 +133,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                         <User size={15} />
                       </div>
                       <div>
-                        <span className="label-caps text-[10px] uppercase text-[var(--gold)] font-semibold block">
-                          Patron Active
+                        <span className="label-caps text-[10.5px] uppercase text-[var(--gold)] font-semibold block truncate max-w-[170px]">
+                          {profileData?.fullName || profileData?.phone || profileData?.email?.split('@')[0] || 'Patron'}
                         </span>
                         <Link
                           to="/account"

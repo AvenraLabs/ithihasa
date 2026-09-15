@@ -38,6 +38,7 @@ export const AddressesPage: React.FC = () => {
     country: 'India',
     isDefaultShipping: true,
   });
+  const [deleteTargetAddress, setDeleteTargetAddress] = useState<Address | null>(null);
 
   const { data: addresses = [], isLoading } = useQuery<Address[]>({
     queryKey: ['addresses'],
@@ -74,6 +75,7 @@ export const AddressesPage: React.FC = () => {
     mutationFn: deleteAddress,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      setDeleteTargetAddress(null);
       toast.success('Address removed');
     },
     onError: (err: any) => {
@@ -256,11 +258,7 @@ export const AddressesPage: React.FC = () => {
                         <Edit2 size={16} />
                       </button>
                       <button
-                        onClick={() => {
-                          if (confirm('Are you sure you want to remove this address?')) {
-                            deleteMutation.mutate(addr.id);
-                          }
-                        }}
+                        onClick={() => setDeleteTargetAddress(addr)}
                         className="p-2 text-[var(--text-secondary)] hover:text-rose-500 transition-colors border border-[var(--border-color)] hover:border-rose-500/50 rounded cursor-pointer"
                         aria-label="Delete Address"
                         title="Delete Address"
@@ -438,6 +436,54 @@ export const AddressesPage: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Custom Address Delete Modal */}
+      {deleteTargetAddress && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div
+            className="bg-[var(--bg-card)] border border-[var(--border-color)] max-w-md w-full shadow-2xl p-6 sm:p-7 space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shrink-0">
+                <Trash2 size={18} />
+              </div>
+              <div className="space-y-1">
+                <span className="label-caps text-[10px] text-rose-400 uppercase tracking-widest font-semibold">
+                  Remove Address
+                </span>
+                <h3 className="font-garamond text-[22px] font-normal text-[var(--text-primary)] leading-tight m-0">
+                  Delete Saved Address?
+                </h3>
+                <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed pt-1">
+                  Are you sure you want to remove the address for{' '}
+                  <strong className="text-[var(--text-primary)]">{deleteTargetAddress.name}</strong> (
+                  {deleteTargetAddress.line1}, {deleteTargetAddress.city})?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--border-color)]">
+              <button
+                type="button"
+                onClick={() => setDeleteTargetAddress(null)}
+                disabled={deleteMutation.isPending}
+                className="px-4 py-2.5 border border-[var(--border-color)] text-[var(--text-primary)] hover:border-[var(--gold)] label-caps text-[11px] uppercase tracking-wider cursor-pointer"
+              >
+                Keep Address
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteMutation.mutate(deleteTargetAddress.id)}
+                disabled={deleteMutation.isPending}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white label-caps text-[11px] uppercase tracking-wider cursor-pointer shadow-sm disabled:opacity-50 font-semibold"
+              >
+                {deleteMutation.isPending ? 'Removing...' : 'Confirm Remove'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

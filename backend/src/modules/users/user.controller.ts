@@ -20,6 +20,16 @@ export class UserController {
       next(error);
     }
   }
+
+  public async updatePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await userService.updatePassword(req.user!.userId, req.body);
+      sendSuccess(res, result, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const userController = new UserController();
+

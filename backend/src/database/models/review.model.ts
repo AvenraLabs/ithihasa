@@ -8,6 +8,7 @@ export interface ReviewAttributes {
   rating: number; // 1 to 5
   title?: string | null;
   comment: string;
+  images?: string[] | null;
   is_verified_purchase: boolean;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   created_at?: Date;
@@ -16,7 +17,7 @@ export interface ReviewAttributes {
 
 export type ReviewCreationAttributes = Optional<
   ReviewAttributes,
-  'id' | 'title' | 'is_verified_purchase' | 'status'
+  'id' | 'title' | 'images' | 'is_verified_purchase' | 'status'
 >;
 
 export class Review
@@ -29,6 +30,7 @@ export class Review
   declare public rating: number;
   declare public title: string | null;
   declare public comment: string;
+  declare public images: string[] | null;
   declare public is_verified_purchase: boolean;
   declare public status: 'PENDING' | 'APPROVED' | 'REJECTED';
 
@@ -63,6 +65,11 @@ Review.init(
     comment: {
       type: DataTypes.TEXT,
       allowNull: false,
+    },
+    images: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+      allowNull: true,
     },
     is_verified_purchase: {
       type: DataTypes.BOOLEAN,

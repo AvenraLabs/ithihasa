@@ -19,8 +19,10 @@ export function createApp(): Express {
   const productUploads = path.join(uploadDir, 'products');
   const storefrontUploads = path.join(uploadDir, 'storefront');
   const bannerUploads = path.join(uploadDir, 'banners');
+  const reviewUploads = path.join(uploadDir, 'reviews');
+  const avatarUploads = path.join(uploadDir, 'avatars');
 
-  [uploadDir, productUploads, storefrontUploads, bannerUploads].forEach((dir) => {
+  [uploadDir, productUploads, storefrontUploads, bannerUploads, reviewUploads, avatarUploads].forEach((dir) => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }

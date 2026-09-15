@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProducts, type Product } from '../api/products.js';
-import { fetchStorefrontData } from '../api/merchandising.js';
+import { fetchStorefrontData, getCachedStorefrontData } from '../api/merchandising.js';
 import { Search as SearchIcon, X, History, ArrowRight, Compass } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -10,7 +10,24 @@ export const SearchPage: React.FC = () => {
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('ithihasa_recent_searches');
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) return [];
+      const parsed: string[] = JSON.parse(saved);
+      // Clean up any prefix fragments (e.g. ['tshirt', 'tshir', 'tshi', 'tsh', 'ts'] -> ['tshirt'])
+      const cleaned: string[] = [];
+      for (const item of parsed) {
+        const itemLower = item.toLowerCase().trim();
+        if (!itemLower) continue;
+        const isPrefixOfLonger = parsed.some(
+          (other) => other.length > item.length && other.toLowerCase().trim().startsWith(itemLower)
+        );
+        if (!isPrefixOfLonger && !cleaned.includes(item)) {
+          cleaned.push(item);
+        }
+      }
+      try {
+        localStorage.setItem('ithihasa_recent_searches', JSON.stringify(cleaned.slice(0, 6)));
+      } catch {}
+      return cleaned.slice(0, 6);
     } catch {
       return [];
     }
@@ -19,13 +36,20 @@ export const SearchPage: React.FC = () => {
   const { data: cms } = useQuery({
     queryKey: ['storefront'],
     queryFn: fetchStorefrontData,
+    initialData: getCachedStorefrontData,
+    staleTime: 1000 * 60 * 5,
   });
 
   const saveRecentSearch = (term: string) => {
     const clean = term.trim();
-    if (!clean) return;
+    if (!clean || clean.length < 2) return;
     setRecentSearches((prev) => {
-      const filtered = prev.filter((t) => t.toLowerCase() !== clean.toLowerCase());
+      // Filter out exact matches as well as intermediate prefix fragments
+      const filtered = prev.filter((t) => {
+        const tLower = t.toLowerCase().trim();
+        const cleanLower = clean.toLowerCase();
+        return tLower !== cleanLower && !cleanLower.startsWith(tLower) && !tLower.startsWith(cleanLower);
+      });
       const updated = [clean, ...filtered].slice(0, 6);
       try {
         localStorage.setItem('ithihasa_recent_searches', JSON.stringify(updated));
@@ -43,14 +67,19 @@ export const SearchPage: React.FC = () => {
 
   const { data: results = [], isLoading } = useQuery<Product[]>({
     queryKey: ['products', 'search', searchTerm],
-    queryFn: () => {
-      if (searchTerm.trim().length > 1) {
-        saveRecentSearch(searchTerm.trim());
-      }
-      return fetchProducts({ search: searchTerm });
-    },
+    queryFn: () => fetchProducts({ search: searchTerm }),
     enabled: searchTerm.trim().length > 1,
   });
+
+  // Debounced auto-save of finalized search terms once typing pauses
+  useEffect(() => {
+    const clean = searchTerm.trim();
+    if (clean.length < 2) return;
+    const timer = setTimeout(() => {
+      saveRecentSearch(clean);
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const handleSelectRecent = (term: string) => {
     setSearchTerm(term);
@@ -98,6 +127,12 @@ export const SearchPage: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                saveRecentSearch(searchTerm);
+                e.currentTarget.blur();
+              }
+            }}
             placeholder="Search Heritage Silhouettes (e.g. silk, black shirt, kurta)..."
             autoFocus
             autoComplete="off"
@@ -137,6 +172,7 @@ export const SearchPage: React.FC = () => {
                       <Link
                         key={product.id}
                         to={`/products/${product.slug}`}
+                        onClick={() => saveRecentSearch(searchTerm)}
                         className="flex items-center justify-between p-4 bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[var(--gold)] transition-colors group"
                       >
                         <div className="flex items-center space-x-4 min-w-0">
@@ -288,11 +324,19 @@ export const SearchPage: React.FC = () => {
                           to={`/shop?category=${col.slug}`}
                           className="group relative block h-44 overflow-hidden bg-[var(--bg-secondary)] border border-[var(--border-color)] shadow-sm"
                         >
-                          <img
-                            src={col.imageUrl}
-                            alt={col.name}
-                            className="w-full h-full object-cover brightness-75 group-hover:scale-105 transition-transform duration-700 ease-out"
-                          />
+                          {col.imageUrl ? (
+                            <img
+                              src={col.imageUrl}
+                              alt={col.name || 'Collection'}
+                              className="w-full h-full object-cover brightness-75 group-hover:scale-105 transition-transform duration-700 ease-out"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-[#1A1714] flex items-center justify-center p-4">
+                              <span className="label-caps text-[11px] text-[var(--gold)] tracking-widest uppercase opacity-70">
+                                {col.name || 'Atelier Collection'}
+                              </span>
+                            </div>
+                          )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                           <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white flex justify-between items-end">
                             <div>
@@ -300,10 +344,10 @@ export const SearchPage: React.FC = () => {
                                 className="text-[18px] sm:text-[20px] font-normal leading-snug"
                                 style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
                               >
-                                {col.name}
+                                {col.name || 'Atelier Collection'}
                               </h3>
                               <span className="label-caps text-[10px] text-[var(--gold)] uppercase tracking-wider block mt-0.5">
-                                {col.itemCount} Masterpieces
+                                {col.itemCount ? `${col.itemCount} Masterpieces` : 'Explore Collection'}
                               </span>
                             </div>
                             <ArrowRight size={16} className="text-[var(--gold)] group-hover:translate-x-1 transition-transform shrink-0" />

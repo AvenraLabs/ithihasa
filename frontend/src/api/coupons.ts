@@ -1,26 +1,28 @@
 import { apiClient } from './client.js';
 
 export interface Coupon {
-  id: string;
+  id?: string;
   code: string;
-  discountType: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  discountType: 'PERCENTAGE' | 'FIXED' | 'FIXED_AMOUNT' | 'FLAT';
   discountValue: number;
   minimumOrderAmount: number;
   maxDiscountAmount?: number | null;
   description?: string | null;
-  validUntil: string;
+  validUntil?: string;
 }
 
 export function normalizeCoupon(c: any): Coupon {
   return {
     id: c.id,
     code: c.code,
-    discountType: c.discountType ?? c.discount_type,
-    discountValue: Number(c.discountValue ?? c.discount_value ?? 0),
-    minimumOrderAmount: Number(c.minimumOrderAmount ?? c.min_order_amount ?? 0),
-    maxDiscountAmount: c.maxDiscountAmount ? Number(c.maxDiscountAmount) : null,
+    discountType: c.type ?? c.discountType ?? c.discount_type ?? 'FIXED',
+    discountValue: Number(c.value ?? c.discountValue ?? c.discount_value ?? 0),
+    minimumOrderAmount: Number(c.minOrderValue ?? c.min_order_value ?? c.minimumOrderAmount ?? c.min_order_amount ?? 0),
+    maxDiscountAmount: (c.maxDiscount ?? c.max_discount ?? c.maxDiscountAmount) != null
+      ? Number(c.maxDiscount ?? c.max_discount ?? c.maxDiscountAmount)
+      : null,
     description: c.description ?? null,
-    validUntil: c.validUntil ?? c.expires_at ?? '',
+    validUntil: c.validUntil ?? c.expires_at ?? c.expiresAt ?? '',
   };
 }
 

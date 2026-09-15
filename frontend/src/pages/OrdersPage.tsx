@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Package, ChevronRight, Truck, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Package, ChevronRight, Truck, CheckCircle, XCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchOrders, type OrderData } from '../api/orders.js';
 
@@ -23,13 +23,13 @@ export const OrdersPage: React.FC = () => {
 
   const filteredOrders = orders.filter((o) => {
     if (filter === 'ALL') return true;
-    if (filter === 'ACTIVE') return ['CREATED', 'CONFIRMED', 'PROCESSING', 'DISPATCHED'].includes(o.status.toUpperCase());
-    if (filter === 'DELIVERED') return o.status.toUpperCase() === 'DELIVERED';
+    if (filter === 'ACTIVE') return ['CREATED', 'PENDING', 'PENDING_PAYMENT', 'CONFIRMED', 'PAID', 'PROCESSING', 'DISPATCHED'].includes((o.status || '').toUpperCase());
+    if (filter === 'DELIVERED') return (o.status || '').toUpperCase() === 'DELIVERED';
     return true;
   });
 
   const getStatusBadge = (status: string) => {
-    const s = status.toUpperCase();
+    const s = (status || '').toUpperCase();
     if (s === 'DELIVERED') {
       return (
         <span className="inline-flex items-center gap-1 bg-green-900/20 border border-green-800/40 text-green-400 label-caps text-[9px] uppercase tracking-wider px-2.5 py-0.5 rounded">
@@ -37,16 +37,23 @@ export const OrdersPage: React.FC = () => {
         </span>
       );
     }
-    if (s === 'CANCELLED') {
+    if (s === 'CANCELLED' || s === 'FAILED') {
       return (
         <span className="inline-flex items-center gap-1 bg-red-900/20 border border-red-800/40 text-red-400 label-caps text-[9px] uppercase tracking-wider px-2.5 py-0.5 rounded">
-          Cancelled
+          <XCircle size={10} /> {s === 'FAILED' ? 'Payment Failed' : 'Cancelled'}
+        </span>
+      );
+    }
+    if (s === 'PAID' || s === 'CONFIRMED') {
+      return (
+        <span className="inline-flex items-center gap-1 bg-[var(--gold)]/20 border border-[var(--gold)]/40 text-[var(--gold)] label-caps text-[9px] uppercase tracking-wider px-2.5 py-0.5 rounded font-medium">
+          <CheckCircle size={10} /> Confirmed
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 bg-[var(--gold)]/20 border border-[var(--gold)]/40 text-[var(--gold)] label-caps text-[9px] uppercase tracking-wider px-2.5 py-0.5 rounded">
-        <Truck size={10} /> {status}
+      <span className="inline-flex items-center gap-1 bg-[var(--gold)]/15 border border-[var(--gold)]/30 text-[var(--gold)] label-caps text-[9px] uppercase tracking-wider px-2.5 py-0.5 rounded">
+        <Truck size={10} /> {status || 'Processing'}
       </span>
     );
   };
@@ -138,13 +145,13 @@ export const OrdersPage: React.FC = () => {
                       Order #{order.orderNumber}
                     </span>
                     <span className="body-sm text-[12px] text-[var(--text-secondary)]">
-                      Placed on {new Date(order.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                      Placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' }) : 'Recent'}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     {getStatusBadge(order.status)}
                     <span className="body-md text-[16px] font-semibold text-[var(--text-primary)] tabular-nums">
-                      ₹{order.totalAmount.toLocaleString()}
+                      ₹{Number(order.totalAmount ?? 0).toLocaleString('en-IN')}
                     </span>
                   </div>
                 </div>

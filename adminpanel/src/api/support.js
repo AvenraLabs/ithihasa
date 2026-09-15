@@ -26,9 +26,21 @@ export async function fetchChatSessions() {
   return apiClient('/admin/support/chat/sessions');
 }
 
-export async function sendChatMessage(sessionId, text, sender = 'concierge') {
-  return apiClient(`/admin/support/chat/${sessionId}/messages`, {
+export async function sendChatMessage(sessionId, text) {
+  return apiClient(`/admin/support/tickets/${sessionId}/reply`, {
     method: 'POST',
-    body: { text, sender },
+    body: { text, sender: 'concierge' },
   });
 }
+
+export async function updateTicketStatus(ticketId, status) {
+  return apiClient(`/admin/support/tickets/${ticketId}/status`, {
+    method: 'PATCH',
+    body: { status },
+  });
+}
+
+export async function fetchTicketDetails(ticketId) {
+  return apiClient(`/admin/support/tickets/${ticketId}`);
+}
+

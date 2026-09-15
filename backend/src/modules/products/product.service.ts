@@ -82,14 +82,14 @@ export class ProductService {
         [Op.or]: [
           { name: { [Op.iLike]: `%${tok}%` } },
           { description: { [Op.iLike]: `%${tok}%` } },
-          { fabric_composition: { [Op.iLike]: `%${tok}%` } },
-          { care_instructions: { [Op.iLike]: `%${tok}%` } },
+          { short_description: { [Op.iLike]: `%${tok}%` } },
         ],
       }));
 
       where[Op.or] = [
         { name: { [Op.iLike]: `%${cleanSearch}%` } },
         { description: { [Op.iLike]: `%${cleanSearch}%` } },
+        { short_description: { [Op.iLike]: `%${cleanSearch}%` } },
         ...tokenConditions,
       ];
     }
@@ -164,9 +164,10 @@ export class ProductService {
     };
   }
 
-  public async getProductBySlug(slug: string) {
+  public async getProductBySlug(slug: string, transaction?: any) {
     const product = await Product.findOne({
       where: { slug, status: 'ACTIVE' },
+      ...(transaction ? { transaction } : {}),
       include: [
         {
           model: Category,
@@ -208,17 +209,38 @@ export class ProductService {
   }
 
   public async createProduct(data: any, actorId?: string) {
-    const existing = await Product.findOne({ where: { slug: data.slug } });
-    if (existing) throw new ConflictError(`Product with slug '${data.slug}' already exists`);
+    let slug = data.slug;
+    const existing = await Product.findOne({ where: { slug } });
+    if (existing) {
+      slug = `${slug}-${Math.floor(100 + Math.random() * 900)}`;
+    }
 
-    return sequelize.transaction(async (t) => {
+    let categoryId = data.categoryId;
+    if (!categoryId && data.categorySlug) {
+      const cat = await Category.findOne({ where: { slug: data.categorySlug } });
+      if (cat) categoryId = cat.id;
+    }
+    if (!categoryId && data.categoryName) {
+      const cat = await Category.findOne({ where: { name: data.categoryName } });
+      if (cat) categoryId = cat.id;
+    }
+    if (!categoryId) {
+      const cat = await Category.findOne();
+      if (cat) {
+        categoryId = cat.id;
+      } else {
+        throw new NotFoundError('Category not found for product');
+      }
+    }
+
+    const createdProduct = await sequelize.transaction(async (t) => {
       const product = await Product.create(
         {
           name: data.name,
-          slug: data.slug,
+          slug: slug,
           description: data.description,
           short_description: data.shortDescription || null,
-          category_id: data.categoryId,
+          category_id: categoryId,
           base_price: data.basePrice,
           compare_at_price: data.compareAtPrice || null,
           featured: data.featured || false,
@@ -283,8 +305,10 @@ export class ProductService {
         }
       }
 
-      return this.getProductBySlug(product.slug);
+      return product;
     });
+
+    return this.getProductBySlug(createdProduct.slug);
   }
 
   public async deleteProduct(id: string) {
@@ -327,10 +351,10 @@ export class ProductService {
       await product.destroy({ transaction: t });
       await t.commit();
 
-      // Delete files from disk in uploads folder
-      cleanupMultipleUploadedFiles(imageUrls);
+      // Safely cleanup unreferenced files (preserves any images referenced in past customer orders)
+      await cleanupMultipleUploadedFiles(imageUrls);
 
-      return { success: true, message: 'Product deleted permanently and uploaded images cleaned' };
+      return { success: true, message: 'Product deleted permanently. Historical transaction assets safely retained.' };
     } catch (err) {
       await t.rollback();
       throw err;

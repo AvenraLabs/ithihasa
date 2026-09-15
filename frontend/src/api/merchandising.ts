@@ -30,6 +30,23 @@ export interface StorefrontConfig {
   }[];
 }
 
+const CMS_STORAGE_KEY = 'ithihasa_storefront_cms';
+
+export function getCachedStorefrontData(): StorefrontConfig | undefined {
+  try {
+    const saved = localStorage.getItem(CMS_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function fetchStorefrontData(): Promise<StorefrontConfig> {
-  return apiClient<StorefrontConfig>('/merchandising/storefront');
+  const data = await apiClient<StorefrontConfig>('/merchandising/storefront');
+  if (data) {
+    try {
+      localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(data));
+    } catch {}
+  }
+  return data;
 }
