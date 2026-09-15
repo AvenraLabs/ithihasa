@@ -13,8 +13,9 @@ export const FeaturedSilhouettes: React.FC = () => {
   const { data: cms } = useQuery({
     queryKey: ['storefront'],
     queryFn: fetchStorefrontData,
-    initialData: getCachedStorefrontData,
-    staleTime: 1000 * 60 * 5,
+    placeholderData: getCachedStorefrontData,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
   });
 
   // If highlighted section is disabled or empty in CMS, do not render

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { X, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { registerWithPassword } from '../api/auth.js';
+import { registerWithPassword, loginWithGoogle } from '../api/auth.js';
 import { syncGuestWishlistToBackend } from '../api/wishlist.js';
 import { useAvatar } from '../context/AvatarContext.js';
 
@@ -13,6 +13,10 @@ export const RegisterPage: React.FC = () => {
   const searchParams = new URLSearchParams(location.search);
   const redirectTarget = searchParams.get('redirect') || (location.state as any)?.from || '/account';
 
+  const GOOGLE_CLIENT_ID =
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+    '683901924088-1t92grkteqpjn7n5sb07vsuo2n3pv915.apps.googleusercontent.com';
+
   const [fullName, setFullName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -22,6 +26,73 @@ export const RegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initGoogle = () => {
+      if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+        try {
+          (window as any).google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: async (response: any) => {
+              if (!response?.credential) return;
+              setIsLoading(true);
+              setError(null);
+              try {
+                const res = await loginWithGoogle(response.credential);
+                if (res.user) {
+                  setProfileData({
+                    fullName: res.user.name || '',
+                    email: res.user.email || '',
+                    phone: res.user.phone || '',
+                  });
+                }
+                await syncGuestWishlistToBackend().catch(() => {});
+                setToastMessage(`Welcome to the atelier, ${res.user?.name || 'Patron'}`);
+                setTimeout(() => {
+                  setToastMessage(null);
+                  navigate(redirectTarget);
+                }, 700);
+              } catch (err: any) {
+                setError(err.message || 'Google registration failed');
+              } finally {
+                setIsLoading(false);
+              }
+            },
+            auto_select: false,
+          });
+
+          const btnContainer = document.getElementById('google-reg-btn');
+          if (btnContainer && !btnContainer.hasChildNodes()) {
+            (window as any).google.accounts.id.renderButton(btnContainer, {
+              type: 'standard',
+              theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
+              size: 'large',
+              text: 'signup_with',
+              shape: 'rectangular',
+              logo_alignment: 'left',
+              width: Math.min(window.innerWidth - 48, 380),
+            });
+          }
+        } catch (e) {
+          console.warn('Google GSI reg notice:', e);
+        }
+      }
+    };
+
+    initGoogle();
+    const timer = setInterval(() => {
+      if ((window as any).google?.accounts?.id) {
+        initGoogle();
+        clearInterval(timer);
+      }
+    }, 250);
+    const timeout = setTimeout(() => clearInterval(timer), 4000);
+
+    return () => {
+      clearInterval(timer);
+      clearTimeout(timeout);
+    };
+  }, []);
 
   const handleDismiss = () => {
     if (window.history.length > 1) {
@@ -156,6 +227,20 @@ export const RegisterPage: React.FC = () => {
               {error}
             </div>
           )}
+
+          {/* Google Sign Up Button Container */}
+          <div className="w-full flex flex-col items-center justify-center min-h-[44px] mb-6">
+            <div id="google-reg-btn" className="w-full flex justify-center items-center" />
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-[1px] flex-grow bg-[var(--border-color)]" />
+            <span className="label-caps text-[11px] text-[var(--text-secondary)] uppercase tracking-widest">
+              Or with mobile
+            </span>
+            <div className="h-[1px] flex-grow bg-[var(--border-color)]" />
+          </div>
 
           {/* Form */}
           <form onSubmit={handleRegister} className="flex flex-col gap-5">

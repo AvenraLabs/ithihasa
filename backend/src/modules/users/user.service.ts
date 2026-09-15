@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { User, Address, Order, Wishlist } from '../../database/index.js';
 import { NotFoundError, AuthenticationError, BusinessRuleError } from '../../common/errors/index.js';
 import { hashValue, verifyHash } from '../../common/utils/crypto.js';
@@ -21,12 +22,35 @@ export class UserService {
     return userJson;
   }
 
-  public async updateProfile(userId: string, data: { name?: string; avatarUrl?: string | null }) {
+  public async updateProfile(userId: string, data: { name?: string; phone?: string | null; avatarUrl?: string | null }) {
     const user = await User.findByPk(userId);
     if (!user) throw new NotFoundError('User');
 
     if (data.name !== undefined) user.name = data.name;
     if (data.avatarUrl !== undefined) user.avatar_url = data.avatarUrl;
+    if (data.phone !== undefined) {
+      const cleanPhone = data.phone ? data.phone.trim().replace(/\D/g, '').slice(-10) : null;
+      if (cleanPhone && cleanPhone !== user.phone) {
+        if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+          throw new BusinessRuleError('Please enter a valid 10-digit Indian mobile number');
+        }
+        const existing = await User.findOne({
+          where: {
+            phone: cleanPhone,
+            phone_verified: true,
+            id: { [Op.ne]: userId },
+          },
+        });
+        if (existing) {
+          throw new BusinessRuleError('This mobile number is already registered to another verified patron account.');
+        }
+        user.phone = cleanPhone;
+        user.phone_verified = false;
+      } else if (!cleanPhone) {
+        user.phone = null;
+        user.phone_verified = false;
+      }
+    }
 
     await user.save();
     return this.getProfile(userId);

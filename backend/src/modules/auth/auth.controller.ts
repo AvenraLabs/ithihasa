@@ -44,6 +44,16 @@ export class AuthController {
     }
   }
 
+  public async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { identifier, otp, newPassword } = req.body;
+      const result = await authService.resetPassword({ identifier, otp, newPassword });
+      sendSuccess(res, result, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   public async googleAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { idToken } = req.body;

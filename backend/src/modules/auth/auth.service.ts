@@ -239,20 +239,43 @@ export class AuthService {
   /**
    * Password Reset Request (Generates OTP)
    */
-  public async requestPasswordReset(identifier: string): Promise<{ success: boolean; message: string }> {
+  public async requestPasswordReset(identifier: string): Promise<{ success: boolean; message: string; otp?: string; cooldownSeconds?: number }> {
     const id = identifier.trim();
+    const cleanPhone = id.replace(/\D/g, '').slice(-10);
+    const isPhone = /^[6-9]\d{9}$/.test(cleanPhone);
+
     const user = await User.findOne({
       where: {
         [Op.or]: [
           { email: id.toLowerCase() },
-          { phone: id },
+          ...(isPhone ? [{ phone: cleanPhone }] : [{ phone: id }]),
         ],
       },
     });
 
     if (!user) {
-      // Return true to avoid user enumeration
+      // Return success message to avoid user enumeration
       return { success: true, message: 'If an account exists with this credential, a verification OTP has been sent.' };
+    }
+
+    // 20-second cooldown check to stop OTP abuse (Backend & API level)
+    const twentySecondsAgo = new Date(Date.now() - 20 * 1000);
+    const targetPhone = user.phone || (isPhone ? cleanPhone : id.toLowerCase());
+    const recentOtp = await UserOtp.findOne({
+      where: {
+        [Op.or]: [
+          { phone: targetPhone },
+          { user_id: user.id },
+        ],
+        created_at: { [Op.gt]: twentySecondsAgo },
+      },
+      order: [['created_at', 'DESC']],
+    });
+
+    if (recentOtp) {
+      const elapsedMs = Date.now() - new Date(recentOtp.created_at).getTime();
+      const remainingSecs = Math.max(1, Math.ceil((20 * 1000 - elapsedMs) / 1000));
+      throw new BusinessRuleError(`Please wait ${remainingSecs}s before requesting another verification code.`);
     }
 
     const otp = generateOTP(4);
@@ -261,15 +284,15 @@ export class AuthService {
 
     await UserOtp.create({
       user_id: user.id,
-      phone: user.phone || user.email || 'NO_PHONE',
+      phone: user.phone || (isPhone ? cleanPhone : user.email || 'NO_PHONE'),
       otp_hash: otpHash,
       purpose: 'PASSWORD_RESET',
       expires_at: expiresAt,
     });
 
-    if (user.phone) {
+    if (user.phone || isPhone) {
       await whatsappProvider.sendOTP({
-        phone: user.phone,
+        phone: user.phone || cleanPhone,
         otp,
         expiryMinutes: 15,
       });
@@ -278,6 +301,74 @@ export class AuthService {
     return {
       success: true,
       message: `Verification code sent successfully.`,
+      otp, // Exposed for immediate frontend testing while WhatsApp is in development
+      cooldownSeconds: 20,
+    };
+  }
+
+  /**
+   * Completes Password Reset using Verified OTP
+   */
+  public async resetPassword(data: {
+    identifier: string;
+    otp: string;
+    newPassword: string;
+  }): Promise<{ success: boolean; message: string }> {
+    const id = data.identifier.trim();
+    const cleanPhone = id.replace(/\D/g, '').slice(-10);
+    const user = await User.findOne({
+      where: {
+        [Op.or]: [
+          { email: id.toLowerCase() },
+          ...(cleanPhone ? [{ phone: cleanPhone }] : []),
+          { phone: id },
+        ],
+      },
+    });
+
+    if (!user) {
+      throw new BusinessRuleError('No patron account found matching this credential.');
+    }
+
+    const latestOtp = await UserOtp.findOne({
+      where: {
+        user_id: user.id,
+        purpose: 'PASSWORD_RESET',
+        verified_at: null,
+        expires_at: { [Op.gt]: new Date() },
+      },
+      order: [['created_at', 'DESC']],
+    });
+
+    if (!latestOtp) {
+      throw new BusinessRuleError('Verification code has expired or is invalid. Please request a new code.');
+    }
+
+    if (latestOtp.attempts >= env.MAX_OTP_ATTEMPTS) {
+      throw new BusinessRuleError('Maximum verification attempts exceeded. Please request a new code.');
+    }
+
+    latestOtp.attempts += 1;
+    await latestOtp.save();
+
+    const isMatch = await verifyHash(data.otp, latestOtp.otp_hash);
+    if (!isMatch) {
+      const remaining = env.MAX_OTP_ATTEMPTS - latestOtp.attempts;
+      throw new BusinessRuleError(
+        `Invalid verification code. ${remaining > 0 ? `${remaining} attempt(s) remaining.` : 'Please request a new code.'}`
+      );
+    }
+
+    latestOtp.verified_at = new Date();
+    await latestOtp.save();
+
+    const newPasswordHash = await hashValue(data.newPassword);
+    user.password_hash = newPasswordHash;
+    await user.save();
+
+    return {
+      success: true,
+      message: 'Your password has been successfully updated. You may now sign in.',
     };
   }
 
@@ -353,33 +444,58 @@ export class AuthService {
   /**
    * Sends WhatsApp OTP to link/verify customer phone number
    */
-  public async sendWhatsAppOTP(userId: string, phone: string): Promise<{ success: boolean; message: string }> {
-    const user = await User.findByPk(userId);
-    if (!user) throw new NotFoundError('User');
+  public async sendWhatsAppOTP(
+    userId?: string | null,
+    rawPhone?: string
+  ): Promise<{ success: boolean; message: string; otp: string; cooldownSeconds: number }> {
+    if (!rawPhone) {
+      throw new BusinessRuleError('Phone number is required');
+    }
+    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      throw new BusinessRuleError('Please enter a valid 10-digit Indian mobile number');
+    }
+
+    const user = (userId && userId !== 'guest') ? await User.findByPk(userId) : null;
 
     // Check if another active customer already verified this phone
     const existingPhoneUser = await User.findOne({
       where: {
-        phone,
+        phone: cleanPhone,
         phone_verified: true,
-        id: { [Op.ne]: userId },
+        ...(user ? { id: { [Op.ne]: user.id } } : {}),
       },
     });
     if (existingPhoneUser) {
-      throw new BusinessRuleError('This phone number is already verified on another account');
+      throw new BusinessRuleError('This phone number is already verified on another patron account');
     }
 
-    // Rate limit check: Max 3 active OTP requests in the last 10 minutes
+    // 20-second cooldown check to stop OTP abuse (Backend & API level)
+    const twentySecondsAgo = new Date(Date.now() - 20 * 1000);
+    const recentOtp = await UserOtp.findOne({
+      where: {
+        phone: cleanPhone,
+        created_at: { [Op.gt]: twentySecondsAgo },
+      },
+      order: [['created_at', 'DESC']],
+    });
+
+    if (recentOtp) {
+      const elapsedMs = Date.now() - new Date(recentOtp.created_at).getTime();
+      const remainingSecs = Math.max(1, Math.ceil((20 * 1000 - elapsedMs) / 1000));
+      throw new BusinessRuleError(`Please wait ${remainingSecs}s before requesting another verification code.`);
+    }
+
+    // Rate limit check: Max 5 active OTP requests in the last 10 minutes
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
     const recentOtpsCount = await UserOtp.count({
       where: {
-        user_id: userId,
-        phone,
+        phone: cleanPhone,
         created_at: { [Op.gt]: tenMinutesAgo },
       },
     });
 
-    if (recentOtpsCount >= env.MAX_OTP_ATTEMPTS) {
+    if (recentOtpsCount >= 5) {
       throw new BusinessRuleError('Too many OTP attempts. Please wait 10 minutes before requesting again.');
     }
 
@@ -388,22 +504,24 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + env.OTP_EXPIRY_MINUTES * 60 * 1000);
 
     await UserOtp.create({
-      user_id: userId,
-      phone,
+      user_id: user ? user.id : null,
+      phone: cleanPhone,
       otp_hash: otpHash,
       purpose: 'PHONE_VERIFICATION',
       expires_at: expiresAt,
     });
 
     await whatsappProvider.sendOTP({
-      phone,
+      phone: cleanPhone,
       otp,
       expiryMinutes: env.OTP_EXPIRY_MINUTES,
     });
 
     return {
       success: true,
-      message: `OTP sent successfully via WhatsApp to ${phone}`,
+      message: `Verification code sent successfully to ${cleanPhone}`,
+      otp, // Exposed for immediate frontend testing while WhatsApp is in development
+      cooldownSeconds: 20,
     };
   }
 
@@ -411,14 +529,18 @@ export class AuthService {
    * Verifies WhatsApp OTP and marks phone as verified on customer profile
    */
   public async verifyWhatsAppOTP(
-    userId: string,
-    phone: string,
-    otp: string
-  ): Promise<{ success: boolean; phone: string; phone_verified: boolean }> {
+    userId?: string | null,
+    rawPhone?: string,
+    otp?: string
+  ): Promise<{ success: boolean; phone: string; phone_verified: boolean; user?: any }> {
+    if (!rawPhone || !otp) {
+      throw new BusinessRuleError('Mobile number and verification code are required.');
+    }
+    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+
     const latestOtp = await UserOtp.findOne({
       where: {
-        user_id: userId,
-        phone,
+        phone: cleanPhone,
         verified_at: null,
         expires_at: { [Op.gt]: new Date() },
       },
@@ -426,11 +548,11 @@ export class AuthService {
     });
 
     if (!latestOtp) {
-      throw new BusinessRuleError('OTP has expired or is invalid. Please request a new one.');
+      throw new BusinessRuleError('Verification code has expired or is invalid. Please request a new code.');
     }
 
-    if (latestOtp.attempts >= 3) {
-      throw new BusinessRuleError('Maximum verification attempts exceeded. Please request a new OTP.');
+    if (latestOtp.attempts >= env.MAX_OTP_ATTEMPTS) {
+      throw new BusinessRuleError('Maximum verification attempts exceeded. Please request a new code.');
     }
 
     latestOtp.attempts += 1;
@@ -438,24 +560,41 @@ export class AuthService {
 
     const isMatch = await verifyHash(otp, latestOtp.otp_hash);
     if (!isMatch) {
-      throw new BusinessRuleError('Invalid OTP entered. Please check and try again.');
+      const remaining = env.MAX_OTP_ATTEMPTS - latestOtp.attempts;
+      throw new BusinessRuleError(
+        `Invalid verification code. ${remaining > 0 ? `${remaining} attempt(s) remaining.` : 'Please request a new code.'}`
+      );
     }
 
     latestOtp.verified_at = new Date();
     await latestOtp.save();
 
-    // Update user profile
-    const user = await User.findByPk(userId);
-    if (!user) throw new NotFoundError('User');
+    // Update user profile if authenticated or matching this phone
+    let user = (userId && userId !== 'guest')
+      ? await User.findByPk(userId)
+      : await User.findOne({ where: { phone: cleanPhone } });
 
-    user.phone = phone;
-    user.phone_verified = true;
-    await user.save();
+    if (user) {
+      user.phone = cleanPhone;
+      user.phone_verified = true;
+      await user.save();
+    }
 
     return {
       success: true,
-      phone: user.phone,
-      phone_verified: user.phone_verified,
+      phone: cleanPhone,
+      phone_verified: true,
+      user: user
+        ? {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            phone_verified: user.phone_verified,
+            role: user.role,
+            avatar_url: user.avatar_url,
+          }
+        : undefined,
     };
   }
 }

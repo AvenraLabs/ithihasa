@@ -50,10 +50,28 @@ export async function registerWithPassword(data: {
   return res;
 }
 
-export async function requestPasswordReset(identifier: string): Promise<{ success: boolean; message: string }> {
-  return apiClient<{ success: boolean; message: string }>('/auth/forgot-password', {
+export interface OtpResponse {
+  success: boolean;
+  message: string;
+  otp?: string;
+  cooldownSeconds?: number;
+}
+
+export async function requestPasswordReset(identifier: string): Promise<OtpResponse> {
+  return apiClient<OtpResponse>('/auth/forgot-password', {
     method: 'POST',
     body: JSON.stringify({ identifier }),
+  });
+}
+
+export async function resetPassword(data: {
+  identifier: string;
+  otp: string;
+  newPassword: string;
+}): Promise<{ success: boolean; message: string }> {
+  return apiClient<{ success: boolean; message: string }>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
   });
 }
 
@@ -68,15 +86,18 @@ export async function loginWithGoogle(idToken: string): Promise<AuthResponse> {
   return res;
 }
 
-export async function sendOtpToPhone(phone: string): Promise<{ success: boolean; message: string }> {
-  return apiClient<{ success: boolean; message: string }>('/auth/phone/send-otp', {
+export async function sendOtpToPhone(phone: string): Promise<OtpResponse> {
+  return apiClient<OtpResponse>('/auth/phone/send-otp', {
     method: 'POST',
     body: JSON.stringify({ phone }),
   });
 }
 
-export async function verifyPhoneOtp(phone: string, otp: string): Promise<{ success: boolean; phone: string; phone_verified: boolean }> {
-  return apiClient<{ success: boolean; phone: string; phone_verified: boolean }>('/auth/phone/verify-otp', {
+export async function verifyPhoneOtp(
+  phone: string,
+  otp: string
+): Promise<{ success: boolean; phone: string; phone_verified: boolean; user?: UserSession }> {
+  return apiClient<{ success: boolean; phone: string; phone_verified: boolean; user?: UserSession }>('/auth/phone/verify-otp', {
     method: 'POST',
     body: JSON.stringify({ phone, otp }),
   });

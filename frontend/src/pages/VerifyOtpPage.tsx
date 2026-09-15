@@ -1,21 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
-import { verifyPhoneOtp, sendOtpToPhone } from '../api/auth.js';
+import { ArrowLeft, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { verifyPhoneOtp, sendOtpToPhone, resetPassword } from '../api/auth.js';
+import { useAvatar } from '../context/AvatarContext.js';
 
 const OTP_LENGTH = 4;
 
 export const VerifyOtpPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { profileData, setProfileData } = useAvatar();
+
   const flow = (location.state as { flow?: string })?.flow || 'register';
   const phone = (location.state as { phone?: string })?.phone || '+91 9876543210';
+  const initialOtp = (location.state as { otp?: string })?.otp || null;
 
+  const [activeOtp, setActiveOtp] = useState<string | null>(initialOtp);
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
+  const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(20);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Auto-focus first input
@@ -23,7 +30,7 @@ export const VerifyOtpPage: React.FC = () => {
     inputRefs.current[0]?.focus();
   }, []);
 
-  // Resend cooldown timer
+  // Resend cooldown timer (20 seconds)
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
@@ -66,25 +73,45 @@ export const VerifyOtpPage: React.FC = () => {
     const code = otp.join('');
     if (code.length < OTP_LENGTH) return;
 
+    if (flow === 'forgot' && newPassword.length < 6) {
+      setIsError(true);
+      setToastMessage('New password must be at least 6 characters');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
     setIsLoading(true);
     setIsError(false);
 
     try {
-      await verifyPhoneOtp(phone, code);
-      setToastMessage('Verified successfully');
-      setTimeout(() => {
-        setToastMessage(null);
-        if (flow === 'forgot') {
+      if (flow === 'forgot') {
+        const res = await resetPassword({
+          identifier: phone,
+          otp: code,
+          newPassword,
+        });
+        setToastMessage(res.message || 'Password updated successfully');
+        setTimeout(() => {
+          setToastMessage(null);
           navigate('/login');
-        } else {
+        }, 1200);
+      } else {
+        const res = await verifyPhoneOtp(phone, code);
+        setProfileData({
+          ...profileData,
+          phone: res.phone || phone,
+        });
+        setToastMessage('Phone verified successfully');
+        setTimeout(() => {
+          setToastMessage(null);
           navigate('/account');
-        }
-      }, 1000);
+        }, 1000);
+      }
     } catch (err: any) {
       setIsError(true);
-      const msg = err.message || 'Invalid or expired OTP. Please try again.';
+      const msg = err.message || 'Invalid or expired code. Please try again.';
       setToastMessage(msg);
-      setTimeout(() => setToastMessage(null), 3000);
+      setTimeout(() => setToastMessage(null), 3500);
     } finally {
       setIsLoading(false);
     }
@@ -93,15 +120,18 @@ export const VerifyOtpPage: React.FC = () => {
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     try {
-      await sendOtpToPhone(phone);
-      setResendCooldown(30);
+      const res = await sendOtpToPhone(phone);
+      if (res.otp) {
+        setActiveOtp(res.otp);
+      }
+      setResendCooldown(20);
       setIsError(false);
-      setToastMessage('New code sent to your phone');
-      setTimeout(() => setToastMessage(null), 2000);
+      setToastMessage('New verification code sent');
+      setTimeout(() => setToastMessage(null), 2500);
     } catch (err: any) {
       setIsError(true);
-      setToastMessage(err.message || 'Failed to send code');
-      setTimeout(() => setToastMessage(null), 3000);
+      setToastMessage(err.message || 'Failed to send code. Please wait.');
+      setTimeout(() => setToastMessage(null), 3500);
     }
   };
 
@@ -163,9 +193,32 @@ export const VerifyOtpPage: React.FC = () => {
             Enter the 4-digit code sent to your mobile.
           </p>
 
+          {/* OTP Live Preview Banner */}
+          {activeOtp && (
+            <div className="mb-8 p-4 bg-[var(--gold)]/10 border border-[var(--gold)]/40 rounded text-center">
+              <span className="label-caps text-[11px] tracking-widest text-[var(--gold)] font-semibold uppercase block mb-1">
+                Verification Code (Live Preview)
+              </span>
+              <span className="text-[32px] tracking-[0.35em] font-mono font-bold text-[var(--gold)] block">
+                {activeOtp}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const digits = activeOtp.split('').slice(0, 4);
+                  setOtp(digits);
+                  inputRefs.current[3]?.focus();
+                }}
+                className="mt-2 text-[11px] font-semibold text-[var(--gold)] hover:underline uppercase tracking-wider block mx-auto cursor-pointer"
+              >
+                Auto-Fill Code
+              </button>
+            </div>
+          )}
+
           {/* OTP Input Grid */}
           <form onSubmit={handleVerify}>
-            <div className="flex justify-center gap-4 mb-12" onPaste={handlePaste}>
+            <div className="flex justify-center gap-4 mb-8" onPaste={handlePaste}>
               {otp.map((digit, i) => (
                 <input
                   key={i}
@@ -187,11 +240,42 @@ export const VerifyOtpPage: React.FC = () => {
               ))}
             </div>
 
+            {/* If Forgot Password flow, prompt for New Password */}
+            {flow === 'forgot' && (
+              <div className="mb-8 text-left border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-1 relative">
+                <label
+                  htmlFor="new-password"
+                  className="label-caps text-[11px] tracking-widest text-[var(--text-secondary)] uppercase mb-1 block"
+                >
+                  NEW PASSWORD (MIN. 6 CHARACTERS)
+                </label>
+                <div className="flex items-center justify-between">
+                  <input
+                    id="new-password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="w-full bg-transparent text-[16px] text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-secondary)]/40 pr-8"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-1 text-[var(--text-secondary)] hover:text-[var(--gold)] transition-colors"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Verify Button */}
             <button
               type="submit"
               disabled={!isComplete || isLoading}
-              className="w-full h-12 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] label-caps text-[12px] uppercase tracking-[0.15em] hover:bg-[var(--gold)] hover:text-[#0A0A0A] transition-colors duration-300 font-semibold shadow-md disabled:opacity-40 flex items-center justify-center gap-2"
+              className="w-full h-12 bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] label-caps text-[12px] uppercase tracking-[0.15em] hover:bg-[var(--gold)] hover:text-[#0A0A0A] transition-colors duration-300 font-semibold shadow-md disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -199,7 +283,7 @@ export const VerifyOtpPage: React.FC = () => {
                   <span>Verifying...</span>
                 </>
               ) : (
-                <span>Verify & Continue</span>
+                <span>{flow === 'forgot' ? 'Update Password' : 'Verify & Continue'}</span>
               )}
             </button>
           </form>

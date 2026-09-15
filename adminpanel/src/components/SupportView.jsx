@@ -55,7 +55,7 @@ export function SupportView() {
   const openTicketsCount =
     metrics?.openTickets ??
     tickets.filter((t) => t.status === 'OPEN' || t.status === 'PENDING').length;
-  const avgResponseTime = metrics?.avgResponseHours ?? 1.2;
+  const avgResponseTime = metrics?.avgResponseHours ?? 0;
   const urgentCount =
     metrics?.urgentEscalations ??
     tickets.filter((t) => (t.priority === 'High' || t.priority === 'HIGH') && t.status !== 'RESOLVED').length;

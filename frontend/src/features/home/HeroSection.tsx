@@ -10,8 +10,9 @@ export const HeroSection: React.FC = () => {
   const { data: cms } = useQuery({
     queryKey: ['storefront'],
     queryFn: fetchStorefrontData,
-    initialData: getCachedStorefrontData,
-    staleTime: 1000 * 60 * 5,
+    placeholderData: getCachedStorefrontData,
+    staleTime: 30 * 1000,
+    refetchOnMount: true,
   });
 
   const hero = cms?.hero;
@@ -64,7 +65,7 @@ export const HeroSection: React.FC = () => {
           {hero.ctaText ? (
             <button
               onClick={() => navigate(hero.ctaLink || '/shop')}
-              className="bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] font-label-caps text-label-caps px-8 py-4 tracking-widest hover:bg-[var(--gold)] hover:text-[#0A0A0A] transition-colors duration-300 border border-[var(--border-color)] uppercase shadow-lg active:scale-95 cursor-pointer"
+              className="bg-[var(--gold)] text-[#0A0A0A] font-label-caps text-label-caps px-8 py-4 tracking-[0.2em] font-semibold hover:bg-[var(--gold-bright)] transition-all duration-300 border border-[var(--gold)] uppercase shadow-[0_4px_24px_rgba(201,162,75,0.35)] active:scale-95 cursor-pointer"
             >
               {hero.ctaText}
             </button>

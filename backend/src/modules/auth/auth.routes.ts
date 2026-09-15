@@ -8,6 +8,7 @@ import {
   registerSchema,
   loginSchema,
   forgotPasswordSchema,
+  resetPasswordSchema,
   sendOtpSchema,
   verifyOtpSchema,
 } from './auth.validation.js';
@@ -40,6 +41,13 @@ authRouter.post(
   authRateLimiter,
   validateRequest({ body: forgotPasswordSchema }),
   authController.forgotPassword
+);
+
+authRouter.post(
+  '/reset-password',
+  authRateLimiter,
+  validateRequest({ body: resetPasswordSchema }),
+  authController.resetPassword
 );
 
 authRouter.post(

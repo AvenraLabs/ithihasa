@@ -61,71 +61,82 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const GOOGLE_CLIENT_ID =
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+    '683901924088-1t92grkteqpjn7n5sb07vsuo2n3pv915.apps.googleusercontent.com';
+
+  const handleGoogleCredentialResponse = async (response: any) => {
+    if (!response?.credential) {
+      setError('Google sign-in was cancelled or produced no credential.');
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
-      const clientId =
-        import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-        '683901924088-1t92grkteqpjn7n5sb07vsuo2n3pv915.apps.googleusercontent.com';
-
-      if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
-        (window as any).google.accounts.id.initialize({
-          client_id: clientId,
-          callback: async (response: any) => {
-            try {
-              if (!response?.credential) {
-                throw new Error('No credential received from Google');
-              }
-              const res = await loginWithGoogle(response.credential);
-              if (res.user) {
-                setProfileData({
-                  fullName: res.user.name || '',
-                  email: res.user.email || '',
-                  phone: res.user.phone || '',
-                });
-              }
-              await syncGuestWishlistToBackend().catch(() => {});
-              setToastMessage(`Welcome to the atelier, ${res.user?.name || 'Patron'}`);
-              setTimeout(() => {
-                setToastMessage(null);
-                navigate(redirectTarget);
-              }, 700);
-            } catch (err: any) {
-              setError(err.message || 'Google sign in failed');
-            } finally {
-              setIsLoading(false);
-            }
-          },
+      const res = await loginWithGoogle(response.credential);
+      if (res.user) {
+        setProfileData({
+          fullName: res.user.name || '',
+          email: res.user.email || '',
+          phone: res.user.phone || '',
         });
-
-        (window as any).google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            console.info('Google One Tap notification:', notification);
-          }
-        });
-      } else {
-        const res = await loginWithGoogle('mock_token_patron@ithihasa.co.in');
-        if (res.user) {
-          setProfileData({
-            fullName: res.user.name || '',
-            email: res.user.email || '',
-            phone: res.user.phone || '',
-          });
-        }
-        await syncGuestWishlistToBackend().catch(() => {});
-        setToastMessage(`Welcome back, ${res.user?.name || 'Patron'}`);
-        setTimeout(() => {
-          setToastMessage(null);
-          navigate(redirectTarget);
-        }, 700);
       }
+      await syncGuestWishlistToBackend().catch(() => {});
+      setToastMessage(`Welcome to the atelier, ${res.user?.name || 'Patron'}`);
+      setTimeout(() => {
+        setToastMessage(null);
+        navigate(redirectTarget);
+      }, 700);
     } catch (err: any) {
-      setError(err.message || 'Google sign in failed');
+      setError(err.message || 'Google sign in failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    const initGoogle = () => {
+      if (typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
+        try {
+          (window as any).google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+
+          const btnContainer = document.getElementById('google-login-btn');
+          if (btnContainer && !btnContainer.hasChildNodes()) {
+            (window as any).google.accounts.id.renderButton(btnContainer, {
+              type: 'standard',
+              theme: document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline',
+              size: 'large',
+              text: 'continue_with',
+              shape: 'rectangular',
+              logo_alignment: 'left',
+              width: Math.min(window.innerWidth - 48, 380),
+            });
+          }
+        } catch (e) {
+          console.warn('Google GSI initialization notice:', e);
+        }
+      }
+    };
+
+    initGoogle();
+    const timer = setInterval(() => {
+      if ((window as any).google?.accounts?.id) {
+        initGoogle();
+        clearInterval(timer);
+      }
+    }, 250);
+    const timeout = setTimeout(() => clearInterval(timer), 4000);
+
+    return () => {
+      clearInterval(timer);
+      clearTimeout(timeout);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors flex flex-col md:flex-row antialiased selection:bg-[var(--gold)] selection:text-[#0A0A0A]">
@@ -189,33 +200,10 @@ export const LoginPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Google Login Button matching Stitch */}
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-            className="w-full h-12 flex items-center justify-center gap-3 bg-transparent border border-[var(--border-color)] hover:border-[var(--gold)] hover:bg-[var(--bg-card)] transition-colors duration-300 label-caps text-[11px] text-[var(--text-primary)] uppercase tracking-widest disabled:opacity-50"
-          >
-            <svg aria-hidden="true" className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-              <path
-                d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
-                fill="#EA4335"
-              />
-              <path
-                d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z"
-                fill="#4285F4"
-              />
-              <path
-                d="M5.26498 14.2949C5.02498 13.5699 4.88501 12.7999 4.88501 11.9999C4.88501 11.1999 5.01998 10.4299 5.26498 9.7049L1.275 6.60986C0.46 8.22986 0 10.0599 0 11.9999C0 13.9399 0.46 15.7699 1.28 17.3899L5.26498 14.2949Z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.8704 19.245 6.21537 17.135 5.26537 14.29L1.27539 17.385C3.25539 21.31 7.3104 24.0001 12.0004 24.0001Z"
-                fill="#34A853"
-              />
-            </svg>
-            <span>Continue with Google</span>
-          </button>
+          {/* Google Login Button Container */}
+          <div className="w-full flex flex-col items-center justify-center min-h-[44px]">
+            <div id="google-login-btn" className="w-full flex justify-center items-center" />
+          </div>
 
           {/* Divider */}
           <div className="flex items-center gap-4">

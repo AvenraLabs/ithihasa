@@ -3,7 +3,7 @@ import { ArrowLeft, Check, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAvatar } from '../context/AvatarContext.js';
 
-import { updateUserProfile } from '../api/auth.js';
+import { updateUserProfile, sendOtpToPhone } from '../api/auth.js';
 
 export const EditProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +15,30 @@ export const EditProfilePage: React.FC = () => {
   const [phone, setPhone] = useState<string>(profileData.phone);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false);
+
+  const handleVerifyPhone = async () => {
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setToastMessage('Please enter a valid 10-digit mobile number');
+      setTimeout(() => setToastMessage(null), 2500);
+      return;
+    }
+    setIsSendingOtp(true);
+    try {
+      const res = await sendOtpToPhone(cleanPhone);
+      setToastMessage('Verification code generated');
+      setTimeout(() => {
+        setToastMessage(null);
+        navigate('/verify-otp', { state: { phone: cleanPhone, flow: 'profile', otp: res?.otp } });
+      }, 700);
+    } catch (err: any) {
+      setToastMessage(err.message || 'Failed to send verification code');
+      setTimeout(() => setToastMessage(null), 3500);
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,12 +212,24 @@ export const EditProfilePage: React.FC = () => {
 
             {/* Phone Number */}
             <div className="relative border-b border-[var(--border-color)] focus-within:border-[var(--gold)] transition-colors pb-2">
-              <label
-                htmlFor="phone"
-                className="block text-[11px] label-caps tracking-widest text-[var(--text-secondary)] uppercase mb-1"
-              >
-                PHONE NUMBER (10 DIGITS)
-              </label>
+              <div className="flex justify-between items-center mb-1">
+                <label
+                  htmlFor="phone"
+                  className="block text-[11px] label-caps tracking-widest text-[var(--text-secondary)] uppercase"
+                >
+                  PHONE NUMBER (10 DIGITS)
+                </label>
+                {phone && phone.replace(/\D/g, '').length === 10 && (
+                  <button
+                    type="button"
+                    onClick={handleVerifyPhone}
+                    disabled={isSendingOtp}
+                    className="label-caps text-[10px] uppercase tracking-wider text-[var(--gold)] hover:underline font-semibold cursor-pointer disabled:opacity-50"
+                  >
+                    {isSendingOtp ? 'Sending code...' : 'Verify Phone'}
+                  </button>
+                )}
+              </div>
               <input
                 id="phone"
                 type="tel"

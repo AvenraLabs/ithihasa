@@ -17,18 +17,17 @@ export const ForgotPasswordPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await requestPasswordReset(mobileNumber);
-      setToastMessage('OTP sent to your mobile');
+      const res = await requestPasswordReset(mobileNumber);
+      setToastMessage('Verification code generated');
       setTimeout(() => {
         setToastMessage(null);
-        navigate('/verify-otp', { state: { phone: mobileNumber, flow: 'forgot' } });
-      }, 800);
+        navigate('/verify-otp', { state: { phone: mobileNumber, flow: 'forgot', otp: res?.otp } });
+      }, 700);
     } catch (err: any) {
-      setToastMessage(err.message || 'OTP sent to your mobile');
+      setToastMessage(err.message || 'Error requesting reset code');
       setTimeout(() => {
         setToastMessage(null);
-        navigate('/verify-otp', { state: { phone: mobileNumber, flow: 'forgot' } });
-      }, 800);
+      }, 2500);
     } finally {
       setIsLoading(false);
     }

@@ -56,9 +56,41 @@ export class SupportService {
       ],
     });
 
+    // Calculate actual average response time from ticket creation to first agent response
+    const repliedTickets = await SupportTicket.findAll({
+      attributes: ['id', 'created_at'],
+      include: [
+        {
+          model: SupportMessage,
+          as: 'messages',
+          attributes: ['id', 'sender_role', 'created_at'],
+          where: { sender_role: 'AGENT' },
+          required: true,
+        },
+      ],
+      limit: 100,
+    });
+
+    let avgResponseHours = 0;
+    if (repliedTickets.length > 0) {
+      let totalDiffMs = 0;
+      for (const ticket of repliedTickets) {
+        const agentMessages = (ticket as any).messages || [];
+        if (agentMessages.length > 0) {
+          const earliestAgentTime = Math.min(
+            ...agentMessages.map((m: any) => new Date(m.created_at).getTime())
+          );
+          const ticketCreatedTime = new Date(ticket.created_at).getTime();
+          totalDiffMs += Math.max(0, earliestAgentTime - ticketCreatedTime);
+        }
+      }
+      const totalHours = totalDiffMs / (1000 * 60 * 60);
+      avgResponseHours = Number((totalHours / repliedTickets.length).toFixed(1));
+    }
+
     return {
       openTickets: openTicketsCount,
-      avgResponseHours: 1.2,
+      avgResponseHours,
       urgentEscalations,
       totalTickets,
       recentTickets: recentTickets.map((t) => this.formatTicketSummary(t)),
