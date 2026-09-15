@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { User, Address, Order, Wishlist } from '../../database/index.js';
+import { User, Address, Order, Wishlist, UserOtp } from '../../database/index.js';
 import { NotFoundError, AuthenticationError, BusinessRuleError } from '../../common/errors/index.js';
 import { hashValue, verifyHash } from '../../common/utils/crypto.js';
 
@@ -44,8 +44,22 @@ export class UserService {
         if (existing) {
           throw new BusinessRuleError('This mobile number is already registered to another verified patron account.');
         }
+
+        // Verify that this new mobile number was verified via OTP
+        const verifiedOtp = await UserOtp.findOne({
+          where: {
+            phone: cleanPhone,
+            verified_at: { [Op.ne]: null },
+          },
+          order: [['created_at', 'DESC']],
+        });
+
+        if (!verifiedOtp) {
+          throw new BusinessRuleError('Please verify your mobile number with OTP before saving changes.');
+        }
+
         user.phone = cleanPhone;
-        user.phone_verified = false;
+        user.phone_verified = true;
       } else if (!cleanPhone) {
         user.phone = null;
         user.phone_verified = false;

@@ -34,6 +34,7 @@ export interface UserProfileData {
   fullName: string;
   email: string;
   phone: string;
+  phone_verified?: boolean;
   tier?: string;
 }
 
@@ -43,7 +44,7 @@ interface AvatarContextType {
   setAvatar: (srcOrAuto: string) => void;
   avatarOptions: AvatarOption[];
   profileData: UserProfileData;
-  setProfileData: (data: UserProfileData) => void;
+  setProfileData: (data: Partial<UserProfileData>) => void;
 }
 
 const AvatarContext = createContext<AvatarContextType | undefined>(undefined);
@@ -69,6 +70,7 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       fullName: '',
       email: '',
       phone: '',
+      phone_verified: false,
       tier: 'Novice',
     };
   });
@@ -82,10 +84,11 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try {
         const user = await fetchUserProfile();
         if (user) {
-          const updated = {
+          const updated: UserProfileData = {
             fullName: user.name || '',
             email: user.email || '',
             phone: user.phone || '',
+            phone_verified: Boolean(user.phone_verified),
             tier: user.tier || 'Novice',
           };
           setProfileDataState(updated);
@@ -103,9 +106,12 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem('ithihasa_selected_avatar', srcOrAuto);
   };
 
-  const setProfileData = (data: UserProfileData) => {
-    setProfileDataState(data);
-    localStorage.setItem('ithihasa_user_profile', JSON.stringify(data));
+  const setProfileData = (data: Partial<UserProfileData>) => {
+    setProfileDataState((prev) => {
+      const updated: UserProfileData = { ...prev, ...data };
+      localStorage.setItem('ithihasa_user_profile', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   // Resolve current avatar:

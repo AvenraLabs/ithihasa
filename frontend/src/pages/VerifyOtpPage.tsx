@@ -9,7 +9,7 @@ const OTP_LENGTH = 4;
 export const VerifyOtpPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profileData, setProfileData } = useAvatar();
+  const { setProfileData } = useAvatar();
 
   const flow = (location.state as { flow?: string })?.flow || 'register';
   const phone = (location.state as { phone?: string })?.phone || '+91 9876543210';
@@ -95,11 +95,31 @@ export const VerifyOtpPage: React.FC = () => {
           setToastMessage(null);
           navigate('/login');
         }, 1200);
+      } else if (flow === 'profile') {
+        const res = await verifyPhoneOtp(phone, code);
+        const draft = (location.state as any)?.draftProfile || {};
+        setProfileData({
+          phone: res.phone || phone,
+          phone_verified: true,
+        });
+        setToastMessage('Phone verified successfully');
+        setTimeout(() => {
+          setToastMessage(null);
+          navigate('/account/edit', {
+            state: {
+              draftProfile: {
+                ...draft,
+                phone: res.phone || phone,
+                phone_verified: true,
+              },
+            },
+          });
+        }, 700);
       } else {
         const res = await verifyPhoneOtp(phone, code);
         setProfileData({
-          ...profileData,
           phone: res.phone || phone,
+          phone_verified: true,
         });
         setToastMessage('Phone verified successfully');
         setTimeout(() => {
@@ -159,7 +179,14 @@ export const VerifyOtpPage: React.FC = () => {
       {/* Header Bar */}
       <header className="flex items-center justify-between px-5 h-14 border-b border-[var(--border-color)]">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            if (flow === 'profile') {
+              const draft = (location.state as any)?.draftProfile;
+              navigate('/account/edit', { state: { draftProfile: draft } });
+            } else {
+              navigate(-1);
+            }
+          }}
           className="p-2 -ml-2 text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors"
           aria-label="Go Back"
         >
