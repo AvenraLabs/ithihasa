@@ -9,6 +9,7 @@ import {
   changePassword,
   verifyPhoneOtp,
   verifyEmailOtp,
+  fetchUserProfile,
 } from '../api/auth.js';
 
 interface VerificationModalState {
@@ -25,7 +26,8 @@ export const EditProfilePage: React.FC = () => {
 
   const draft = (location.state as any)?.draftProfile;
 
-  const isGoogleAuth = Boolean(profileData.is_google_auth);
+  // Only consider Google Auth locked if the account actually has an email linked from Google
+  const isGoogleAuth = Boolean(profileData.is_google_auth && profileData.email);
   const hasPassword = Boolean(profileData.has_password);
 
   const [chosenAvatar, setChosenAvatar] = useState<string>(
@@ -79,6 +81,34 @@ export const EditProfilePage: React.FC = () => {
   const [modalCooldown, setModalCooldown] = useState<number>(20);
   const [isModalVerifying, setIsModalVerifying] = useState<boolean>(false);
   const modalInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Hydrate authoritative profile state on mount to ensure fresh status
+  useEffect(() => {
+    fetchUserProfile()
+      .then((u) => {
+        if (u) {
+          const isGoogle = Boolean(u.is_google_auth);
+          setProfileData({
+            fullName: u.name || '',
+            email: u.email || '',
+            phone: u.phone || '',
+            phone_verified: Boolean(u.phone_verified),
+            tier: u.tier || 'Novice',
+            is_google_auth: isGoogle,
+            has_password: Boolean(u.has_password),
+            avatar_url: u.avatar_url || undefined,
+          });
+          if (!draft) {
+            setFullName(u.name || '');
+            setEmail(u.email || '');
+            setPhone(u.phone || '');
+            setVerifiedPhone(u.phone_verified ? (u.phone || null) : null);
+            setVerifiedEmail(u.email || null);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // 20-second countdown timer for in-page modal resend
   useEffect(() => {
@@ -139,14 +169,14 @@ export const EditProfilePage: React.FC = () => {
     }
     setIsSendingEmailOtp(true);
     try {
-      const res = await sendEmailOtp(cleanEmail);
+      await sendEmailOtp(cleanEmail);
       setModalOtpDigits(['', '', '', '']);
       setModalCooldown(20);
       setVerifyModal({
         isOpen: true,
         type: 'email',
         target: cleanEmail,
-        activeOtp: res?.otp || null,
+        activeOtp: null, // Email OTP is delivered via SMTP to patron's inbox only
       });
       setTimeout(() => {
         modalInputRefs.current[0]?.focus();
@@ -199,14 +229,14 @@ export const EditProfilePage: React.FC = () => {
   const handleModalResend = async () => {
     if (modalCooldown > 0) return;
     try {
-      let res;
       if (verifyModal.type === 'phone') {
-        res = await sendOtpToPhone(verifyModal.target);
+        const res = await sendOtpToPhone(verifyModal.target);
+        if (res?.otp) {
+          setVerifyModal((prev) => ({ ...prev, activeOtp: res.otp || null }));
+        }
       } else {
-        res = await sendEmailOtp(verifyModal.target);
-      }
-      if (res?.otp) {
-        setVerifyModal((prev) => ({ ...prev, activeOtp: res?.otp || null }));
+        await sendEmailOtp(verifyModal.target);
+        setVerifyModal((prev) => ({ ...prev, activeOtp: null }));
       }
       setModalCooldown(20);
       setToastMessage('New verification code sent');
@@ -719,18 +749,26 @@ export const EditProfilePage: React.FC = () => {
                 {verifyModal.type === 'phone' ? 'Verify Mobile Number' : 'Verify Email Address'}
               </h3>
               <p className="body-md text-[13px] text-[var(--text-secondary)]">
-                Enter the 4-digit verification code sent to{' '}
-                <span className="text-[var(--gold)] font-medium">
-                  {verifyModal.type === 'phone' ? `+91 ${verifyModal.target}` : verifyModal.target}
-                </span>
+                {verifyModal.type === 'phone' ? (
+                  <>
+                    Enter the 4-digit verification code sent to{' '}
+                    <span className="text-[var(--gold)] font-medium">+91 {verifyModal.target}</span>
+                  </>
+                ) : (
+                  <>
+                    A 4-digit verification code has been dispatched to your email at{' '}
+                    <span className="text-[var(--gold)] font-medium">{verifyModal.target}</span>.
+                    <br />Please inspect your inbox or spam folder.
+                  </>
+                )}
               </p>
             </div>
 
-            {/* OTP Preview Banner */}
-            {verifyModal.activeOtp && (
+            {/* OTP Preview Banner (Development preview for WhatsApp/Phone only, never for Email) */}
+            {verifyModal.type === 'phone' && verifyModal.activeOtp && (
               <div className="p-3 bg-[var(--gold)]/10 border border-[var(--gold)]/40 rounded text-center">
                 <span className="label-caps text-[10px] tracking-widest text-[var(--gold)] font-semibold uppercase block mb-0.5">
-                  Verification Code (Live Preview)
+                  Verification Code (Preview)
                 </span>
                 <span className="text-[26px] tracking-[0.3em] font-mono font-bold text-[var(--gold)] block">
                   {verifyModal.activeOtp}

@@ -120,6 +120,8 @@ export const VerifyOtpPage: React.FC = () => {
           email: res.user.email || '',
           phone: res.user.phone || phone,
           phone_verified: true,
+          is_google_auth: false,
+          has_password: true,
         });
 
         setToastMessage('Account created and phone verified!');

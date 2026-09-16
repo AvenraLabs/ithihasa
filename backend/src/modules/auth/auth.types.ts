@@ -14,6 +14,8 @@ export interface AuthResponse {
     role: 'CUSTOMER' | 'ADMIN';
     avatar_url: string | null;
     tier?: string;
+    is_google_auth?: boolean;
+    has_password?: boolean;
   };
   tokens: AuthTokens;
 }

@@ -6,9 +6,11 @@ import {
   OrderStatusHistory,
   Cart,
   CartItem,
+  User,
 } from '../../database/index.js';
 import { phonePeProvider } from '../../integrations/phonepe/phonepe.provider.js';
 import { inventoryService } from '../inventory/inventory.service.js';
+import { emailProvider } from '../../integrations/email/email.provider.js';
 import { NotFoundError, PaymentError } from '../../common/errors/index.js';
 import { logger } from '../../common/logger/index.js';
 
@@ -67,7 +69,7 @@ export class PaymentService {
       return { status: 'SUCCESS', orderId: order.id, orderNumber: order.order_number };
     }
 
-    return sequelize.transaction(async (t) => {
+    const result = await sequelize.transaction(async (t) => {
       payment.raw_response = rawPayload || null;
       if (providerReferenceId) payment.provider_reference_id = providerReferenceId;
 
@@ -144,6 +146,49 @@ export class PaymentService {
         orderNumber: order.order_number,
       };
     });
+
+    // If payment completed successfully, dispatch Order Confirmation email to patron via Zoho SMTP
+    if (state === 'COMPLETED' && payment.status === 'SUCCESS') {
+      try {
+        const fullOrder = await Order.findByPk(order.id, {
+          include: [
+            { model: User, as: 'user', attributes: ['name', 'email'] },
+            { model: OrderItem, as: 'items' },
+          ],
+        });
+
+        const customerEmail = (fullOrder as any)?.user?.email;
+        if (customerEmail) {
+          const itemsPayload = ((fullOrder as any)?.items || []).map((it: any) => ({
+            productName: it.product_name,
+            variantName: it.variant_name,
+            quantity: it.quantity,
+            unitPrice: it.unit_price,
+            total: it.total,
+          }));
+
+          emailProvider
+            .sendOrderConfirmationEmail({
+              email: customerEmail,
+              orderNumber: fullOrder?.order_number || order.order_number,
+              totalAmount: Number(fullOrder?.total_amount || order.total_amount),
+              currency: fullOrder?.currency || order.currency,
+              items: itemsPayload,
+              shippingAddress: fullOrder?.shipping_address || order.shipping_address,
+              customerName: (fullOrder as any)?.user?.name,
+            })
+            .catch((err) => {
+              logger.warn({ err: err.message, orderId: order.id }, 'Background order confirmation email dispatch notice');
+            });
+        } else {
+          logger.info({ orderId: order.id }, 'Customer has no email address on file. Skipped order confirmation email.');
+        }
+      } catch (emailErr: any) {
+        logger.warn({ err: emailErr.message, orderId: order.id }, 'Failed to initiate order confirmation email');
+      }
+    }
+
+    return result;
   }
 
   /**

@@ -96,6 +96,8 @@ export class AuthService {
         phone_verified: user.phone_verified,
         role: user.role,
         avatar_url: user.avatar_url,
+        is_google_auth: Boolean(user.google_id),
+        has_password: Boolean(user.password_hash),
       },
       tokens,
     };
@@ -156,6 +158,8 @@ export class AuthService {
         phone_verified: user.phone_verified,
         role: user.role,
         avatar_url: user.avatar_url,
+        is_google_auth: Boolean(user.google_id),
+        has_password: Boolean(user.password_hash),
       },
       tokens,
     };
@@ -427,6 +431,8 @@ export class AuthService {
         phone_verified: user.phone_verified,
         role: user.role,
         avatar_url: user.avatar_url,
+        is_google_auth: true,
+        has_password: Boolean(user.password_hash),
       },
       tokens,
     };
@@ -602,6 +608,8 @@ export class AuthService {
             phone_verified: user.phone_verified,
             role: user.role,
             avatar_url: user.avatar_url,
+            is_google_auth: Boolean(user.google_id),
+            has_password: Boolean(user.password_hash),
           }
         : undefined,
     };
@@ -769,6 +777,8 @@ export class AuthService {
         phone_verified: user.phone_verified,
         role: user.role,
         avatar_url: user.avatar_url,
+        is_google_auth: false,
+        has_password: true,
       },
       tokens,
     };
@@ -780,7 +790,7 @@ export class AuthService {
   public async sendEmailOTP(
     userId?: string | null,
     rawEmail?: string
-  ): Promise<{ success: boolean; message: string; otp: string; cooldownSeconds: number }> {
+  ): Promise<{ success: boolean; message: string; cooldownSeconds: number }> {
     if (!rawEmail) {
       throw new BusinessRuleError('Email address is required.');
     }
@@ -790,21 +800,16 @@ export class AuthService {
       throw new BusinessRuleError('Please enter a valid email address.');
     }
 
-    // If authenticated user, verify they are not a Google account
+    // Check if another account is already using this email
     if (userId && userId !== 'guest') {
-      const user = await User.findByPk(userId);
-      if (user?.google_id) {
-        throw new BusinessRuleError('Email cannot be changed for accounts linked with Google.');
-      }
-
-      const existingOther = await User.findOne({
+      const existing = await User.findOne({
         where: {
           email: cleanEmail,
           id: { [Op.ne]: userId },
         },
       });
-      if (existingOther) {
-        throw new BusinessRuleError('An account with this email address already exists.');
+      if (existing) {
+        throw new BusinessRuleError('An account with this email address already exists. Please use a different email.');
       }
     } else {
       const existing = await User.findOne({ where: { email: cleanEmail } });
@@ -863,7 +868,6 @@ export class AuthService {
     return {
       success: true,
       message: `Verification code sent to ${cleanEmail}`,
-      otp, // Available for frontend testing preview
       cooldownSeconds: 20,
     };
   }

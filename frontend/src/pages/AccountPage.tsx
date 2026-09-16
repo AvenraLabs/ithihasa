@@ -29,7 +29,7 @@ const NAV_ITEMS = [
 ];
 
 export const AccountPage: React.FC = () => {
-  const { profileData } = useAvatar();
+  const { profileData, clearProfileData } = useAvatar();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -43,7 +43,7 @@ export const AccountPage: React.FC = () => {
 
   const handleSignOut = () => {
     localStorage.removeItem('ithihasa_access_token');
-    localStorage.removeItem('ithihasa_user_profile');
+    clearProfileData();
     setIsLoggedIn(false);
     navigate('/login');
   };

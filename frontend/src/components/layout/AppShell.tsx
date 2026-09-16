@@ -30,7 +30,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { profileData } = useAvatar();
+  const { profileData, clearProfileData } = useAvatar();
   const isPDP = location.pathname.startsWith('/products/');
 
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -73,7 +73,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   const handleSignOut = () => {
     localStorage.removeItem('ithihasa_access_token');
-    localStorage.removeItem('ithihasa_user_profile');
+    clearProfileData();
     setIsLoggedIn(false);
     setIsMenuOpen(false);
     navigate('/login');

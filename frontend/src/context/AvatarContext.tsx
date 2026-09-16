@@ -48,6 +48,7 @@ interface AvatarContextType {
   avatarOptions: AvatarOption[];
   profileData: UserProfileData;
   setProfileData: (data: Partial<UserProfileData>) => void;
+  clearProfileData: () => void;
 }
 
 const AvatarContext = createContext<AvatarContextType | undefined>(undefined);
@@ -130,6 +131,23 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   };
 
+  const clearProfileData = () => {
+    const blank: UserProfileData = {
+      fullName: '',
+      email: '',
+      phone: '',
+      phone_verified: false,
+      tier: 'Novice',
+      is_google_auth: false,
+      has_password: false,
+      avatar_url: undefined,
+    };
+    setProfileDataState(blank);
+    localStorage.removeItem('ithihasa_user_profile');
+    localStorage.removeItem('ithihasa_selected_avatar');
+    setSelectedAvatarState('auto');
+  };
+
   // Resolve current avatar:
   // 1. Explicitly selected avatar (if not 'auto')
   // 2. Saved avatar_url in profile data
@@ -152,6 +170,7 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         avatarOptions: AVATAR_OPTIONS,
         profileData,
         setProfileData,
+        clearProfileData,
       }}
     >
       {children}
@@ -173,6 +192,7 @@ export const useAvatar = (): AvatarContextType => {
         phone: '',
       },
       setProfileData: () => {},
+      clearProfileData: () => {},
     };
   }
   return context;
