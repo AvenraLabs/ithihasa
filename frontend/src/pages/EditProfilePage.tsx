@@ -1,8 +1,22 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Check, CheckCircle2, Lock, KeyRound, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, Check, CheckCircle2, Lock, KeyRound, Eye, EyeOff, X, RefreshCw } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAvatar } from '../context/AvatarContext.js';
-import { updateUserProfile, sendOtpToPhone, sendEmailOtp, changePassword } from '../api/auth.js';
+import {
+  updateUserProfile,
+  sendOtpToPhone,
+  sendEmailOtp,
+  changePassword,
+  verifyPhoneOtp,
+  verifyEmailOtp,
+} from '../api/auth.js';
+
+interface VerificationModalState {
+  isOpen: boolean;
+  type: 'phone' | 'email';
+  target: string;
+  activeOtp: string | null;
+}
 
 export const EditProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,18 +41,18 @@ export const EditProfilePage: React.FC = () => {
     draft?.phone ?? profileData.phone
   );
 
-  // Track verified phone and email
+  // Track verified phone and email in state
   const initialVerifiedPhone = draft?.phone_verified
     ? draft.phone
     : profileData.phone_verified
     ? profileData.phone
     : null;
-  const [verifiedPhone] = useState<string | null>(initialVerifiedPhone);
+  const [verifiedPhone, setVerifiedPhone] = useState<string | null>(initialVerifiedPhone);
 
   const initialVerifiedEmail = draft?.email_verified
     ? draft.email
     : profileData.email || null;
-  const [verifiedEmail] = useState<string | null>(initialVerifiedEmail);
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(initialVerifiedEmail);
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -54,6 +68,25 @@ export const EditProfilePage: React.FC = () => {
   const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false);
   const [isSendingEmailOtp, setIsSendingEmailOtp] = useState<boolean>(false);
 
+  // In-page OTP Verification Modal state
+  const [verifyModal, setVerifyModal] = useState<VerificationModalState>({
+    isOpen: false,
+    type: 'phone',
+    target: '',
+    activeOtp: null,
+  });
+  const [modalOtpDigits, setModalOtpDigits] = useState<string[]>(['', '', '', '']);
+  const [modalCooldown, setModalCooldown] = useState<number>(20);
+  const [isModalVerifying, setIsModalVerifying] = useState<boolean>(false);
+  const modalInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // 20-second countdown timer for in-page modal resend
+  useEffect(() => {
+    if (!verifyModal.isOpen || modalCooldown <= 0) return;
+    const timer = setTimeout(() => setModalCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [verifyModal.isOpen, modalCooldown]);
+
   const cleanPhone = phone ? phone.replace(/\D/g, '').slice(-10) : '';
   const cleanVerifiedPhone = verifiedPhone ? verifiedPhone.replace(/\D/g, '').slice(-10) : null;
   const isPhoneVerified = Boolean(cleanPhone && cleanVerifiedPhone && cleanPhone === cleanVerifiedPhone);
@@ -66,7 +99,9 @@ export const EditProfilePage: React.FC = () => {
     (cleanEmail && cleanVerifiedEmail && cleanEmail === cleanVerifiedEmail)
   );
 
-  const canSave = !isSaving && (cleanPhone.length === 0 || isPhoneVerified) && isEmailVerified;
+  const hasUnverifiedPhone = Boolean(cleanPhone.length > 0 && !isPhoneVerified);
+  const hasUnverifiedEmail = Boolean(cleanEmail.length > 0 && !isEmailVerified);
+  const canSave = !isSaving && !hasUnverifiedPhone && !hasUnverifiedEmail;
 
   const handleVerifyPhone = async () => {
     if (!cleanPhone || cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
@@ -77,24 +112,17 @@ export const EditProfilePage: React.FC = () => {
     setIsSendingOtp(true);
     try {
       const res = await sendOtpToPhone(cleanPhone);
-      setToastMessage('Verification code generated');
+      setModalOtpDigits(['', '', '', '']);
+      setModalCooldown(20);
+      setVerifyModal({
+        isOpen: true,
+        type: 'phone',
+        target: cleanPhone,
+        activeOtp: res?.otp || null,
+      });
       setTimeout(() => {
-        setToastMessage(null);
-        navigate('/verify-otp', {
-          state: {
-            phone: cleanPhone,
-            flow: 'profile',
-            otp: res?.otp,
-            draftProfile: {
-              fullName,
-              email: cleanEmail,
-              phone: cleanPhone,
-              chosenAvatar,
-              email_verified: isEmailVerified,
-            },
-          },
-        });
-      }, 600);
+        modalInputRefs.current[0]?.focus();
+      }, 150);
     } catch (err: any) {
       setToastMessage(err.message || 'Failed to send verification code');
       setTimeout(() => setToastMessage(null), 3500);
@@ -112,29 +140,98 @@ export const EditProfilePage: React.FC = () => {
     setIsSendingEmailOtp(true);
     try {
       const res = await sendEmailOtp(cleanEmail);
-      setToastMessage('Verification code sent to email');
+      setModalOtpDigits(['', '', '', '']);
+      setModalCooldown(20);
+      setVerifyModal({
+        isOpen: true,
+        type: 'email',
+        target: cleanEmail,
+        activeOtp: res?.otp || null,
+      });
       setTimeout(() => {
-        setToastMessage(null);
-        navigate('/verify-otp', {
-          state: {
-            phone: cleanEmail,
-            flow: 'email',
-            otp: res?.otp,
-            draftProfile: {
-              fullName,
-              email: cleanEmail,
-              phone: cleanPhone,
-              chosenAvatar,
-              phone_verified: isPhoneVerified,
-            },
-          },
-        });
-      }, 600);
+        modalInputRefs.current[0]?.focus();
+      }, 150);
     } catch (err: any) {
       setToastMessage(err.message || 'Failed to send email verification code');
       setTimeout(() => setToastMessage(null), 3500);
     } finally {
       setIsSendingEmailOtp(false);
+    }
+  };
+
+  const handleConfirmModalOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = modalOtpDigits.join('');
+    if (code.length < 4) {
+      setToastMessage('Please enter the complete 4-digit code');
+      setTimeout(() => setToastMessage(null), 2500);
+      return;
+    }
+
+    setIsModalVerifying(true);
+    try {
+      if (verifyModal.type === 'phone') {
+        const res = await verifyPhoneOtp(verifyModal.target, code);
+        setVerifiedPhone(res.phone || verifyModal.target);
+        setProfileData({
+          phone: res.phone || verifyModal.target,
+          phone_verified: true,
+        });
+        setToastMessage('Mobile number verified successfully');
+      } else {
+        const res = await verifyEmailOtp(verifyModal.target, code);
+        setVerifiedEmail(res.email || verifyModal.target);
+        setProfileData({
+          email: res.email || verifyModal.target,
+        });
+        setToastMessage('Email address verified successfully');
+      }
+      setVerifyModal({ isOpen: false, type: 'phone', target: '', activeOtp: null });
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (err: any) {
+      setToastMessage(err.message || 'Invalid or expired code. Please try again.');
+      setTimeout(() => setToastMessage(null), 3500);
+    } finally {
+      setIsModalVerifying(false);
+    }
+  };
+
+  const handleModalResend = async () => {
+    if (modalCooldown > 0) return;
+    try {
+      let res;
+      if (verifyModal.type === 'phone') {
+        res = await sendOtpToPhone(verifyModal.target);
+      } else {
+        res = await sendEmailOtp(verifyModal.target);
+      }
+      if (res?.otp) {
+        setVerifyModal((prev) => ({ ...prev, activeOtp: res?.otp || null }));
+      }
+      setModalCooldown(20);
+      setToastMessage('New verification code sent');
+      setTimeout(() => setToastMessage(null), 2500);
+    } catch (err: any) {
+      setToastMessage(err.message || 'Failed to resend code');
+      setTimeout(() => setToastMessage(null), 3500);
+    }
+  };
+
+  const handleOtpDigitChange = (index: number, val: string) => {
+    if (!/^\d*$/.test(val)) return;
+    const digit = val.slice(-1);
+    const updated = [...modalOtpDigits];
+    updated[index] = digit;
+    setModalOtpDigits(updated);
+
+    if (digit && index < 3) {
+      modalInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !modalOtpDigits[index] && index > 0) {
+      modalInputRefs.current[index - 1]?.focus();
     }
   };
 
@@ -438,7 +535,7 @@ export const EditProfilePage: React.FC = () => {
             </div>
 
             {/* Save Profile Button */}
-            <div className="pt-2">
+            <div className="pt-2 space-y-2">
               <button
                 type="submit"
                 disabled={!canSave}
@@ -446,6 +543,23 @@ export const EditProfilePage: React.FC = () => {
               >
                 {isSaving ? 'SAVING CHANGES...' : 'SAVE CHANGES'}
               </button>
+
+              {(hasUnverifiedPhone || hasUnverifiedEmail) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhone(profileData.phone || '');
+                    setEmail(profileData.email || '');
+                    setVerifiedPhone(profileData.phone_verified ? profileData.phone : null);
+                    setVerifiedEmail(profileData.email || null);
+                    setToastMessage('Reverted unverified edits to current profile');
+                    setTimeout(() => setToastMessage(null), 2500);
+                  }}
+                  className="w-full text-center py-2 text-[11px] label-caps tracking-wider text-amber-500/90 hover:text-amber-400 underline uppercase transition-colors"
+                >
+                  Discard Unverified Changes
+                </button>
+              )}
             </div>
 
             <div className="text-center">
@@ -454,7 +568,7 @@ export const EditProfilePage: React.FC = () => {
                 onClick={handleDiscard}
                 className="label-caps text-[12px] tracking-wider text-[var(--text-secondary)] underline hover:text-[var(--text-primary)] transition-colors uppercase"
               >
-                DISCARD CHANGES
+                DISCARD ALL & EXIT
               </button>
             </div>
           </form>
@@ -581,6 +695,110 @@ export const EditProfilePage: React.FC = () => {
           </form>
         </div>
       </main>
+
+      {/* In-Page OTP Verification Modal */}
+      {verifyModal.isOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-[#0A0A0A]/75 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-6 shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
+            {/* Close Modal */}
+            <button
+              type="button"
+              onClick={() => setVerifyModal({ isOpen: false, type: 'phone', target: '', activeOtp: null })}
+              className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-1 transition-colors"
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Modal Title */}
+            <div className="text-center space-y-1 pt-1">
+              <h3
+                className="text-[22px] font-normal text-[var(--text-primary)] tracking-wide"
+                style={{ fontFamily: "'EB Garamond', Georgia, serif" }}
+              >
+                {verifyModal.type === 'phone' ? 'Verify Mobile Number' : 'Verify Email Address'}
+              </h3>
+              <p className="body-md text-[13px] text-[var(--text-secondary)]">
+                Enter the 4-digit verification code sent to{' '}
+                <span className="text-[var(--gold)] font-medium">
+                  {verifyModal.type === 'phone' ? `+91 ${verifyModal.target}` : verifyModal.target}
+                </span>
+              </p>
+            </div>
+
+            {/* OTP Preview Banner */}
+            {verifyModal.activeOtp && (
+              <div className="p-3 bg-[var(--gold)]/10 border border-[var(--gold)]/40 rounded text-center">
+                <span className="label-caps text-[10px] tracking-widest text-[var(--gold)] font-semibold uppercase block mb-0.5">
+                  Verification Code (Live Preview)
+                </span>
+                <span className="text-[26px] tracking-[0.3em] font-mono font-bold text-[var(--gold)] block">
+                  {verifyModal.activeOtp}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const digits = verifyModal.activeOtp!.split('').slice(0, 4);
+                    setModalOtpDigits(digits);
+                    modalInputRefs.current[3]?.focus();
+                  }}
+                  className="mt-1 text-[10.5px] font-semibold text-[var(--gold)] hover:underline uppercase tracking-wider block mx-auto cursor-pointer"
+                >
+                  1-Tap Auto-Fill Code
+                </button>
+              </div>
+            )}
+
+            {/* 4 Digit Inputs */}
+            <form onSubmit={handleConfirmModalOtp} className="space-y-6">
+              <div className="flex justify-center gap-3">
+                {modalOtpDigits.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => {
+                      modalInputRefs.current[i] = el;
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpDigitChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    className="w-12 h-14 text-center text-[22px] font-mono font-bold bg-[var(--bg-secondary)] border border-[var(--border-color)] focus:border-[var(--gold)] focus:outline-none rounded transition-colors text-[var(--text-primary)]"
+                  />
+                ))}
+              </div>
+
+              {/* Cooldown & Resend */}
+              <div className="text-center">
+                {modalCooldown > 0 ? (
+                  <span className="label-caps text-[11px] tracking-wider text-[var(--text-secondary)]">
+                    Resend code in <span className="text-[var(--gold)] font-semibold">{modalCooldown}s</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleModalResend}
+                    className="label-caps text-[11px] tracking-wider text-[var(--gold)] hover:underline uppercase font-semibold cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
+                  >
+                    <RefreshCw size={12} />
+                    Resend Code
+                  </button>
+                )}
+              </div>
+
+              {/* Submit Verification */}
+              <button
+                type="submit"
+                disabled={isModalVerifying || modalOtpDigits.join('').length < 4}
+                className="w-full bg-[var(--gold)] text-[#0A0A0A] py-3 label-caps tracking-[0.2em] uppercase hover:bg-[var(--gold-bright)] transition-all duration-300 font-bold shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isModalVerifying ? 'Verifying...' : 'Confirm Verification'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

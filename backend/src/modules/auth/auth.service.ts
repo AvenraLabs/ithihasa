@@ -379,9 +379,17 @@ export class AuthService {
   public async authenticateWithGoogle(idToken: string): Promise<AuthResponse> {
     const profile = await googleAuthProvider.verifyIdToken(idToken);
 
-    let [user, created] = await User.findOrCreate({
-      where: { email: profile.email.toLowerCase() },
-      defaults: {
+    let user = await User.findOne({
+      where: {
+        [Op.or]: [
+          { google_id: profile.googleId },
+          { email: profile.email.toLowerCase() },
+        ],
+      },
+    });
+
+    if (!user) {
+      user = await User.create({
         email: profile.email.toLowerCase(),
         name: profile.name,
         google_id: profile.googleId,
@@ -389,23 +397,23 @@ export class AuthService {
         role: 'CUSTOMER',
         status: 'ACTIVE',
         phone_verified: false,
-      },
-    });
-
-    if (!created) {
+      });
+      // Ensure new customer gets an initialized wishlist
+      await Wishlist.findOrCreate({ where: { user_id: user.id } });
+    } else {
       if (user.status === 'BLOCKED') {
         throw new AuthenticationError('Account is blocked. Please contact customer support.');
       }
       if (!user.google_id) {
         user.google_id = profile.googleId;
       }
+      if (profile.email && !user.email) {
+        user.email = profile.email.toLowerCase();
+      }
       if (!user.avatar_url && profile.avatarUrl) {
         user.avatar_url = profile.avatarUrl;
       }
       await user.save();
-    } else {
-      // Ensure new customer gets an initialized wishlist
-      await Wishlist.findOrCreate({ where: { user_id: user.id } });
     }
 
     const tokens = this.generateTokens(user);
