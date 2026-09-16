@@ -43,6 +43,14 @@ const envSchema = z.object({
   TAX_RATE: z.coerce.number().default(0.00),
   DEFAULT_SHIPPING_FEE: z.coerce.number().default(0),
   FREE_SHIPPING_THRESHOLD: z.coerce.number().default(0),
+
+  // SMTP Email Service
+  SMTP_HOST: z.string().default('mail.ithihasa.co.in'),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_SECURE: z.string().transform((val) => val === 'true').default('false'),
+  SMTP_USER: z.string().default('help@ithihasa.co.in'),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().default('"Ithihasa Atelier" <help@ithihasa.co.in>'),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

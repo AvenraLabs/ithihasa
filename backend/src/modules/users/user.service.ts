@@ -6,7 +6,7 @@ import { hashValue, verifyHash } from '../../common/utils/crypto.js';
 export class UserService {
   public async getProfile(userId: string) {
     const user = await User.findByPk(userId, {
-      attributes: ['id', 'email', 'name', 'phone', 'phone_verified', 'role', 'avatar_url', 'tier', 'created_at', 'password_hash'],
+      attributes: ['id', 'email', 'name', 'phone', 'phone_verified', 'role', 'avatar_url', 'tier', 'created_at', 'password_hash', 'google_id'],
       include: [
         {
           model: Address,
@@ -18,16 +18,52 @@ export class UserService {
     if (!user) throw new NotFoundError('User');
     const userJson: any = user.toJSON();
     userJson.has_password = Boolean(user.password_hash);
+    userJson.is_google_auth = Boolean(user.google_id);
     delete userJson.password_hash;
+    delete userJson.google_id;
     return userJson;
   }
 
-  public async updateProfile(userId: string, data: { name?: string; phone?: string | null; avatarUrl?: string | null }) {
+  public async updateProfile(userId: string, data: { name?: string; email?: string | null; phone?: string | null; avatarUrl?: string | null }) {
     const user = await User.findByPk(userId);
     if (!user) throw new NotFoundError('User');
 
     if (data.name !== undefined) user.name = data.name;
     if (data.avatarUrl !== undefined) user.avatar_url = data.avatarUrl;
+
+    if (data.email !== undefined) {
+      const cleanEmail = data.email ? data.email.trim().toLowerCase() : null;
+      if (cleanEmail && cleanEmail !== user.email) {
+        if (user.google_id) {
+          throw new BusinessRuleError('Email cannot be changed for accounts linked with Google.');
+        }
+        const existingEmail = await User.findOne({
+          where: {
+            email: cleanEmail,
+            id: { [Op.ne]: userId },
+          },
+        });
+        if (existingEmail) {
+          throw new BusinessRuleError('An account with this email address already exists.');
+        }
+
+        const verifiedOtp = await UserOtp.findOne({
+          where: {
+            email: cleanEmail,
+            purpose: 'EMAIL_VERIFICATION',
+            verified_at: { [Op.ne]: null },
+          },
+          order: [['created_at', 'DESC']],
+        });
+
+        if (!verifiedOtp) {
+          throw new BusinessRuleError('Please verify your email address with OTP before saving changes.');
+        }
+
+        user.email = cleanEmail;
+      }
+    }
+
     if (data.phone !== undefined) {
       const cleanPhone = data.phone ? data.phone.trim().replace(/\D/g, '').slice(-10) : null;
       if (cleanPhone && cleanPhone !== user.phone) {
@@ -37,12 +73,11 @@ export class UserService {
         const existing = await User.findOne({
           where: {
             phone: cleanPhone,
-            phone_verified: true,
             id: { [Op.ne]: userId },
           },
         });
         if (existing) {
-          throw new BusinessRuleError('This mobile number is already registered to another verified patron account.');
+          throw new BusinessRuleError('An account already exists with this mobile number.');
         }
 
         // Verify that this new mobile number was verified via OTP

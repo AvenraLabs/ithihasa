@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { X, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { registerWithPassword, loginWithGoogle } from '../api/auth.js';
+import { sendRegistrationOtp, loginWithGoogle } from '../api/auth.js';
 import { syncGuestWishlistToBackend } from '../api/wishlist.js';
 import { useAvatar } from '../context/AvatarContext.js';
 
@@ -123,25 +123,25 @@ export const RegisterPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await registerWithPassword({
-        name: fullName.trim(),
-        phone: cleanPhone,
-        password,
-      });
+      const response = await sendRegistrationOtp(cleanPhone);
 
-      setProfileData({
-        fullName: response.user.name,
-        email: response.user.email,
-        phone: response.user.phone || cleanPhone,
-      });
-
-      await syncGuestWishlistToBackend().catch(() => {});
-
-      setToastMessage('Account created successfully');
+      setToastMessage('Verification code sent');
       setTimeout(() => {
         setToastMessage(null);
-        navigate(redirectTarget);
-      }, 700);
+        navigate('/verify-otp', {
+          state: {
+            phone: cleanPhone,
+            flow: 'register',
+            otp: response?.otp,
+            registrationData: {
+              name: fullName.trim(),
+              phone: cleanPhone,
+              password,
+            },
+            redirect: redirectTarget,
+          },
+        });
+      }, 600);
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please check your information.');
     } finally {
@@ -394,10 +394,10 @@ export const RegisterPage: React.FC = () => {
               {isLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  <span>Creating Account...</span>
+                  <span>Sending Verification Code...</span>
                 </>
               ) : (
-                <span>Register</span>
+                <span>Verify Mobile & Register</span>
               )}
             </button>
           </form>

@@ -4,9 +4,10 @@ import { sequelize } from '../../config/database.js';
 export interface UserOtpAttributes {
   id: string;
   user_id?: string | null;
-  phone: string;
+  phone?: string | null;
+  email?: string | null;
   otp_hash: string;
-  purpose: 'PHONE_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET';
+  purpose: 'PHONE_VERIFICATION' | 'EMAIL_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET';
   attempts: number;
   expires_at: Date;
   verified_at?: Date | null;
@@ -14,7 +15,7 @@ export interface UserOtpAttributes {
   updated_at?: Date;
 }
 
-export type UserOtpCreationAttributes = Optional<UserOtpAttributes, 'id' | 'user_id' | 'attempts' | 'verified_at'>;
+export type UserOtpCreationAttributes = Optional<UserOtpAttributes, 'id' | 'user_id' | 'attempts' | 'verified_at' | 'phone' | 'email'>;
 
 export class UserOtp
   extends Model<UserOtpAttributes, UserOtpCreationAttributes>
@@ -22,9 +23,10 @@ export class UserOtp
 {
   declare public id: string;
   declare public user_id: string | null;
-  declare public phone: string;
+  declare public phone: string | null;
+  declare public email: string | null;
   declare public otp_hash: string;
-  declare public purpose: 'PHONE_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET';
+  declare public purpose: 'PHONE_VERIFICATION' | 'EMAIL_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET';
   declare public attempts: number;
   declare public expires_at: Date;
   declare public verified_at: Date | null;
@@ -46,14 +48,18 @@ UserOtp.init(
     },
     phone: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     otp_hash: {
       type: DataTypes.STRING,
       allowNull: false,
     },
     purpose: {
-      type: DataTypes.ENUM('PHONE_VERIFICATION', 'LOGIN', 'PASSWORD_RESET'),
+      type: DataTypes.ENUM('PHONE_VERIFICATION', 'EMAIL_VERIFICATION', 'LOGIN', 'PASSWORD_RESET'),
       defaultValue: 'PHONE_VERIFICATION',
       allowNull: false,
     },
@@ -74,6 +80,6 @@ UserOtp.init(
   {
     sequelize,
     tableName: 'user_otps',
-    indexes: [{ fields: ['user_id', 'phone'] }, { fields: ['expires_at'] }],
+    indexes: [{ fields: ['user_id', 'phone'] }, { fields: ['email'] }, { fields: ['expires_at'] }],
   }
 );

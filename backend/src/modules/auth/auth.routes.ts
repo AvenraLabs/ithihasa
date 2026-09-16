@@ -74,3 +74,31 @@ authRouter.post(
   validateRequest({ body: verifyOtpSchema }),
   authController.verifyOtp
 );
+
+// Registration with OTP endpoints
+authRouter.post(
+  '/registration/send-otp',
+  otpRateLimiter,
+  validateRequest({ body: sendOtpSchema }),
+  authController.sendRegistrationOtp
+);
+
+authRouter.post(
+  '/register-with-otp',
+  authRateLimiter,
+  authController.registerWithOtp
+);
+
+// Email OTP verification endpoints
+authRouter.post(
+  '/email/send-otp',
+  optionalAuthenticate,
+  otpRateLimiter,
+  authController.sendEmailOtp
+);
+
+authRouter.post(
+  '/email/verify-otp',
+  optionalAuthenticate,
+  authController.verifyEmailOtp
+);

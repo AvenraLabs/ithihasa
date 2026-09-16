@@ -9,6 +9,8 @@ export interface UserSession {
   role: 'CUSTOMER' | 'ADMIN';
   avatar_url?: string | null;
   tier?: string;
+  is_google_auth?: boolean;
+  has_password?: boolean;
 }
 
 export interface AuthResponse {
@@ -115,6 +117,59 @@ export async function updateUserProfile(data: {
 }): Promise<UserSession> {
   return apiClient<UserSession>('/account/profile', {
     method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function sendRegistrationOtp(phone: string): Promise<OtpResponse> {
+  return apiClient<OtpResponse>('/auth/registration/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  });
+}
+
+export async function registerWithOtp(data: {
+  name: string;
+  phone: string;
+  password: string;
+  otp: string;
+}): Promise<AuthResponse> {
+  const res = await apiClient<AuthResponse>('/auth/register-with-otp', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  if (res.tokens?.accessToken) {
+    setAccessToken(res.tokens.accessToken);
+  }
+  return res;
+}
+
+export async function sendEmailOtp(email: string): Promise<OtpResponse> {
+  return apiClient<OtpResponse>('/auth/email/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function verifyEmailOtp(
+  email: string,
+  otp: string
+): Promise<{ success: boolean; email: string; email_verified: boolean; user?: UserSession }> {
+  return apiClient<{ success: boolean; email: string; email_verified: boolean; user?: UserSession }>(
+    '/auth/email/verify-otp',
+    {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+    }
+  );
+}
+
+export async function changePassword(data: {
+  currentPassword?: string;
+  newPassword: string;
+}): Promise<{ success: boolean; message: string }> {
+  return apiClient<{ success: boolean; message: string }>('/account/password', {
+    method: 'POST',
     body: JSON.stringify(data),
   });
 }

@@ -36,6 +36,8 @@ export interface UserProfileData {
   phone: string;
   phone_verified?: boolean;
   tier?: string;
+  is_google_auth?: boolean;
+  has_password?: boolean;
 }
 
 interface AvatarContextType {
@@ -90,6 +92,8 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             phone: user.phone || '',
             phone_verified: Boolean(user.phone_verified),
             tier: user.tier || 'Novice',
+            is_google_auth: Boolean(user.is_google_auth),
+            has_password: Boolean(user.has_password),
           };
           setProfileDataState(updated);
           localStorage.setItem('ithihasa_user_profile', JSON.stringify(updated));

@@ -95,6 +95,48 @@ export class AuthController {
       next(error);
     }
   }
+
+  public async sendRegistrationOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { phone } = req.body;
+      const result = await authService.sendRegistrationOTP(phone);
+      sendSuccess(res, result, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public async registerWithOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { name, phone, password, otp } = req.body;
+      const result = await authService.registerWithVerifiedOtp({ name, phone, password, otp });
+      sendSuccess(res, result, 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public async sendEmailOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email } = req.body;
+      const userId = req.user?.userId || 'guest';
+      const result = await authService.sendEmailOTP(userId, email);
+      sendSuccess(res, result, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public async verifyEmailOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email, otp } = req.body;
+      const userId = req.user?.userId || 'guest';
+      const result = await authService.verifyEmailOTP(userId, email, otp);
+      sendSuccess(res, result, 200);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const authController = new AuthController();

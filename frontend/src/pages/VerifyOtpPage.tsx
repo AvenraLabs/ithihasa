@@ -1,7 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { verifyPhoneOtp, sendOtpToPhone, resetPassword } from '../api/auth.js';
+import {
+  verifyPhoneOtp,
+  sendOtpToPhone,
+  resetPassword,
+  sendRegistrationOtp,
+  registerWithOtp,
+  sendEmailOtp,
+  verifyEmailOtp,
+} from '../api/auth.js';
 import { useAvatar } from '../context/AvatarContext.js';
 
 const OTP_LENGTH = 4;
@@ -95,6 +103,50 @@ export const VerifyOtpPage: React.FC = () => {
           setToastMessage(null);
           navigate('/login');
         }, 1200);
+      } else if (flow === 'register') {
+        const regData = (location.state as any)?.registrationData;
+        if (!regData?.password || !regData?.name) {
+          throw new Error('Registration details missing. Please start registration again.');
+        }
+        const res = await registerWithOtp({
+          name: regData.name,
+          phone: regData.phone || phone,
+          password: regData.password,
+          otp: code,
+        });
+
+        setProfileData({
+          fullName: res.user.name,
+          email: res.user.email || '',
+          phone: res.user.phone || phone,
+          phone_verified: true,
+        });
+
+        setToastMessage('Account created and phone verified!');
+        setTimeout(() => {
+          setToastMessage(null);
+          const redirect = (location.state as any)?.redirect || '/account';
+          navigate(redirect);
+        }, 800);
+      } else if (flow === 'email') {
+        const res = await verifyEmailOtp(phone, code);
+        const draft = (location.state as any)?.draftProfile || {};
+        setProfileData({
+          email: res.email || phone,
+        });
+        setToastMessage('Email verified successfully');
+        setTimeout(() => {
+          setToastMessage(null);
+          navigate('/account/edit', {
+            state: {
+              draftProfile: {
+                ...draft,
+                email: res.email || phone,
+                email_verified: true,
+              },
+            },
+          });
+        }, 700);
       } else if (flow === 'profile') {
         const res = await verifyPhoneOtp(phone, code);
         const draft = (location.state as any)?.draftProfile || {};
@@ -140,8 +192,16 @@ export const VerifyOtpPage: React.FC = () => {
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     try {
-      const res = await sendOtpToPhone(phone);
-      if (res.otp) {
+      let res;
+      if (flow === 'register') {
+        res = await sendRegistrationOtp(phone);
+      } else if (flow === 'email') {
+        res = await sendEmailOtp(phone);
+      } else {
+        res = await sendOtpToPhone(phone);
+      }
+
+      if (res?.otp) {
         setActiveOtp(res.otp);
       }
       setResendCooldown(20);

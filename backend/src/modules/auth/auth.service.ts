@@ -4,6 +4,7 @@ import { User, UserOtp, Wishlist, Cart } from '../../database/index.js';
 import { env } from '../../config/env.js';
 import { googleAuthProvider } from '../../integrations/google/google.provider.js';
 import { whatsappProvider } from '../../integrations/whatsapp/whatsapp.provider.js';
+import { emailProvider } from '../../integrations/email/email.provider.js';
 import { generateOTP, hashValue, verifyHash } from '../../common/utils/crypto.js';
 import {
   AuthenticationError,
@@ -584,6 +585,342 @@ export class AuthService {
       success: true,
       phone: cleanPhone,
       phone_verified: true,
+      user: user
+        ? {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            phone_verified: user.phone_verified,
+            role: user.role,
+            avatar_url: user.avatar_url,
+          }
+        : undefined,
+    };
+  }
+
+  /**
+   * Sends OTP for patron registration, ensuring phone does not already exist
+   */
+  public async sendRegistrationOTP(
+    rawPhone: string
+  ): Promise<{ success: boolean; message: string; otp: string; cooldownSeconds: number }> {
+    if (!rawPhone) {
+      throw new BusinessRuleError('Mobile number is required to register.');
+    }
+    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      throw new BusinessRuleError('Please enter a valid 10-digit Indian mobile number.');
+    }
+
+    // Check if account already exists with this phone number
+    const existingUser = await User.findOne({ where: { phone: cleanPhone } });
+    if (existingUser) {
+      throw new BusinessRuleError('An account already exists with this mobile number. Please sign in instead.');
+    }
+
+    // 20-second cooldown check
+    const twentySecondsAgo = new Date(Date.now() - 20 * 1000);
+    const recentOtp = await UserOtp.findOne({
+      where: {
+        phone: cleanPhone,
+        created_at: { [Op.gt]: twentySecondsAgo },
+      },
+      order: [['created_at', 'DESC']],
+    });
+
+    if (recentOtp) {
+      const elapsedMs = Date.now() - new Date(recentOtp.created_at).getTime();
+      const remainingSecs = Math.max(1, Math.ceil((20 * 1000 - elapsedMs) / 1000));
+      throw new BusinessRuleError(`Please wait ${remainingSecs}s before requesting another verification code.`);
+    }
+
+    // Max 5 attempts in 10 minutes
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    const recentOtpsCount = await UserOtp.count({
+      where: {
+        phone: cleanPhone,
+        created_at: { [Op.gt]: tenMinutesAgo },
+      },
+    });
+
+    if (recentOtpsCount >= 5) {
+      throw new BusinessRuleError('Too many OTP attempts. Please wait 10 minutes before requesting again.');
+    }
+
+    const otp = generateOTP(4);
+    const otpHash = await hashValue(otp);
+    const expiresAt = new Date(Date.now() + env.OTP_EXPIRY_MINUTES * 60 * 1000);
+
+    await UserOtp.create({
+      phone: cleanPhone,
+      otp_hash: otpHash,
+      purpose: 'PHONE_VERIFICATION',
+      expires_at: expiresAt,
+    });
+
+    await whatsappProvider.sendOTP({
+      phone: cleanPhone,
+      otp,
+      expiryMinutes: env.OTP_EXPIRY_MINUTES,
+    });
+
+    return {
+      success: true,
+      message: `Verification code sent successfully to ${cleanPhone}`,
+      otp, // Live preview for immediate testing
+      cooldownSeconds: 20,
+    };
+  }
+
+  /**
+   * Finalizes Patron Registration with verified OTP
+   */
+  public async registerWithVerifiedOtp(data: {
+    name: string;
+    phone: string;
+    password: string;
+    otp: string;
+  }): Promise<AuthResponse> {
+    const cleanPhone = data.phone.trim().replace(/\D/g, '').slice(-10);
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      throw new BusinessRuleError('Please enter a valid 10-digit Indian mobile number.');
+    }
+
+    if (!data.name || !data.name.trim()) {
+      throw new BusinessRuleError('Full name is required.');
+    }
+
+    if (!data.password || data.password.length < 6) {
+      throw new BusinessRuleError('Password must be at least 6 characters.');
+    }
+
+    if (!data.otp) {
+      throw new BusinessRuleError('Verification code is required.');
+    }
+
+    // Check duplicate
+    const existingUser = await User.findOne({ where: { phone: cleanPhone } });
+    if (existingUser) {
+      throw new BusinessRuleError('An account already exists with this mobile number. Please sign in instead.');
+    }
+
+    // Verify OTP
+    const latestOtp = await UserOtp.findOne({
+      where: {
+        phone: cleanPhone,
+        verified_at: null,
+        expires_at: { [Op.gt]: new Date() },
+      },
+      order: [['created_at', 'DESC']],
+    });
+
+    if (!latestOtp) {
+      throw new BusinessRuleError('Verification code has expired or is invalid. Please request a new code.');
+    }
+
+    if (latestOtp.attempts >= env.MAX_OTP_ATTEMPTS) {
+      throw new BusinessRuleError('Maximum verification attempts exceeded. Please request a new code.');
+    }
+
+    latestOtp.attempts += 1;
+    await latestOtp.save();
+
+    const isMatch = await verifyHash(data.otp, latestOtp.otp_hash);
+    if (!isMatch) {
+      const remaining = env.MAX_OTP_ATTEMPTS - latestOtp.attempts;
+      throw new BusinessRuleError(
+        `Invalid verification code. ${remaining > 0 ? `${remaining} attempt(s) remaining.` : 'Please request a new code.'}`
+      );
+    }
+
+    latestOtp.verified_at = new Date();
+    await latestOtp.save();
+
+    const passwordHash = await hashValue(data.password);
+
+    const user = await User.create({
+      name: data.name.trim(),
+      phone: cleanPhone,
+      phone_verified: true, // Verified via OTP
+      password_hash: passwordHash,
+      role: 'CUSTOMER',
+      status: 'ACTIVE',
+    });
+
+    await Wishlist.findOrCreate({ where: { user_id: user.id } });
+
+    const tokens = this.generateTokens(user);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        phone_verified: user.phone_verified,
+        role: user.role,
+        avatar_url: user.avatar_url,
+      },
+      tokens,
+    };
+  }
+
+  /**
+   * Sends OTP to customer's email via SMTP from help@ithihasa.co.in
+   */
+  public async sendEmailOTP(
+    userId?: string | null,
+    rawEmail?: string
+  ): Promise<{ success: boolean; message: string; otp: string; cooldownSeconds: number }> {
+    if (!rawEmail) {
+      throw new BusinessRuleError('Email address is required.');
+    }
+    const cleanEmail = rawEmail.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      throw new BusinessRuleError('Please enter a valid email address.');
+    }
+
+    // If authenticated user, verify they are not a Google account
+    if (userId && userId !== 'guest') {
+      const user = await User.findByPk(userId);
+      if (user?.google_id) {
+        throw new BusinessRuleError('Email cannot be changed for accounts linked with Google.');
+      }
+
+      const existingOther = await User.findOne({
+        where: {
+          email: cleanEmail,
+          id: { [Op.ne]: userId },
+        },
+      });
+      if (existingOther) {
+        throw new BusinessRuleError('An account with this email address already exists.');
+      }
+    } else {
+      const existing = await User.findOne({ where: { email: cleanEmail } });
+      if (existing) {
+        throw new BusinessRuleError('An account with this email address already exists. Please sign in instead.');
+      }
+    }
+
+    // 20-second cooldown check
+    const twentySecondsAgo = new Date(Date.now() - 20 * 1000);
+    const recentOtp = await UserOtp.findOne({
+      where: {
+        email: cleanEmail,
+        created_at: { [Op.gt]: twentySecondsAgo },
+      },
+      order: [['created_at', 'DESC']],
+    });
+
+    if (recentOtp) {
+      const elapsedMs = Date.now() - new Date(recentOtp.created_at).getTime();
+      const remainingSecs = Math.max(1, Math.ceil((20 * 1000 - elapsedMs) / 1000));
+      throw new BusinessRuleError(`Please wait ${remainingSecs}s before requesting another verification code.`);
+    }
+
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    const recentCount = await UserOtp.count({
+      where: {
+        email: cleanEmail,
+        created_at: { [Op.gt]: tenMinutesAgo },
+      },
+    });
+
+    if (recentCount >= 5) {
+      throw new BusinessRuleError('Too many email OTP attempts. Please wait 10 minutes before requesting again.');
+    }
+
+    const otp = generateOTP(4);
+    const otpHash = await hashValue(otp);
+    const expiresAt = new Date(Date.now() + env.OTP_EXPIRY_MINUTES * 60 * 1000);
+
+    await UserOtp.create({
+      user_id: (userId && userId !== 'guest') ? userId : null,
+      email: cleanEmail,
+      otp_hash: otpHash,
+      purpose: 'EMAIL_VERIFICATION',
+      expires_at: expiresAt,
+    });
+
+    // Send via SMTP from help@ithihasa.co.in
+    await emailProvider.sendOtpEmail({
+      email: cleanEmail,
+      otp,
+      expiryMinutes: env.OTP_EXPIRY_MINUTES,
+    });
+
+    return {
+      success: true,
+      message: `Verification code sent to ${cleanEmail}`,
+      otp, // Available for frontend testing preview
+      cooldownSeconds: 20,
+    };
+  }
+
+  /**
+   * Verifies Email OTP and links email to patron account
+   */
+  public async verifyEmailOTP(
+    userId?: string | null,
+    rawEmail?: string,
+    otp?: string
+  ): Promise<{ success: boolean; email: string; email_verified: boolean; user?: any }> {
+    if (!rawEmail || !otp) {
+      throw new BusinessRuleError('Email address and verification code are required.');
+    }
+    const cleanEmail = rawEmail.trim().toLowerCase();
+
+    const latestOtp = await UserOtp.findOne({
+      where: {
+        email: cleanEmail,
+        purpose: 'EMAIL_VERIFICATION',
+        verified_at: null,
+        expires_at: { [Op.gt]: new Date() },
+      },
+      order: [['created_at', 'DESC']],
+    });
+
+    if (!latestOtp) {
+      throw new BusinessRuleError('Verification code has expired or is invalid. Please request a new code.');
+    }
+
+    if (latestOtp.attempts >= env.MAX_OTP_ATTEMPTS) {
+      throw new BusinessRuleError('Maximum verification attempts exceeded. Please request a new code.');
+    }
+
+    latestOtp.attempts += 1;
+    await latestOtp.save();
+
+    const isMatch = await verifyHash(otp, latestOtp.otp_hash);
+    if (!isMatch) {
+      const remaining = env.MAX_OTP_ATTEMPTS - latestOtp.attempts;
+      throw new BusinessRuleError(
+        `Invalid verification code. ${remaining > 0 ? `${remaining} attempt(s) remaining.` : 'Please request a new code.'}`
+      );
+    }
+
+    latestOtp.verified_at = new Date();
+    await latestOtp.save();
+
+    let user = (userId && userId !== 'guest')
+      ? await User.findByPk(userId)
+      : await User.findOne({ where: { email: cleanEmail } });
+
+    if (user) {
+      if (user.google_id && user.email !== cleanEmail) {
+        throw new BusinessRuleError('Email cannot be changed for accounts linked with Google.');
+      }
+      user.email = cleanEmail;
+      await user.save();
+    }
+
+    return {
+      success: true,
+      email: cleanEmail,
+      email_verified: true,
       user: user
         ? {
             id: user.id,
