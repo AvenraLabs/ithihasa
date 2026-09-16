@@ -20,6 +20,7 @@ import { fetchCart } from '../../api/cart.js';
 import { fetchWishlist } from '../../api/wishlist.js';
 import { fetchCategories, type Category } from '../../api/categories.js';
 import { useAvatar } from '../../context/AvatarContext.js';
+import { ProfileAvatar } from '../ui/ProfileAvatar.js';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -128,18 +129,26 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
               <div className="px-6 py-4 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/40 mb-2">
                 {isLoggedIn ? (
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-[var(--gold)] text-black flex items-center justify-center font-bold text-[12px]">
-                        <User size={15} />
-                      </div>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        to="/account"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="shrink-0 rounded-full overflow-hidden block hover:opacity-90 transition-opacity"
+                        aria-label="View Account"
+                      >
+                        <ProfileAvatar
+                          size={40}
+                          className="border border-[var(--gold)]/50 shadow-sm"
+                        />
+                      </Link>
                       <div>
-                        <span className="label-caps text-[10.5px] uppercase text-[var(--gold)] font-semibold block truncate max-w-[170px]">
+                        <span className="label-caps text-[11px] uppercase text-[var(--gold)] font-semibold block truncate max-w-[170px]">
                           {profileData?.fullName || profileData?.phone || profileData?.email?.split('@')[0] || 'Patron'}
                         </span>
                         <Link
                           to="/account"
                           onClick={() => setIsMenuOpen(false)}
-                          className="body-sm text-[13px] font-medium text-[var(--text-primary)] hover:text-[var(--gold)]"
+                          className="body-sm text-[13px] font-medium text-[var(--text-primary)] hover:text-[var(--gold)] transition-colors"
                         >
                           View Account
                         </Link>

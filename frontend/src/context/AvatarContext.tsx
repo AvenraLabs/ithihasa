@@ -38,6 +38,7 @@ export interface UserProfileData {
   tier?: string;
   is_google_auth?: boolean;
   has_password?: boolean;
+  avatar_url?: string;
 }
 
 interface AvatarContextType {
@@ -94,9 +95,15 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             tier: user.tier || 'Novice',
             is_google_auth: Boolean(user.is_google_auth),
             has_password: Boolean(user.has_password),
+            avatar_url: user.avatar_url || undefined,
           };
           setProfileDataState(updated);
           localStorage.setItem('ithihasa_user_profile', JSON.stringify(updated));
+
+          if (user.avatar_url) {
+            setSelectedAvatarState(user.avatar_url);
+            localStorage.setItem('ithihasa_selected_avatar', user.avatar_url);
+          }
         }
       } catch (err) {
         console.warn('Profile hydration note:', err);
@@ -108,6 +115,11 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const setAvatar = (srcOrAuto: string) => {
     setSelectedAvatarState(srcOrAuto);
     localStorage.setItem('ithihasa_selected_avatar', srcOrAuto);
+    setProfileDataState((prev) => {
+      const updated: UserProfileData = { ...prev, avatar_url: srcOrAuto };
+      localStorage.setItem('ithihasa_user_profile', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const setProfileData = (data: Partial<UserProfileData>) => {
@@ -119,14 +131,17 @@ export const AvatarProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   // Resolve current avatar:
-  // If 'auto', use cat for dark mode and girl for light mode
-  // Otherwise use the user's explicitly selected avatar
+  // 1. Explicitly selected avatar (if not 'auto')
+  // 2. Saved avatar_url in profile data
+  // 3. Theme-based default (Cat for dark mode, Princess for light mode)
   const currentAvatar =
-    selectedAvatar === 'auto'
-      ? theme === 'dark'
-        ? '/avatar1/screen.png' // Cat for Dark Mode
-        : '/avatar/screen.png' // Girl for Light Mode
-      : selectedAvatar;
+    selectedAvatar && selectedAvatar !== 'auto'
+      ? selectedAvatar
+      : profileData.avatar_url
+      ? profileData.avatar_url
+      : theme === 'dark'
+      ? '/avatar1/screen.png' // Cat for Dark Mode
+      : '/avatar/screen.png'; // Girl for Light Mode
 
   return (
     <AvatarContext.Provider

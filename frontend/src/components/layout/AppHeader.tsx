@@ -34,6 +34,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   });
 
   const isPDP = location.pathname.startsWith('/products/');
+  const isAccountPage = location.pathname.startsWith('/account');
 
   return (
     <>
@@ -117,16 +118,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
             {/* Patron Account / Sign In */}
             {isLoggedIn ? (
-              <Link
-                to="/account"
-                aria-label="My Account"
-                className="flex items-center justify-center p-0.5 rounded-full hover:scale-105 transition-transform"
-              >
-                <ProfileAvatar
-                  size={32}
-                  className="border border-[var(--gold)]/40 hover:border-[var(--gold)] transition-all shadow-sm"
-                />
-              </Link>
+              !isAccountPage && (
+                <Link
+                  to="/account"
+                  aria-label="My Account"
+                  className="flex items-center justify-center p-0.5 rounded-full hover:scale-105 transition-transform"
+                >
+                  <ProfileAvatar
+                    size={32}
+                    className="border border-[var(--gold)]/40 hover:border-[var(--gold)] transition-all shadow-sm"
+                  />
+                </Link>
+              )
             ) : (
               <Link
                 to="/login"
@@ -172,16 +175,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         {/* Right Actions: Account / Sign In & Wishlist */}
         <div className="flex items-center space-x-2.5 -mr-2">
           {isLoggedIn ? (
-            <Link
-              to="/account"
-              aria-label="My Account"
-              className="p-0.5 rounded-full active:scale-95 transition-transform flex items-center justify-center"
-            >
-              <ProfileAvatar
-                size={28}
-                className="border border-[var(--gold)]/40 shadow-sm"
-              />
-            </Link>
+            !isAccountPage && (
+              <Link
+                to="/account"
+                aria-label="My Account"
+                className="p-0.5 rounded-full active:scale-95 transition-transform flex items-center justify-center"
+              >
+                <ProfileAvatar
+                  size={28}
+                  className="border border-[var(--gold)]/40 shadow-sm"
+                />
+              </Link>
+            )
           ) : (
             <Link
               to="/login"
