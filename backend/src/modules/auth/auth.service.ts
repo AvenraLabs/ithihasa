@@ -296,11 +296,15 @@ export class AuthService {
     });
 
     if (user.phone || isPhone) {
-      await whatsappProvider.sendOTP({
-        phone: user.phone || cleanPhone,
-        otp,
-        expiryMinutes: 15,
-      });
+      try {
+        await whatsappProvider.sendOTP({
+          phone: user.phone || cleanPhone,
+          otp,
+          expiryMinutes: 15,
+        });
+      } catch (waErr) {
+        logger.warn({ waErr, phone: user.phone || cleanPhone }, 'WhatsApp OTP dispatch skipped or failed; OTP provided in response for UI display');
+      }
     }
 
     return {
@@ -526,11 +530,15 @@ export class AuthService {
       expires_at: expiresAt,
     });
 
-    await whatsappProvider.sendOTP({
-      phone: cleanPhone,
-      otp,
-      expiryMinutes: env.OTP_EXPIRY_MINUTES,
-    });
+    try {
+      await whatsappProvider.sendOTP({
+        phone: cleanPhone,
+        otp,
+        expiryMinutes: env.OTP_EXPIRY_MINUTES,
+      });
+    } catch (waErr) {
+      logger.warn({ waErr, phone: cleanPhone }, 'WhatsApp OTP dispatch skipped or failed; OTP provided in response for UI display');
+    }
 
     return {
       success: true,
@@ -675,11 +683,15 @@ export class AuthService {
       expires_at: expiresAt,
     });
 
-    await whatsappProvider.sendOTP({
-      phone: cleanPhone,
-      otp,
-      expiryMinutes: env.OTP_EXPIRY_MINUTES,
-    });
+    try {
+      await whatsappProvider.sendOTP({
+        phone: cleanPhone,
+        otp,
+        expiryMinutes: env.OTP_EXPIRY_MINUTES,
+      });
+    } catch (waErr) {
+      logger.warn({ waErr, phone: cleanPhone }, 'WhatsApp OTP dispatch skipped or failed; OTP provided in response for UI display');
+    }
 
     return {
       success: true,

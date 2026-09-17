@@ -142,7 +142,8 @@ export const EditProfilePage: React.FC = () => {
     setIsSendingOtp(true);
     try {
       const res = await sendOtpToPhone(cleanPhone);
-      setModalOtpDigits(['', '', '', '']);
+      const digits = (res?.otp && res.otp.length === 4) ? res.otp.split('') : ['', '', '', ''];
+      setModalOtpDigits(digits);
       setModalCooldown(20);
       setVerifyModal({
         isOpen: true,
@@ -151,7 +152,11 @@ export const EditProfilePage: React.FC = () => {
         activeOtp: res?.otp || null,
       });
       setTimeout(() => {
-        modalInputRefs.current[0]?.focus();
+        if (digits.every(d => d !== '')) {
+          modalInputRefs.current[3]?.focus();
+        } else {
+          modalInputRefs.current[0]?.focus();
+        }
       }, 150);
     } catch (err: any) {
       setToastMessage(err.message || 'Failed to send verification code');
@@ -233,6 +238,9 @@ export const EditProfilePage: React.FC = () => {
         const res = await sendOtpToPhone(verifyModal.target);
         if (res?.otp) {
           setVerifyModal((prev) => ({ ...prev, activeOtp: res.otp || null }));
+          if (res.otp.length === 4) {
+            setModalOtpDigits(res.otp.split(''));
+          }
         }
       } else {
         await sendEmailOtp(verifyModal.target);

@@ -24,7 +24,9 @@ export const VerifyOtpPage: React.FC = () => {
   const initialOtp = (location.state as { otp?: string })?.otp || null;
 
   const [activeOtp, setActiveOtp] = useState<string | null>(initialOtp);
-  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
+  const [otp, setOtp] = useState<string[]>(
+    initialOtp && initialOtp.length === OTP_LENGTH ? initialOtp.split('') : Array(OTP_LENGTH).fill('')
+  );
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,10 +35,14 @@ export const VerifyOtpPage: React.FC = () => {
   const [resendCooldown, setResendCooldown] = useState(20);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Auto-focus first input
+  // Auto-focus input
   useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
+    if (initialOtp && initialOtp.length === OTP_LENGTH) {
+      inputRefs.current[OTP_LENGTH - 1]?.focus();
+    } else {
+      inputRefs.current[0]?.focus();
+    }
+  }, [initialOtp]);
 
   // Resend cooldown timer (20 seconds)
   useEffect(() => {
@@ -205,6 +211,9 @@ export const VerifyOtpPage: React.FC = () => {
 
       if (res?.otp) {
         setActiveOtp(res.otp);
+        if (res.otp.length === OTP_LENGTH) {
+          setOtp(res.otp.split(''));
+        }
       }
       setResendCooldown(20);
       setIsError(false);
@@ -278,15 +287,17 @@ export const VerifyOtpPage: React.FC = () => {
           >
             Verification
           </h1>
-          <p className="body-md text-[14px] text-[var(--text-secondary)] mb-12">
-            Enter the 4-digit code sent to your mobile.
+          <p className="body-md text-[14px] text-[var(--text-secondary)] mb-10">
+            {flow === 'register'
+              ? 'Your verification code is displayed on screen below for instant registration.'
+              : 'Your verification code is displayed on screen below.'}
           </p>
 
-          {/* OTP Live Preview Banner */}
+          {/* OTP In-UI Display Banner */}
           {activeOtp && (
             <div className="mb-8 p-4 bg-[var(--gold)]/10 border border-[var(--gold)]/40 rounded text-center">
               <span className="label-caps text-[11px] tracking-widest text-[var(--gold)] font-semibold uppercase block mb-1">
-                Verification Code (Live Preview)
+                Verification Code (Displaying on screen)
               </span>
               <span className="text-[32px] tracking-[0.35em] font-mono font-bold text-[var(--gold)] block">
                 {activeOtp}

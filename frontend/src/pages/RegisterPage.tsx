@@ -125,14 +125,15 @@ export const RegisterPage: React.FC = () => {
     try {
       const response = await sendRegistrationOtp(cleanPhone);
 
-      setToastMessage('Verification code sent');
+      const otpCode = response?.otp;
+      setToastMessage(otpCode ? `Verification code: ${otpCode}` : 'Verification code generated');
       setTimeout(() => {
         setToastMessage(null);
         navigate('/verify-otp', {
           state: {
             phone: cleanPhone,
             flow: 'register',
-            otp: response?.otp,
+            otp: otpCode,
             registrationData: {
               name: fullName.trim(),
               phone: cleanPhone,
@@ -141,7 +142,7 @@ export const RegisterPage: React.FC = () => {
             redirect: redirectTarget,
           },
         });
-      }, 600);
+      }, 500);
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please check your information.');
     } finally {
