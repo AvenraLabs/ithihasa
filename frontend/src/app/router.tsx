@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell.js';
 import { HomePage } from '../pages/HomePage.js';
 import { ShopPage } from '../pages/ShopPage.js';
@@ -24,7 +24,9 @@ import { ConciergeChatPage } from '../pages/ConciergeChatPage.js';
 import { PrivacyPolicyPage } from '../pages/PrivacyPolicyPage.js';
 import { TermsPage } from '../pages/TermsPage.js';
 
-export const router = createBrowserRouter([
+import { RouteErrorBoundary } from '../components/layout/RouteErrorBoundary.js';
+
+const routeDefinitions: RouteObject[] = [
   {
     path: '/login',
     element: <LoginPage />,
@@ -213,4 +215,12 @@ export const router = createBrowserRouter([
       </AppShell>
     ),
   },
-]);
+];
+
+export const router = createBrowserRouter(
+  routeDefinitions.map((route) => ({
+    ...route,
+    errorElement: route.errorElement || <RouteErrorBoundary />,
+  }))
+);
+

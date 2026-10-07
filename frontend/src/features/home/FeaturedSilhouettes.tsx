@@ -18,22 +18,20 @@ export const FeaturedSilhouettes: React.FC = () => {
     refetchOnMount: true,
   });
 
-  // If highlighted section is disabled or empty in CMS, do not render
-  if (cms?.showHighlighted === false) {
-    return null;
-  }
-  if (cms?.highlightedItems && Array.isArray(cms.highlightedItems) && cms.highlightedItems.length === 0) {
-    return null;
-  }
+  const isHighlightedDisabled =
+    cms?.showHighlighted === false ||
+    (cms?.highlightedItems !== undefined && Array.isArray(cms.highlightedItems) && cms.highlightedItems.length === 0);
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ['products', 'featured'],
     queryFn: () => fetchProducts({ featured: true, limit: 3 }),
+    enabled: !isHighlightedDisabled,
   });
 
   const { data: wishlist = [] } = useQuery({
     queryKey: ['wishlist'],
     queryFn: fetchWishlist,
+    enabled: !isHighlightedDisabled,
   });
 
   const wishlistMutation = useMutation({
@@ -43,6 +41,11 @@ export const FeaturedSilhouettes: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['wishlist'] });
     },
   });
+
+  // If highlighted section is disabled or empty in CMS, do not render
+  if (isHighlightedDisabled) {
+    return null;
+  }
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
